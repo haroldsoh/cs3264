@@ -1,0 +1,196 @@
+/* ==========================================================================
+   CS3264 course site — no build step, no dependencies.
+   Palette and type match the lecture deck so the two read as one course.
+   ========================================================================== */
+
+:root{
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --font-body:"Iowan Old Style",Palatino,Georgia,serif;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+  --font-mono:"SF Mono",Menlo,Consolas,monospace;
+
+  --bg:#FBF7EF; --bg-alt:#F4EDE0; --ink:#1E1A17; --ink-soft:#6B6157; --rule:#DCD2C0;
+  --accent:#9B2C2C; --accent-soft:#C97A6D; --accent2:#2F6F6B; --grid:#E7DFCF;
+  --shadow:0 1px 2px rgba(60,45,25,.06), 0 8px 28px rgba(60,45,25,.05);
+  --max:1080px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14120F; --bg-alt:#1E1A16; --ink:#EDE7DD; --ink-soft:#9D948A; --rule:#332C24;
+    --accent:#D98A7A; --accent-soft:#B36A5E; --accent2:#6FAFA8; --grid:#241F1A;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#FBF7EF; --bg-alt:#F4EDE0; --ink:#1E1A17; --ink-soft:#6B6157; --rule:#DCD2C0;
+  --accent:#9B2C2C; --accent-soft:#C97A6D; --accent2:#2F6F6B; --grid:#E7DFCF;
+}
+:root[data-theme="dark"]{
+  --bg:#14120F; --bg-alt:#1E1A16; --ink:#EDE7DD; --ink-soft:#9D948A; --rule:#332C24;
+  --accent:#D98A7A; --accent-soft:#B36A5E; --accent2:#6FAFA8; --grid:#241F1A;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:74px}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);
+  font-size:18px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+nav .wrap{display:flex;align-items:center;gap:22px;height:60px}
+nav .brand{font-family:var(--font-sans);font-weight:700;font-size:15px;letter-spacing:.04em;
+  color:var(--ink);text-decoration:none;white-space:nowrap}
+nav .brand span{color:var(--accent)}
+nav ul{list-style:none;display:flex;gap:18px;margin-left:auto;flex-wrap:wrap}
+nav a{font-family:var(--font-sans);font-size:14px;color:var(--ink-soft);text-decoration:none}
+nav a:hover{color:var(--accent)}
+#themeBtn{font-family:var(--font-sans);font-size:13px;background:none;border:1px solid var(--rule);
+  color:var(--ink-soft);border-radius:16px;padding:4px 11px;cursor:pointer}
+#themeBtn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- hero ---------- */
+header.hero{padding:64px 0 44px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:var(--font-sans);font-size:12px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px}
+h1{font-family:var(--font-display);font-size:clamp(38px,6vw,62px);line-height:1.05;
+  font-weight:700;letter-spacing:-.02em}
+.tagline{font-size:clamp(19px,2.4vw,23px);color:var(--ink-soft);margin-top:16px;max-width:60ch}
+.bar{width:80px;height:4px;background:var(--accent);border-radius:2px;margin:26px 0}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-top:8px}
+.fact{background:var(--bg-alt);border:1px solid var(--rule);border-radius:11px;padding:15px 17px}
+.fact .k{font-family:var(--font-sans);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-soft);font-weight:700;margin-bottom:5px}
+.fact .v{font-size:17px;line-height:1.4}
+.fact .v strong{font-weight:700}
+
+.quick{display:flex;flex-wrap:wrap;gap:11px;margin-top:26px}
+.btn{font-family:var(--font-sans);font-size:14.5px;font-weight:600;text-decoration:none;
+  padding:10px 20px;border-radius:24px;border:1.5px solid var(--accent);color:var(--accent);
+  display:inline-flex;align-items:center;gap:7px}
+.btn:hover{background:var(--accent);color:var(--bg)}
+.btn.solid{background:var(--accent);color:var(--bg)}
+.btn.solid:hover{opacity:.88}
+.btn.ghost{border-color:var(--rule);color:var(--ink-soft)}
+.btn.ghost:hover{border-color:var(--ink-soft);background:var(--bg-alt);color:var(--ink)}
+
+/* ---------- sections ---------- */
+section{padding:56px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:0}
+h2{font-family:var(--font-display);font-size:clamp(28px,3.6vw,38px);font-weight:700;
+  letter-spacing:-.015em;margin-bottom:8px}
+h2 + .lede{color:var(--ink-soft);font-size:18px;margin-bottom:26px;max-width:65ch}
+h3{font-family:var(--font-display);font-size:21px;font-weight:700;margin-bottom:8px}
+p{max-width:68ch}
+p + p{margin-top:14px}
+a{color:var(--accent)}
+a:hover{text-decoration:underline}
+ul.plain{list-style:none}
+ul.plain li{position:relative;padding-left:22px;margin-bottom:9px}
+ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;
+  border-radius:50%;background:var(--accent)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px}
+.card{background:var(--bg-alt);border:1px solid var(--rule);border-radius:12px;padding:22px 24px;
+  box-shadow:var(--shadow)}
+.card.accent{border-color:var(--accent)}
+.small{font-size:15px;color:var(--ink-soft)}
+/* Values not yet confirmed. Kept visually distinct so a student never mistakes a
+   placeholder for a commitment — and so it is obvious which ones still need filling in. */
+.tbc{font-family:var(--font-sans);font-size:10.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);
+  border-radius:4px;padding:1px 5px;vertical-align:2px;white-space:nowrap}
+.note{font-size:15.5px;color:var(--ink-soft);font-style:italic}
+
+/* ---------- announcements ---------- */
+.ann{background:var(--bg-alt);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;
+  padding:16px 20px;margin-bottom:14px}
+.ann time{font-family:var(--font-sans);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;display:block;margin-bottom:5px}
+
+/* ---------- schedule ---------- */
+.sched{width:100%;border-collapse:collapse;font-size:16px}
+.sched th{font-family:var(--font-sans);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-soft);text-align:left;padding:9px 12px;border-bottom:1.5px solid var(--rule);font-weight:700}
+.sched td{padding:11px 12px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.42}
+.sched td.wk{font-family:var(--font-sans);font-weight:700;font-size:14px;width:46px;color:var(--ink-soft)}
+.sched td.dt{font-family:var(--font-sans);font-size:13.5px;color:var(--ink-soft);width:92px;white-space:nowrap}
+.sched tr.hi td{background:color-mix(in srgb,var(--accent) 9%,transparent);font-weight:700}
+.sched tr.brk td{color:var(--ink-soft);font-style:italic;background:color-mix(in srgb,var(--ink-soft) 6%,transparent)}
+.sched a{font-family:var(--font-sans);font-size:13px;text-decoration:none;white-space:nowrap}
+.sched a:hover{text-decoration:underline}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ---------- assessment bar ----------
+   The four segment colours are deliberately NOT themed. They are data, so they must
+   mean the same thing in both themes — and every one has to clear ~4.5:1 against the
+   white label sitting on it. Using var(--ink) here put white text on a near-white
+   segment in dark mode. */
+.stack{--s1:#9B2C2C;--s2:#B05B4B;--s3:#2F6F6B;--s4:#5A4E43;
+  display:flex;width:100%;height:96px;border-radius:11px;overflow:hidden;box-shadow:var(--shadow)}
+.stack .seg{display:flex;flex-direction:column;justify-content:center;align-items:center;
+  color:#fff;padding:0 8px;text-align:center;min-width:0}
+.stack .pc{font-family:var(--font-display);font-size:28px;font-weight:700;line-height:1}
+.stack .nm{font-family:var(--font-sans);font-size:12px;font-weight:600;margin-top:5px;opacity:.93}
+.stacknote{display:flex;width:100%;margin-top:9px;font-family:var(--font-sans);font-size:11.5px;
+  color:var(--ink-soft)}
+.stacknote span{text-align:center;padding:0 4px}
+
+/* ---------- staff ---------- */
+.staff{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px}
+.person{background:var(--bg-alt);border:1px solid var(--rule);border-radius:12px;padding:20px}
+.person .nm{font-family:var(--font-display);font-size:21px;font-weight:700}
+.person .rl{font-family:var(--font-sans);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;margin:5px 0 9px}
+.person .dt{font-size:15px;color:var(--ink-soft);line-height:1.5;word-break:break-word}
+
+/* ---------- footer ---------- */
+footer{padding:36px 0 52px;font-family:var(--font-sans);font-size:13.5px;color:var(--ink-soft)}
+footer a{color:var(--ink-soft)}
+
+@media (max-width:640px){
+  body{font-size:17px}
+  html{scroll-padding-top:56px}
+  /* Keep the sticky bar one row deep. Letting the links wrap costs ~200px of a
+     812px phone viewport, permanently — a scrollable single row costs 54px. */
+  nav .wrap{height:54px;gap:14px;padding:0 16px}
+  nav ul{gap:16px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;margin-left:14px;min-width:0}
+  nav ul::-webkit-scrollbar{display:none}
+  nav li{flex:0 0 auto}
+  nav li:last-child{position:sticky;right:0;padding-left:10px;
+    background:linear-gradient(90deg,transparent,var(--bg) 22%)}
+  section{padding:42px 0}
+
+  /* Six columns do not fit a phone. Collapse each week into a stacked card and
+     label the cells from data-l, so the header row is no longer load-bearing. */
+  .sched,.sched tbody,.sched tr,.sched td{display:block;width:100%}
+  .sched thead{display:none}
+  .sched tr{border-bottom:1px solid var(--rule);padding:12px 2px}
+  .sched td{border:0;padding:0}
+  .sched td:empty,.sched td.na{display:none}   /* "—" placeholders are table grammar, not content */
+  .sched td[data-l]{margin-top:9px}
+  .sched td[data-l]::before{content:attr(data-l);display:block;font-family:var(--font-sans);
+    font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);
+    font-weight:700;margin-bottom:1px}
+  .sched td.wk,.sched td.dt{display:inline;width:auto;font-family:var(--font-sans);
+    font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    color:var(--accent);white-space:normal}
+  .sched td.wk::before{content:"Week "}
+  .sched td.dt::before{content:" · "}
+  /* Recess/reading/exam rows have no week number — drop the cell and its separator
+     rather than printing "Week —". */
+  .sched td.wk.na{display:none}
+  .sched td.wk.na + td.dt::before{content:none}
+  .sched tr.brk td[colspan],.sched tr.hi td[colspan]{margin-top:6px;font-size:16px}
+  .sched tr.brk td,.sched tr.hi td{background:none}
+  .sched tr.brk,.sched tr.hi{padding-left:12px;border-left:3px solid var(--rule)}
+  .sched tr.hi{border-left-color:var(--accent)}
+  .sched a{font-size:15px}
+
+  .stack{height:auto;flex-direction:column}
+  .stack .seg{flex-direction:row;justify-content:space-between;padding:12px 18px}
+  .stack .nm{margin-top:0}
+  .stacknote{display:none}
+}

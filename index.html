@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Foundations of Machine Learning · NUS</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, National University of Singapore, Semester 1 AY2026/27. Schedule, assessment, resources and policies.">
+<meta property="og:title" content="CS3264 · Foundations of Machine Learning">
+<meta property="og:description" content="NUS · Semester 1, AY2026/27 · Tuesdays 4–6pm, LT15">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">CS<span>3264</span></a>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#schedule">Schedule</a></li>
+      <li><a href="#assessment">Assessment</a></li>
+      <li><a href="#resources">Resources</a></li>
+      <li><a href="#policies">Policies</a></li>
+      <li><a href="#staff">Staff</a></li>
+      <li><button id="themeBtn" type="button">◑</button></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow">National University of Singapore · Semester 1, AY2026/27</div>
+    <h1>Foundations of<br>Machine&nbsp;Learning</h1>
+    <div class="bar"></div>
+    <p class="tagline">A course about <em>understanding</em> machine learning algorithms — how they
+    work, why they work, and when they will not. CS3264, 4 units.</p>
+
+    <div class="quick">
+      <a class="btn solid" href="https://piazza.com/nus.edu.sg/fall2026/cs3264">Piazza — ask questions here</a>
+      <a class="btn" href="https://canvas.nus.edu.sg/">Canvas — grades</a>
+      <a class="btn ghost" href="https://nusmods.com/courses/CS3264/foundations-of-machine-learning">NUSMods</a>
+    </div>
+
+    <div class="facts" style="margin-top:34px">
+      <div class="fact"><div class="k">Lectures</div>
+        <div class="v"><strong>Tuesday 4–6pm</strong><br>LT15 · Weeks 1–13</div></div>
+      <div class="fact"><div class="k">Tutorials</div>
+        <div class="v"><strong>Wednesdays</strong><br>BIZ2-0302 · Weeks 3–13</div></div>
+      <div class="fact"><div class="k">Instructor</div>
+        <div class="v"><strong>Harold Soh</strong><br>harold@nus.edu.sg</div></div>
+      <div class="fact"><div class="k">First lecture</div>
+        <div class="v"><strong>11 August 2026</strong><br>Semester begins 10 Aug</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="announcements">
+  <div class="wrap">
+    <h2>Announcements</h2>
+    <p class="lede">The latest first. Anything time-critical also goes out on Piazza.</p>
+    <div class="ann">
+      <time>Before the semester</time>
+      Welcome to CS3264. Sign up for <a href="https://piazza.com/nus.edu.sg/fall2026/cs3264">Piazza</a> —
+      that is where announcements, questions and resources live. Tutorials start in
+      <strong>Week 3</strong>; there is an optional online revision session on probability and linear
+      algebra before then, details to follow.
+    </div>
+  </div>
+</section>
+
+<section id="overview">
+  <div class="wrap">
+    <h2>What this course is</h2>
+    <p class="lede">Machine learning is the study of models and algorithms for finding patterns in
+    data. CS3264 is about the machinery underneath — the part that transfers when the tools change.</p>
+
+    <div class="cols">
+      <div>
+        <h3>By the end you should be able to</h3>
+        <ul class="plain">
+          <li>Describe what ML is, especially supervised and unsupervised learning.</li>
+          <li>Explain fundamental techniques, how they work — and <strong>when they will not</strong>.</li>
+          <li>Design your own ML methods.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>This course is <em>not</em></h3>
+        <ul class="plain">
+          <li>a pure mathematics or statistics course</li>
+          <li>a programming course</li>
+          <li>a complete survey of machine learning</li>
+        </ul>
+        <p class="note" style="margin-top:12px">You will go beyond calling libraries: reading
+        state-of-the-art methods, adapting them, and debugging models that misbehave.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:28px">
+      <h3>Prerequisites</h3>
+      <p class="small">CS2109S, one of CS2040/CS2040S/CS2040C/CS2040DE/CS2040HS, one of
+      MA1101R/MA1311/MA1508E/MA1513/MA1522/MA2001, and one of
+      EE2012/EE2012A/MA2116/MA2116T/MA2216/ST2131/ST2334 — each at grade D or better.
+      Precluded by CS3244 and CG3201.</p>
+      <p class="small" style="margin-top:10px">In practice: comfort with linear algebra, vector
+      calculus and probability. If the first two lectures feel fast, work through Chapters 2–5 of
+      <a href="https://mml-book.github.io/">Mathematics for Machine Learning</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="schedule">
+  <div class="wrap">
+    <h2>Schedule</h2>
+    <p class="lede"><strong style="color:var(--accent)">Tentative — this will change.</strong>
+    Topics and pacing adapt as we go. Piazza always carries the current version.</p>
+
+    <div class="tbl-scroll">
+    <table class="sched">
+      <thead>
+        <tr><th>Wk</th><th>Tue</th><th>Lecture</th><th>Tutorial (Wed)</th><th>Reading</th><th>Slides</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="wk">1</td><td class="dt">11 Aug</td>
+          <td data-l="Lecture">Introduction + Regression I</td>
+          <td class="na" data-l="Tutorial">—</td><td data-l="Reading">PRML Ch. 1</td>
+          <td data-l="Slides"><a href="slides/lecture-01.html">slides</a></td></tr>
+        <tr><td class="wk">2</td><td class="dt">18 Aug</td>
+          <td data-l="Lecture">Regression II — Probabilistic Modelling</td>
+          <td class="na" data-l="Tutorial">—</td><td data-l="Reading">PRML §1.2, §3.1.1, §3.3</td><td></td></tr>
+        <tr><td class="wk">3</td><td class="dt">25 Aug</td>
+          <td data-l="Lecture">Classification I — Linear Classification</td>
+          <td data-l="Tutorial">Probability &amp; linear algebra; pseudoinverse</td>
+          <td data-l="Reading">PRML §4.3.2</td><td></td></tr>
+        <tr><td class="wk">4</td><td class="dt">1 Sep</td>
+          <td data-l="Lecture">Classification II — Naive Bayes</td>
+          <td data-l="Tutorial">Log-odds, multi-class</td><td data-l="Reading">PRML §4.2</td><td></td></tr>
+        <tr><td class="wk">5</td><td class="dt">8 Sep</td>
+          <td data-l="Lecture">Overfitting &amp; Bias–Variance</td>
+          <td data-l="Tutorial">Logistic regression, priors, regularisers</td>
+          <td data-l="Reading">PRML §3.2</td><td></td></tr>
+        <tr><td class="wk">6</td><td class="dt">15 Sep</td>
+          <td data-l="Lecture">Computational Learning Theory (PAC)</td>
+          <td data-l="Tutorial">Bias–variance; midterm scope</td>
+          <td data-l="Reading">Learning From Data Ch. 1</td><td></td></tr>
+        <tr class="brk"><td class="wk na">—</td><td class="dt">19–27 Sep</td>
+          <td colspan="4">Recess week</td></tr>
+        <tr class="hi"><td class="wk">7</td><td class="dt">29 Sep</td>
+          <td data-l="Lecture">MIDTERM — in the lecture slot, LT15</td>
+          <td data-l="Tutorial">PAC problems + debrief</td><td class="na" data-l="Reading">—</td><td></td></tr>
+        <tr><td class="wk">8</td><td class="dt">6 Oct</td>
+          <td data-l="Lecture">Neural Networks I</td>
+          <td data-l="Tutorial">Backpropagation</td><td data-l="Reading">PRML §5.1–5.3</td><td></td></tr>
+        <tr><td class="wk">9</td><td class="dt">13 Oct</td>
+          <td data-l="Lecture">Neural Networks II — CNNs, Transformers, SGD</td>
+          <td data-l="Tutorial">Stochastic gradient descent</td>
+          <td data-l="Reading">PRML §5.5.6</td><td></td></tr>
+        <tr><td class="wk">10</td><td class="dt">20 Oct</td>
+          <td data-l="Lecture">Non-parametric methods — kernels, SVMs</td>
+          <td data-l="Tutorial">Lagrangians</td><td data-l="Reading">PRML §6.1</td><td></td></tr>
+        <tr><td class="wk">11</td><td class="dt">27 Oct</td>
+          <td data-l="Lecture">Unsupervised I — k-means, EM</td>
+          <td data-l="Tutorial">Duality, non-separable SVMs</td>
+          <td data-l="Reading">PRML Appendix E, §9.1</td><td></td></tr>
+        <tr><td class="wk">12</td><td class="dt">3 Nov</td>
+          <td data-l="Lecture">Unsupervised II — KL divergence, VAEs</td>
+          <td data-l="Tutorial">Multivariate Gaussians</td>
+          <td data-l="Reading">PRML §9.2, §9.4</td><td></td></tr>
+        <tr><td class="wk">13</td><td class="dt">10 Nov</td>
+          <td data-l="Lecture">Self-supervised &amp; generative models · wrap-up</td>
+          <td data-l="Tutorial">KL/VAE problems; final exam recap</td>
+          <td data-l="Reading">PRML §6.3, §12.2</td><td></td></tr>
+        <tr class="brk"><td class="wk na">—</td><td class="dt">14–20 Nov</td>
+          <td colspan="4">Reading week</td></tr>
+        <tr class="hi"><td class="wk na">—</td><td class="dt">25 Nov</td>
+          <td colspan="4">FINAL EXAM · 5–7pm · venue TBA</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note" style="margin-top:18px">Readings are worth doing <em>before</em> the lecture.
+    Slides appear here after each lecture; recordings are on Panopto via Canvas.</p>
+  </div>
+</section>
+
+<section id="assessment">
+  <div class="wrap">
+    <h2>Assessment</h2>
+    <p class="lede">Both exams are closed-book <em>except</em> for the Collaborative Notes.</p>
+
+    <div class="stack">
+      <div class="seg" style="flex:30;background:var(--s1)"><div class="pc">30%</div><div class="nm">Assignments</div></div>
+      <div class="seg" style="flex:10;background:var(--s2)"><div class="pc">10%</div><div class="nm">Tutorials</div></div>
+      <div class="seg" style="flex:20;background:var(--s3)"><div class="pc">20%</div><div class="nm">Midterm</div></div>
+      <div class="seg" style="flex:40;background:var(--s4)"><div class="pc">40%</div><div class="nm">Final exam</div></div>
+    </div>
+    <div class="stacknote">
+      <span style="flex:30">2 × 15%</span>
+      <span style="flex:10">Weeks 3–13</span>
+      <span style="flex:20">Tue 29 Sep, 4–6pm</span>
+      <span style="flex:40">Wed 25 Nov, 5–7pm</span>
+    </div>
+
+    <div class="cols" style="margin-top:34px">
+      <div class="card">
+        <h3>Assignments — 30%</h3>
+        <p class="small"><strong>A1 (15%)</strong> theory · <strong>A2 (15%)</strong> practical.</p>
+        <p class="small" style="margin-top:11px">Release and due dates <span class="tbc">TBC</span><br>
+        Announced on Piazza and posted here well before the first release.</p>
+        <p class="small" style="margin-top:11px"><strong>Format still being finalised.</strong>
+        An LLM can now produce a plausible answer to a conventional problem set in seconds, so we are
+        redesigning both assignments to assess something still worth assessing.</p>
+      </div>
+      <div class="card">
+        <h3>Midterm — 20%</h3>
+        <p class="small"><strong>Tue 29 Sep 2026, 4–6pm · LT15.</strong> In class, on paper, MCQ and
+        fill-in-the-blank. Starts at 4pm sharp. No make-up paper.</p>
+        <p class="small" style="margin-top:11px">You may bring the Collaborative Notes, first 20 pages.
+        Exact scope announced on Piazza nearer the date.</p>
+      </div>
+      <div class="card accent">
+        <h3>Final exam — 40%</h3>
+        <p class="small"><strong>Wed 25 Nov 2026, 5–7pm.</strong> Two hours, paper exam, cumulative.
+        You may bring the Collaborative Notes, first 40 pages. Venue TBA.</p>
+        <p class="small" style="margin-top:11px"><em>Provisional</em> — taken from the published AY26/27
+        timetable. The official NUS exam timetable is the authority; confirm before booking anything.
+        Note it falls early in the exam period, about a week and a half after the last lecture.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <h3>Key dates</h3>
+      <div class="cols" style="gap:18px">
+        <ul class="plain small">
+          <li><strong>11 Aug 2026</strong> — First lecture</li>
+          <li><strong>26 Aug 2026</strong> — First tutorial (Week 3)</li>
+          <li><strong>24 Aug – 27 Sep 2026</strong> — dropping gives a “W” grade</li>
+          <li><strong>28 Sep 2026</strong> — dropping gives an “F” grade</li>
+        </ul>
+        <ul class="plain small">
+          <li><strong>29 Sep 2026</strong> — Midterm</li>
+          <li><strong>10 Nov 2026</strong> — Last lecture</li>
+          <li><strong>14–20 Nov 2026</strong> — Reading week</li>
+          <li><strong>25 Nov 2026</strong> — Final exam</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="resources">
+  <div class="wrap">
+    <h2>Resources</h2>
+    <p class="lede">Everything here is free.</p>
+
+    <div class="cols">
+      <div class="card">
+        <h3>Textbook</h3>
+        <p class="small"><a href="https://www.microsoft.com/en-us/research/people/cmbishop/prml-book/">Pattern
+        Recognition and Machine Learning</a> — Christopher Bishop. The main reference; readings are
+        listed per week in the schedule.</p>
+      </div>
+      <div class="card">
+        <h3>If the maths is the hard part</h3>
+        <p class="small"><a href="https://mml-book.github.io/">Mathematics for Machine Learning</a> —
+        Deisenroth, Faisal &amp; Ong. Chapters 2–5 cover essentially all the linear algebra, vector
+        calculus and probability this course assumes.</p>
+      </div>
+      <div class="card">
+        <h3>Collaborative Notes</h3>
+        <p class="small">One shared set of notes in LaTeX on Overleaf that everyone can edit — and that
+        you may bring into both exams (20 pages for the midterm, 40 for the final). Link on Piazza.</p>
+        <p class="small" style="margin-top:10px">An LLM can generate serviceable notes in an afternoon,
+        so the value has moved: it is in <strong>deciding what belongs</strong>, catching what is wrong,
+        and compressing forty pages into something you can navigate under time pressure. Errors in the
+        notes are your problem in the exam hall.</p>
+      </div>
+      <div class="card">
+        <h3>Code</h3>
+        <p class="small">Lecture notebooks are on Google Colab; links appear with each lecture. They are
+        written to be read, not just run — the implementations follow the equations from the board
+        rather than the fastest library call.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="policies">
+  <div class="wrap">
+    <h2>Policies</h2>
+
+    <div class="cols">
+      <div>
+        <h3>Academic integrity</h3>
+        <p class="small">The principle is simple: <strong>your graded work should be your own.</strong>
+        NUS has a strict policy on plagiarism; cases are reported to the department, and if found guilty
+        you will fail the course.</p>
+        <p class="small" style="margin-top:12px"><strong>Fine:</strong> discussing ideas and approaches;
+        using public information in your own words, with attribution.<br>
+        <strong>Not fine:</strong> copying verbatim; sharing code or write-ups.</p>
+        <p class="small" style="margin-top:12px">There are always better options — ask on Piazza,
+        arrange a consultation, or hand in something incomplete. All of those are recoverable.</p>
+      </div>
+      <div>
+        <h3>On using LLMs</h3>
+        <p class="small">You may use them. We would rather set a sensible policy than pretend otherwise.</p>
+        <p class="small" style="margin-top:12px"><strong>Use them as a tutor</strong> — explanations,
+        analogies, hints when stuck. Try opening with: <em>“You are a teaching assistant in a machine
+        learning class. Your goal is to help me understand. Do not give me the answer directly.”</em></p>
+        <p class="small" style="margin-top:12px"><strong>Do not paste their output into graded work.</strong>
+        That is plagiarism, and it is usually obvious. They are also confidently wrong on this material
+        more often than you expect — particularly on derivations, PAC bounds, and anything involving a
+        factor of ½.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:26px">
+      <h3>Tutorials</h3>
+      <p class="small">Six one-hour slots on Wednesdays in BIZ2-0302, from Week 3. Attendance is taken
+      and counts for 10%. Some slots may be merged after add/drop depending on final numbers; if your
+      slot moves you will be reassigned and told on Piazza before Week 3.</p>
+    </div>
+  </div>
+</section>
+
+<section id="staff">
+  <div class="wrap">
+    <h2>Teaching staff</h2>
+    <p class="lede">Use Piazza rather than email for course questions — your classmates have the same
+    question, and the TAs monitor it daily.</p>
+
+    <div class="staff">
+      <div class="person">
+        <div class="nm">Harold Soh</div>
+        <div class="rl">Instructor</div>
+        <div class="dt">harold@nus.edu.sg<br>COM3-02-58<br>
+        <a href="https://haroldsoh.com">haroldsoh.com</a><br>
+        <a href="https://clear-nus.github.io">CLeAR Lab</a></div>
+      </div>
+      <div class="person">
+        <div class="nm">Oscar Jiang</div>
+        <div class="rl">Teaching Assistant</div>
+        <div class="dt">Tutorials · grading · consultations</div>
+      </div>
+      <div class="person">
+        <div class="nm">Sun Minghao</div>
+        <div class="rl">Teaching Assistant</div>
+        <div class="dt">Tutorials · grading · consultations</div>
+      </div>
+      <div class="person">
+        <div class="nm">Shashank Rao Marpally</div>
+        <div class="rl">Teaching Assistant</div>
+        <div class="dt">Tutorials · grading · consultations</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="https://piazza.com/nus.edu.sg/fall2026/cs3264">Piazza</a> ·
+    <a href="https://canvas.nus.edu.sg/">Canvas</a>
+  </div>
+</footer>
+
+<script>
+/* Theme: follow the system by default, remember an explicit choice. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
