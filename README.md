@@ -60,13 +60,26 @@ cd website && git init -b main && git add -A && git commit -m "CS3264 course sit
 
 Live within a minute or two at `https://cs3264.github.io`.
 
-### Option B — `https://haroldsoh.github.io/cs3264`
+### Option B — `https://haroldsoh.com/cs3264` (recommended if the slides stay on Canvas)
 
-A project repo under your own account. No organisation needed: create a public repo named
-`cs3264`, push this folder, enable Pages the same way.
+A **project repo** under your own account. No organisation needed: create a public repo
+named `cs3264`, push this folder, enable Pages the same way.
 
-Both work with the site as written — every path is relative, so nothing breaks at a
-subpath.
+```bash
+cd website && git init -b main && git add -A && git commit -m "CS3264 course site" && git remote add origin git@github.com:haroldsoh/cs3264.git && git push -u origin main
+```
+
+Note the URL. `haroldsoh.github.io` 301-redirects to `haroldsoh.com`, i.e. the user site
+repo has a CNAME. GitHub serves project sites from the user site's custom domain, so this
+repo lands at **`haroldsoh.com/cs3264`**, not `haroldsoh.github.io/cs3264`.
+
+**It cannot break the existing site.** A project repo is a separate repo with its own
+Pages deployment; nothing in `haroldsoh/haroldsoh.github.io` is touched. The only shared
+thing is the URL namespace — if the Jekyll site ever gains its own `/cs3264/` page, this
+repo wins. It has no such page today.
+
+Both options work with the site as written — every path is relative, so nothing breaks at
+a subpath.
 
 ---
 
@@ -80,13 +93,28 @@ mkdir -p website/slides && cp "../CS3264-Materials/Lectures/Lecture 01 - Intro t
 
 The schedule already links to `slides/lecture-01.html`.
 
-**Check this before you push.** The deck embeds third-party material — the Boston Dynamics
-clip, the Netflix mark, a Statista chart, figures from published papers. That is
-comfortably fair dealing for teaching behind a login; putting it on a public website is a
-different question. Two safer routes:
+**Check this before you push.** The deck embeds third-party material. Teaching use is not
+one blanket permission — what matters is who can reach it. Showing these in LT15, or
+posting the deck on Canvas, sits inside the education exceptions, which are written around
+material supplied to *enrolled students*. A public URL is communication to the public and
+is judged on the general fair-use factors instead, where "it's for a class" is one factor
+among four rather than an answer.
 
-- host the decks on **Canvas or Piazza** and point the schedule links there, or
-- publish a version with the third-party media swapped out.
+The practical risk is a DMCA notice to GitHub (US-hosted, so US process applies wherever
+you are), which disables the repo. Ranked by exposure:
+
+| Asset | Risk | Fix |
+|---|---|---|
+| Boston Dynamics clip (re-hosted `llm.mp4` etc.) | Highest — a whole copy on our own server | Embed the rights-holder's own YouTube player instead of re-hosting. Not a copy, so the question does not arise. |
+| Statista chart | High — their licence forbids redistribution and they enforce it | Redraw from the underlying source data. Facts are not copyrightable, only that particular rendering. |
+| Figures from papers | Low in an academic context, with citation | Cite properly; check the publisher's reuse terms if it matters. |
+| Netflix mark | Low — trademark, and this is nominative use | Leave it. |
+
+So: keep the full deck on **Canvas** and point the schedule links there, or publish a
+public version with the top two rows swapped out.
+
+NUS Libraries has a copyright team and institutional licences that may cover more than the
+bare statutory exceptions — they are the authority for your situation, not this file.
 
 The `media/` folder is ~8 MB, which is fine for Pages (1 GB soft limit).
 
