@@ -140,6 +140,11 @@ ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;he
 /* ---------- staff ---------- */
 .staff{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px}
 .person{background:var(--bg-alt);border:1px solid var(--rule);border-radius:12px;padding:20px}
+.person{text-align:center}
+/* Sources are cropped square; object-fit:cover keeps the face centred if one is
+   later swapped for an off-ratio photo. */
+.person .avatar{width:104px;height:104px;border-radius:50%;object-fit:cover;
+  display:block;margin:0 auto 13px;border:3px solid var(--rule);background:var(--bg)}
 .person .nm{font-family:var(--font-display);font-size:21px;font-weight:700}
 .person .rl{font-family:var(--font-sans);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
   color:var(--accent);font-weight:700;margin:5px 0 9px}
