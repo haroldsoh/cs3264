@@ -109,6 +109,19 @@ It needs a network connection for that one video and nothing else; the KaTeX fon
 figures and demos are all still local. Publish the web build and you can leave
 `media/atlas.mp4` out of the copy entirely (2.4 MB saved).
 
+**Opened by double-clicking, the embed will not play.** From disk the page is `file://`,
+and YouTube refuses the opaque origin with *Error 153 — video player configuration error*.
+No embed parameter changes that. The build detects it and the play button opens
+youtube.com in a new tab instead, with the badge reading "Video → YouTube". To see it
+inline locally, serve the folder:
+
+```bash
+cd "AY26-27S1/CS3264-Materials/Lectures" && python3 -m http.server 8000
+```
+
+then open `http://localhost:8000`. For lecturing, use the master deck — it has the real
+video file and needs no network at all.
+
 **Check this before you push.** The web build settles the largest item, not all of them.
 The deck embeds third-party material. Teaching use is not
 one blanket permission — what matters is who can reach it. Showing these in LT15, or
