@@ -24,10 +24,9 @@ The schedule, term dates and venues come from the AY26/27 calendar, NUSMods and
 | **Piazza URL** | hero button, announcement, footer | Guessed as `piazza.com/nus.edu.sg/fall2026/cs3264`. Dead until you create the class — replace with the real one. |
 | **Assessment weights** 30/10/20/40 | `#assessment` | Carried over from AY25/26. Confirm before students read it. |
 | **Assignment dates** | `#assessment` | Marked **TBC** on the page. Fill in when decided. |
-| **Collaborative Notes page limits** (20 / 40) | `#assessment` | Carried over from AY25/26. |
 | **Final exam 25 Nov, 5–7pm** | `#assessment`, schedule | From NUSMods; the page says it is provisional. Confirm against the official exam timetable. |
-| **Tutorial slot count** (six) | `#policies` | Depends on TA contracted hours and post-add/drop numbers. |
-| **Week 13 cover** | not on the page yet | Guest lecturer vs pre-record — decide by early October, then announce. |
+| **Tutorial slot count** (five) | `#policies` | T03 closed; Shashank T06/T01/T02, Oscar T04/T05. Further merging depends on post-add/drop numbers. |
+| **Week 13 topic + cover** | `#schedule` reads "optional topic — TBA" | Guest lecturer vs pre-record — decide by early October, then fill the title in here, on slides 44 and 53, and in `Syllabus.xlsx`. |
 
 Anything marked TBC on the page uses the `.tbc` badge, so it is easy to grep for:
 
@@ -88,12 +87,30 @@ a subpath.
 The decks are self-contained HTML. To publish one:
 
 ```bash
-mkdir -p website/slides && cp "../CS3264-Materials/Lectures/Lecture 01 - Intro to CS3264.html" website/slides/lecture-01.html && cp -R "../CS3264-Materials/Lectures/media" website/slides/media
+mkdir -p website/slides && cp "../CS3264-Materials/Lectures/Lecture 01 - Intro to CS3264 (web).html" website/slides/lecture-01.html && cp -R "../CS3264-Materials/Lectures/media" website/slides/media && rm -f website/slides/media/atlas.mp4
 ```
 
 The schedule already links to `slides/lecture-01.html`.
 
-**Check this before you push.** The deck embeds third-party material. Teaching use is not
+There are two builds of Lecture 1:
+
+| File | Boston Dynamics clip | Use |
+|---|---|---|
+| `Lecture 01 - Intro to CS3264.html` | re-hosted `media/atlas.mp4` | lecturing — fully offline |
+| `Lecture 01 - Intro to CS3264 (web).html` | click-to-load YouTube embed | publishing |
+
+The web build is **generated**, not hand-maintained: edit the master, then re-run
+
+```bash
+python3 "AY26-27S1/CS3264-Materials/Lectures/make-web-variant.py"
+```
+
+It needs a network connection for that one video and nothing else; the KaTeX fonts,
+figures and demos are all still local. Publish the web build and you can leave
+`media/atlas.mp4` out of the copy entirely (2.4 MB saved).
+
+**Check this before you push.** The web build settles the largest item, not all of them.
+The deck embeds third-party material. Teaching use is not
 one blanket permission — what matters is who can reach it. Showing these in LT15, or
 posting the deck on Canvas, sits inside the education exceptions, which are written around
 material supplied to *enrolled students*. A public URL is communication to the public and
@@ -105,13 +122,14 @@ you are), which disables the repo. Ranked by exposure:
 
 | Asset | Risk | Fix |
 |---|---|---|
-| Boston Dynamics clip (re-hosted `llm.mp4` etc.) | Highest — a whole copy on our own server | Embed the rights-holder's own YouTube player instead of re-hosting. Not a copy, so the question does not arise. |
+| ~~Boston Dynamics clip~~ | **resolved** in the web build | Now the rights-holder's own YouTube player — not a copy, so the question does not arise. |
+| `llm.mp4` (the GPT-5 clip) | Same problem, still re-hosted | Same fix if you want it: give me the source URL and I will add it to the generator. |
 | Statista chart | High — their licence forbids redistribution and they enforce it | Redraw from the underlying source data. Facts are not copyrightable, only that particular rendering. |
 | Figures from papers | Low in an academic context, with citation | Cite properly; check the publisher's reuse terms if it matters. |
 | Netflix mark | Low — trademark, and this is nominative use | Leave it. |
 
-So: keep the full deck on **Canvas** and point the schedule links there, or publish a
-public version with the top two rows swapped out.
+So: publish the web build and, if you want the remaining rows dealt with too, either swap
+them out or keep the deck on **Canvas** and point the schedule links there instead.
 
 NUS Libraries has a copyright team and institutional licences that may cover more than the
 bare statutory exceptions — they are the authority for your situation, not this file.
