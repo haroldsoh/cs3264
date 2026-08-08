@@ -23,7 +23,7 @@ The schedule, term dates and venues come from the AY26/27 calendar, NUSMods and
 |---|---|---|
 | **Piazza URL** | hero button, announcement, footer | Guessed as `piazza.com/nus.edu.sg/fall2026/cs3264`. Dead until you create the class — replace with the real one. |
 | **Assessment weights** 30/10/20/40 | `#assessment` | Carried over from AY25/26. Confirm before students read it. |
-| **Assignment dates** | `#assessment` | Marked **TBC** on the page. Fill in when decided. |
+| **Assignments — everything** | `#assessment`, deck slides 47/48/55 | Number, format and dates are all open; the page and both decks say "still being planned". Minghao is leading the design. |
 | **Final exam 25 Nov, 5–7pm** | `#assessment`, schedule | From NUSMods; the page says it is provisional. Confirm against the official exam timetable. |
 | **Tutorial slot count** (five) | `#policies` | T03 closed; Shashank T06/T01/T02, Oscar T04/T05. Further merging depends on post-add/drop numbers. |
 | **Week 13 topic + cover** | `#schedule` reads "optional topic — TBA" | Guest lecturer vs pre-record — decide by early October, then fill the title in here, on slides 44 and 53, and in `Syllabus.xlsx`. |
