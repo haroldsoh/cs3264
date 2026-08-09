@@ -354,6 +354,7 @@ svg{display:block;overflow:visible}
 .truefn{fill:none;stroke:var(--accent2);stroke-width:2.2;stroke-dasharray:7 5;opacity:.85}
 .fitfn{fill:none;stroke:var(--accent);stroke-width:3}
 .legend{font-family:var(--font-sans);font-size:14px;fill:var(--ink-soft)}
+.matn{font-family:var(--font-math);font-size:16px;fill:var(--ink)}
 .tx-node{font-family:var(--font-display);font-weight:700}
 .tx-link{stroke:var(--rule);stroke-width:1.8;fill:none}
 .tx-leaf{font-family:var(--font-sans);font-size:12.5px;fill:var(--ink-soft)}
@@ -405,7 +406,7 @@ svg{display:block;overflow:visible}
 .sc-val{font-size:11px;font-weight:800}
 .fig.h-190{height:190px}.fig.h-230{height:230px}.fig.h-260{height:260px}
 .fig.h-290{height:290px}.fig.h-330{height:330px}
-.figcap{font-size:19px;font-style:italic;color:var(--ink-soft);margin-top:10px;line-height:1.45}
+.figcap{font-size:22px;font-style:italic;color:var(--ink-soft);margin-top:12px;line-height:1.4}
 .cred{font-family:var(--font-sans);font-size:13px;color:var(--ink-soft);margin-top:6px;
   line-height:1.35;opacity:.8;letter-spacing:.01em;text-align:center}
 .tile{position:relative;border-radius:10px;overflow:hidden;
@@ -559,8 +560,7 @@ const SLIDES = [
   <div class="frag" data-f="3" style="margin-top:30px">
     <hr class="rule">
     <p>Tutorials run on Wednesdays, taught by <strong>Oscar</strong> and <strong>Shashank</strong>.
-    Your tutorial TA is your first point of contact — they will know your name and your work
-    far better than I will.</p>
+    Your tutorial TA is your first point of contact.</p>
   </div>`},
 
 /* ══════════ PART I ══════════ */
@@ -744,9 +744,6 @@ const SLIDES = [
           <text x="190" y="119" class="flowtxt">Learning</text>
           <text x="190" y="136" class="flowtxt">algorithm</text>
           <path d="M190,146 v32" class="flowarr"/>
-        </g>
-        <g class="frag" data-f="3">
-          <text x="272" y="166" class="tx-leaf" style="font-size:13px;fill:var(--accent)">…or this writes it</text>
         </g>
       </svg>
     </div>
