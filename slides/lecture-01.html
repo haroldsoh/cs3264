@@ -1348,6 +1348,28 @@ def fitPoly(xs, ts, order):
     </div>
   </div>`},
 
+{s:"Part II", t:"Who do you hire?", draw:"hire", html:`
+  <div class="eyebrow">Why this happens &#8212; concretely</div>
+  <h2 style="margin-bottom:8px">Twelve candidates sit a test. You hire the top score.</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="hiresvg" viewBox="0 0 560 330" width="100%"></svg></div>
+    <div class="demo-ctrl">
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="bbtn" id="hirego" type="button">Run the test</button>
+        <button class="bbtn" id="hirereset" type="button">Reset</button>
+      </div>
+      <div class="ctrl-row"><label>Candidates <span class="val" id="hirenv">12</span></label>
+        <input type="range" id="hiren" min="4" max="40" step="1" value="12"></div>
+      <div class="ctrl-row"><label>Luck in the score <span class="val" id="hiresdv">1.0</span></label>
+        <input type="range" id="hiresd" min="0" max="3" step="0.1" value="1"></div>
+      <div class="readout">
+        <div class="stat train"><div class="k">hired the best?</div><div class="v" id="hirehit">&#8212;</div></div>
+        <div class="stat test"><div class="k">score &#8722; true</div><div class="v" id="hiregap">&#8212;</div></div>
+      </div>
+      <div class="warn" id="hirewarn">Nobody has taken the test yet. Grey ticks are true ability &#8212; which you never get to see.</div>
+    </div>
+  </div>`},
+
 {s:"Part II", t:"Goodhart's law", html:`
   <div class="eyebrow">Why this happens</div>
   <h2 style="margin-bottom:10px">The trouble is the <em>argmin</em>, not the measure</h2>
@@ -1983,7 +2005,7 @@ def fitPoly(xs, ts, order):
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
+const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 3.2, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2643,7 +2665,112 @@ function drawWig(){
 }
 document.getElementById('wigo')?.addEventListener('input',drawWig);
 
-const DRAW={fit:drawFit,bowl:drawBowl,lin:drawLin,poly:drawPoly,err:drawErr,basis:drawBasis,drag:drawDrag,pick:drawPick,wig:drawWig};
+
+/* ============================================================
+   DEMO 10 — the hiring test.  Goodhart made concrete before it is made algebraic:
+   every score is ability + luck, we keep the maximum, and the winner is
+   systematically the luckiest rather than the best. Raising "candidates" is the
+   same knob as raising model capacity — more draws, more chances to get lucky.
+   ============================================================ */
+const H_W=560,H_H=330,H_ML=46,H_MR=14,H_MT=18,H_MB=44;
+/* 20..90 fits the widest swing the luck slider can produce (sd 3 -> +/-12.6 on
+   abilities spanning 33..77) while still filling the plot at the default sd of 1. */
+const H_LO=20,H_HI=90;
+let HIRE_N=12, HIRE_SD=1.0, HIRE_SEED=1, HIRE_T=0, HIRE_ANIM=null;
+const hX=(i,n)=>H_ML+(i+0.5)*(H_W-H_ML-H_MR)/n;
+const hY=v=>H_MT+(H_H-H_MT-H_MB)*(H_HI-v)/(H_HI-H_LO);
+function lcg(seed){ let x=seed>>>0; return function(){ x=(x*1664525+1013904223)>>>0; return (x>>>8)/16777216; }; }
+function gauss(r){ let u=0,v=0; while(u===0)u=r(); while(v===0)v=r();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+/* One fixed pool of candidates, sliced to n. Two reasons: the truth must not move
+   when you re-run the test (only the luck may), and raising "candidates" must mean
+   ADDING people to the same pool — otherwise the comparison across n is between two
+   different cohorts and the trend reads as noise. */
+/* Seed chosen so that BOTH long-run numbers move monotonically as candidates are added
+   — % correct down, flattery up. With an arbitrary pool they wobble, because whether the
+   top two are close is an accident of the draw, and a wobbling demo teaches the wrong
+   lesson while you are standing in front of it. */
+const H_POOL=(function(){ const r=lcg(20260009), a=[]; for(let i=0;i<40;i++) a.push(55+11*gauss(r)); return a; })();
+function hAbility(n){ return H_POOL.slice(0,n); }
+function hLuck(n,sd,seed){ const r=lcg(seed), e=[]; for(let i=0;i<n;i++) e.push(sd*4.2*gauss(r)); return e; }
+const argmax=a=>a.reduce((b,v,i)=>v>a[b]?i:b,0);
+
+function drawHire(){
+  const svg=document.getElementById('hiresvg'); if(!svg) return;
+  const n=HIRE_N, A=hAbility(n), E=hLuck(n,HIRE_SD,HIRE_SEED);
+  const S=A.map((a,i)=>a+E[i]);
+  const best=argmax(A), hired=argmax(S);
+  let g='';
+  for(let v=30;v<=90;v+=15){ const py=hY(v);
+    g+='<line class="gridline" x1="'+H_ML+'" y1="'+py+'" x2="'+(H_W-H_MR)+'" y2="'+py+'"/>'
+     + '<text class="tick" x="'+(H_ML-9)+'" y="'+(py+4)+'" text-anchor="end">'+v+'</text>'; }
+  g+='<line class="axis" x1="'+H_ML+'" y1="'+(H_H-H_MB)+'" x2="'+(H_W-H_MR)+'" y2="'+(H_H-H_MB)+'"/>'
+   + '<line class="axis" x1="'+H_ML+'" y1="'+H_MT+'" x2="'+H_ML+'" y2="'+(H_H-H_MB)+'"/>';
+  const r=n>26?3.4:(n>16?4.4:5.6);
+  for(let i=0;i<n;i++){
+    const x=hX(i,n), ya=hY(A[i]), ys=hY(A[i]+E[i]*HIRE_T);
+    /* true ability: a tick you never actually observe */
+    g+='<line x1="'+(x-7)+'" y1="'+ya+'" x2="'+(x+7)+'" y2="'+ya+'" stroke="var(--ink-soft)" stroke-width="2" opacity=".55"/>';
+    if(HIRE_T>0.02)
+      g+='<line x1="'+x+'" y1="'+ya+'" x2="'+x+'" y2="'+ys+'" stroke="var(--ink-soft)" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>';
+    const isH=(i===hired&&HIRE_T>0.98), isB=(i===best);
+    if(isH) g+='<circle cx="'+x+'" cy="'+ys+'" r="'+(r+6)+'" fill="var(--accent)" opacity=".16"/>';
+    g+='<circle cx="'+x+'" cy="'+ys+'" r="'+r+'" fill="'+(isH?'var(--accent)':'var(--ink)')+'"'
+     + (isB?' stroke="var(--accent2)" stroke-width="2.4"':'')+'/>';
+  }
+  /* who is who */
+  g+='<g transform="translate('+(H_ML+6)+','+(H_H-H_MB+20)+')">'
+   + '<circle cx="6" cy="-4" r="5" fill="var(--ink)" stroke="var(--accent2)" stroke-width="2.4"/>'
+   + '<text class="legend" x="17" y="0">truly best</text>'
+   + '<circle cx="112" cy="-4" r="5" fill="var(--accent)"/>'
+   + '<text class="legend" x="123" y="0">hired</text>'
+   + '<line x1="196" y1="-4" x2="210" y2="-4" stroke="var(--ink-soft)" stroke-width="2" opacity=".55"/>'
+   + '<text class="legend" x="217" y="0">true ability (never observed)</text></g>';
+  svg.innerHTML=g;
+
+  const hit=document.getElementById('hirehit'), gap=document.getElementById('hiregap'),
+        wn=document.getElementById('hirewarn');
+  if(HIRE_T<0.98){ hit.textContent='—'; gap.textContent='—'; return; }
+  hit.textContent = hired===best ? 'yes' : 'no';
+  hit.style.color = hired===best ? 'var(--accent2)' : 'var(--accent)';
+  gap.textContent = (S[hired]-A[hired]>=0?'+':'') + (S[hired]-A[hired]).toFixed(1);
+  /* the long run: how often the top scorer is actually the best, and by how much
+     the winning score flatters them */
+  let win=0, over=0, R=400;
+  for(let k=0;k<R;k++){ const e=hLuck(n,HIRE_SD,1000+k*7919), sc=A.map((a,i)=>a+e[i]);
+    const h=argmax(sc); if(h===best) win++; over+=sc[h]-A[h]; }
+  const pct=Math.round(100*win/R), avg=(over/R).toFixed(1);
+  if(HIRE_SD===0) wn.innerHTML='With no luck in the score, the test is perfect — the top scorer <em>is</em> the best. Add some.';
+  else wn.innerHTML='Over 400 runs the top scorer is genuinely the best <strong>'+pct+'%</strong> of the time, '
+    + 'and their score flatters them by <strong>+'+avg+'</strong> on average. '
+    + (pct<50?'Push the number of candidates up and watch it get worse.':'');
+}
+function hireRun(){
+  HIRE_SEED=(HIRE_SEED*1103515245+12345)>>>0;
+  const t0=performance.now(), DUR=620;
+  if(HIRE_ANIM) cancelAnimationFrame(HIRE_ANIM);
+  const step=()=>{ const e=Math.min(1,(performance.now()-t0)/DUR);
+    HIRE_T=1-Math.pow(1-e,3);
+    drawHire();
+    HIRE_ANIM = e<1 ? requestAnimationFrame(step) : null; };
+  HIRE_ANIM=requestAnimationFrame(step);
+}
+document.addEventListener('click',e=>{ if(!e.target) return;
+  if(e.target.id==='hirego') hireRun();
+  if(e.target.id==='hirereset'){ if(HIRE_ANIM) cancelAnimationFrame(HIRE_ANIM); HIRE_ANIM=null;
+    HIRE_T=0; drawHire();
+    document.getElementById('hirewarn').textContent='Nobody has taken the test yet. Grey ticks are true ability — which you never get to see.'; }
+});
+(function(){
+  const nEl=document.getElementById('hiren'), sdEl=document.getElementById('hiresd');
+  if(!nEl) return;
+  nEl.addEventListener('input',()=>{ HIRE_N=+nEl.value;
+    document.getElementById('hirenv').textContent=HIRE_N; drawHire(); });
+  sdEl.addEventListener('input',()=>{ HIRE_SD=+sdEl.value;
+    document.getElementById('hiresdv').textContent=HIRE_SD.toFixed(1); drawHire(); });
+})();
+
+const DRAW={hire:drawHire,fit:drawFit,bowl:drawBowl,lin:drawLin,poly:drawPoly,err:drawErr,basis:drawBasis,drag:drawDrag,pick:drawPick,wig:drawWig};
 ['ord','lam'].forEach(id=>document.getElementById(id)?.addEventListener('input',drawFit));
 document.getElementById('blam')?.addEventListener('input',drawBowl);
 /* Click-to-advance, but never from a control. We remember where the pointer went DOWN:
