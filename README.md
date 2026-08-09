@@ -21,7 +21,7 @@ The schedule, term dates and venues come from the AY26/27 calendar, NUSMods and
 
 | Item | Where | Status |
 |---|---|---|
-| **Piazza URL** | hero button, announcement, footer | Guessed as `piazza.com/nus.edu.sg/fall2026/cs3264`. Dead until you create the class — replace with the real one. |
+| **Piazza URL** | hero button, announcement, footer | Set to `piazza.com/nus.edu.sg/fall2025/cs3264` as supplied. Piazza serves an identical landing page for any term slug, so this could not be verified from outside — click it once and confirm it lands on the right class. |
 | **Assessment weights** 30/10/20/40 | `#assessment` | Carried over from AY25/26. Confirm before students read it. |
 | **Assignments — everything** | `#assessment`, deck slides 47/48/55 | Number, format and dates are all open; the page and both decks say "still being planned". Minghao is leading the design. |
 | **Final exam 25 Nov, 5–7pm** | `#assessment`, schedule | From NUSMods; the page says it is provisional. Confirm against the official exam timetable. |

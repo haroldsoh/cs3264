@@ -153,6 +153,8 @@ ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;he
 /* ---------- footer ---------- */
 footer{padding:36px 0 52px;font-family:var(--font-sans);font-size:13.5px;color:var(--ink-soft)}
 footer a{color:var(--ink-soft)}
+.colophon{margin-top:14px;padding-top:13px;border-top:1px solid var(--rule);
+  font-size:12.5px;line-height:1.55;max-width:70ch}
 
 @media (max-width:640px){
   body{font-size:17px}
