@@ -140,12 +140,12 @@ you are), which disables the repo. Ranked by exposure:
 |---|---|---|
 | ~~Boston Dynamics clip~~ | **resolved** in the web build | Now the rights-holder's own YouTube player — not a copy, so the question does not arise. |
 | `llm.mp4` (the GPT-5 clip) | Same problem, still re-hosted | Same fix if you want it: give me the source URL and I will add it to the generator. |
-| Statista chart | High — their licence forbids redistribution and they enforce it | Redraw from the underlying source data. Facts are not copyrightable, only that particular rendering. |
+| ~~Statista chart~~ | **resolved** | Redrawn as an inline SVG from Yahoo! Finance daily closes. `stocks.jpg` is deleted; nothing of theirs remains. |
 | Figures from papers | Low in an academic context, with citation | Cite properly; check the publisher's reuse terms if it matters. |
 | Netflix mark | Low — trademark, and this is nominative use | Leave it. |
 
-So: publish the web build and, if you want the remaining rows dealt with too, either swap
-them out or keep the deck on **Canvas** and point the schedule links there instead.
+Only `llm.mp4` is left. Everything else is either the rights-holder's own player, redrawn
+from source data, or low-risk with attribution.
 
 NUS Libraries has a copyright team and institutional licences that may cover more than the
 bare statutory exceptions — they are the authority for your situation, not this file.
