@@ -369,10 +369,9 @@ svg{display:block;overflow:visible}
 .fig{border-radius:10px;overflow:hidden;line-height:0;position:relative;
   background:transparent;box-shadow:0 1px 3px rgba(0,0,0,.07)}
 .fig img,.fig video{display:block;width:100%;height:auto}
-/* Click-to-load YouTube facade. Nothing is requested from Google until the play button
-   is pressed, so the deck still opens instantly and makes no third-party connection if
-   the video is never reached. The thumbnail is served by YouTube rather than copied
-   into media/, which is the whole point of this variant. */
+/* Click-to-load YouTube facade. Nothing is requested from Google until the play button is
+   pressed, so the deck opens instantly and makes no third-party connection if the video is
+   never reached. Used wherever we point at someone else's clip instead of re-hosting it. */
 .ytfacade{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;
   position:relative;line-height:0;border-radius:inherit;overflow:hidden}
 .ytfacade img{display:block;width:100%;height:auto}
@@ -657,6 +656,39 @@ const SLIDES = [
       to draw. We will not cover RL in depth in CS3264 — but the same three ingredients are underneath it.</p>
     </div>
   </div>`},
+
+{s:"Part I", t:"When we do know the rule", html:`
+  <div class="eyebrow">Machine learning in action</div>
+  <h2 style="margin-bottom:14px">Sometimes we know the rule exactly</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col" style="flex:1.15">
+      <div class="fig ytwrap" data-yt="aoW4HRi8VKg" data-title="Cyberpunk 2077 | Ray Tracing: Overdrive Technology Preview - Full Ray Tracing Deep Dive"><span class="vidbadge">Video</span>
+        <button class="ytfacade" type="button" aria-label="Play the NVIDIA ray tracing deep dive on YouTube">
+          <img src="https://i.ytimg.com/vi/aoW4HRi8VKg/maxresdefault.jpg" alt="A path-traced neon street scene from Cyberpunk 2077">
+          <span class="ytplay" aria-hidden="true"></span>
+        </button></div>
+      <p class="cred"><a href="https://www.youtube.com/watch?v=aoW4HRi8VKg" target="_blank" rel="noopener">&#8220;Ray Tracing: Overdrive&#8221;</a>
+        — NVIDIA GeForce. Every bounce of light simulated, at playable frame rates.</p>
+    </div>
+    <div class="col">
+      <p style="font-size:17.5px">Nobody could write the rule for the cat, and nobody wrote that gait.
+      Here the opposite is true: light transport is <em class="hl">settled physics</em>. We can say
+      exactly what a pixel should be.</p>
+      <div class="eq" style="font-size:15px;margin:11px 0 9px"><span class="texd" data-tex="L_o(\\mathbf{x},\\omega_o) = L_e(\\mathbf{x},\\omega_o) + \\int_{\\Omega} f_r(\\mathbf{x},\\omega_i,\\omega_o)\\, L_i(\\mathbf{x},\\omega_i)\\,(\\omega_i\\!\\cdot\\!\\mathbf{n})\\; d\\omega_i"></span></div>
+      <p class="frag" data-f="0" style="font-size:17px">Path tracing estimates that integral by firing
+      rays, and it does converge — but the error only falls as
+      <span class="tex" data-tex="1/\\sqrt{N}"></span>. Halving the noise costs <strong>four times</strong>
+      the rays. A film frame gets hours. A game frame gets milliseconds.</p>
+      <div class="card accent frag" data-f="1" style="margin-top:11px;padding:14px 17px">
+        <p style="font-size:17px;max-width:none">So we stop computing it. Train a network on pairs the
+        slow algorithm produced offline, and it predicts the converged frame from a one-sample render.
+        <strong>The cost is paid once, in training.</strong></p>
+      </div>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="2" style="margin-top:11px;text-align:center;font-size:16.5px">
+    <em class="hl">Amortised computation</em> — the second reason to reach for machine learning.
+    Not that the rule is unknown, but that it is too slow.</p>`},
 
 {s:"Part I", t:"Applications", vid:true, html:`
   <div class="eyebrow">Applications</div>
@@ -1961,7 +1993,7 @@ def fitPoly(xs, ts, order):
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
+const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 2.6, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -1986,9 +2018,9 @@ function paint(){
     if(i===idx){ v.playbackRate=+(v.dataset.rate||1); v.play().catch(()=>{}); }
     else if(!v.paused||v.currentTime){ v.pause(); v.currentTime=0; }
   }));
-  /* Leaving the slide has to REMOVE the iframe, not pause it: playback cannot be
-     controlled across origins without pulling in the YouTube JS API, and an iframe
-     left behind on a hidden slide keeps playing audio. */
+  /* Leaving the slide has to REMOVE the iframe, not pause it: playback cannot be controlled
+     across origins without pulling in the YouTube JS API, and an iframe left behind on a
+     hidden slide keeps playing audio. */
   document.querySelectorAll('.ytwrap.live').forEach(w=>{
     if(+w.closest('.slide').dataset.i !== idx) closeYT(w);
   });
@@ -2724,30 +2756,31 @@ fitSiteFrames();
 highlight();
 
 /* ---- YouTube facade -------------------------------------------------------------
-   `button` and `iframe` are already in CONTROLS, so neither the play button nor the
-   player advances the slide on click. */
+   `button` and `iframe` are already in CONTROLS, so neither the play button nor the player
+   advances the slide on click.
+
+   YouTube's player refuses an opaque origin: opened straight from Finder this page is
+   file://, and the embed dies with "Error 153 - video player configuration error". There is
+   no embed parameter that fixes it. So served over http(s) we play inline, and off the disk
+   we hand off to youtube.com in a new tab. */
+const CAN_EMBED = location.protocol === 'http:' || location.protocol === 'https:';
 function closeYT(w){
   const f=w.querySelector('iframe'); if(f) f.remove();
   const b=w.querySelector('.ytfacade'); if(b) b.style.display='';
   w.classList.remove('live');
 }
-/* YouTube's player refuses an opaque origin. Opened straight from Finder this page is
-   file://, and the embed dies with "Error 153 — video player configuration error"; there
-   is no embed parameter that fixes it. So: served over http(s) we play inline, and off
-   the disk we hand off to youtube.com in a new tab. */
-const CAN_EMBED = location.protocol === 'http:' || location.protocol === 'https:';
 document.querySelectorAll('.ytwrap').forEach(w=>{
   const btn=w.querySelector('.ytfacade');
   if(!CAN_EMBED){
-    const b=w.querySelector('.vidbadge'); if(b) b.textContent='Video → YouTube';
-    btn.title='Opens on YouTube — inline playback needs the deck served over http, not opened from disk';
+    const b=w.querySelector('.vidbadge'); if(b) b.textContent='Video \u2192 YouTube';
+    btn.title='Opens on YouTube \u2014 inline playback needs the deck served over http, not opened from disk';
   }
   btn.addEventListener('click',()=>{
     if(!CAN_EMBED){ window.open('https://www.youtube.com/watch?v='+w.dataset.yt,'_blank','noopener'); return; }
     if(w.classList.contains('live')) return;
     const f=document.createElement('iframe');
     f.src='https://www.youtube-nocookie.com/embed/'+w.dataset.yt+'?autoplay=1&rel=0&modestbranding=1&playsinline=1';
-    f.title='Walk, Run, Crawl, RL Fun | Boston Dynamics | Atlas';
+    f.title=w.dataset.title||'Video';
     f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
     f.allowFullscreen=true;
     btn.style.display='none';
