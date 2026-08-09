@@ -1350,7 +1350,7 @@ def fitPoly(xs, ts, order):
 
 {s:"Part II", t:"Who do you hire?", draw:"hire", html:`
   <div class="eyebrow">Why this happens &#8212; concretely</div>
-  <h2 style="margin-bottom:8px">Twelve candidates sit a test. You hire the top score.</h2>
+  <h2 style="margin-bottom:8px">Candidates sit for a test. You hire the top scorer.</h2>
   <div class="demo">
     <div class="demo-plot"><svg id="hiresvg" viewBox="0 0 560 330" width="100%"></svg></div>
     <div class="demo-ctrl">
@@ -1364,11 +1364,15 @@ def fitPoly(xs, ts, order):
         <input type="range" id="hiresd" min="0" max="3" step="0.1" value="1"></div>
       <div class="readout">
         <div class="stat train"><div class="k">hired the best?</div><div class="v" id="hirehit">&#8212;</div></div>
-        <div class="stat test"><div class="k">score &#8722; true</div><div class="v" id="hiregap">&#8212;</div></div>
+        <div class="stat test"><div class="k">winner flattered by</div><div class="v" id="hiregap">&#8212;</div></div>
       </div>
       <div class="warn" id="hirewarn">Nobody has taken the test yet. Grey ticks are true ability &#8212; which you never get to see.</div>
     </div>
-  </div>`},
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:10px;text-align:center;font-size:17px">
+    Each candidate is a function your model could have chosen; the test is your
+    <strong>training set</strong>. Fitting <em>is</em> hiring the top scorer &#8212;
+    and you inherit <em class="hl">their luck along with their ability</em>.</p>`},
 
 {s:"Part II", t:"Goodhart's law", html:`
   <div class="eyebrow">Why this happens</div>
