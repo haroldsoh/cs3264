@@ -38,62 +38,46 @@ grep -n 'class="tbc"' website/index.html
 
 ## Publishing it
 
-`cs3264` is currently **available** as a GitHub organisation name, so the URL you wanted
-is achievable. Two options:
+Live at **`https://cs3264.github.io`** — a GitHub **organisation** site, so the course
+owns its own URL and nothing touches `haroldsoh.com`.
 
-### Option A — `https://cs3264.github.io` (recommended)
-
-A GitHub **organisation** site. Slightly more setup, but it is the clean URL, it survives
-you changing accounts, and you can add TAs as members without giving them access to
-anything else.
+### One-time setup
 
 1. Create an organisation named `cs3264` (github.com → **+** → New organization → Free).
-2. Inside it, create a **public** repo named exactly `cs3264.github.io`.
-3. Push the contents of this folder to the repo root:
+2. Inside it, create a **public** repo named exactly `cs3264.github.io`, with no README,
+   .gitignore or licence — it must be empty.
+3. Push (see below).
+4. Repo **Settings → Pages → Source: Deploy from a branch → `main` / `(root)`**.
 
-```bash
-cd website && git init -b main && git add -A && git commit -m "CS3264 course site" && git remote add origin git@github.com:cs3264/cs3264.github.io.git && git push -u origin main
-```
+Live within a minute or two. Add the TAs as org members if they should be able to edit;
+that gives them this repo and nothing else.
 
-4. Settings → Pages → Source: **Deploy from a branch**, branch `main`, folder `/ (root)`.
-
-Live within a minute or two at `https://cs3264.github.io`.
-
-### Option B — `https://haroldsoh.com/cs3264` (in use)
-
-A **project repo** under your own account: `haroldsoh/cs3264`, public.
-
-Note the URL. `haroldsoh.github.io` 301-redirects to `haroldsoh.com`, i.e. the user site
-repo has a CNAME. GitHub serves project sites from the user site's custom domain, so this
-repo lands at **`haroldsoh.com/cs3264`**, not `haroldsoh.github.io/cs3264`.
-
-**It cannot break the existing site.** A project repo is a separate repo with its own
-Pages deployment; nothing in `haroldsoh/haroldsoh.github.io` is touched. The only shared
-thing is the URL namespace — if the Jekyll site ever gains its own `/cs3264/` page, this
-repo wins. It has no such page today.
-
-#### Deploying — `git subtree`, not a nested repo
+### Deploying — `git subtree`, not a nested repo
 
 This folder is **not** its own repository; the git dir is at `AY26-27S1/`. Do not run
 `git init` in here — that nests a second repo inside the first. Push the subfolder
-instead, which also guarantees only `website/` ever leaves the machine:
+instead:
 
 ```bash
 cd "AY26-27S1" && git subtree push --prefix=website cs3264 main
 ```
 
-The `cs3264` remote is already configured (`git@github.com:haroldsoh/cs3264.git`). That
-one command is also the update path — commit to `website/` as normal, then re-run it.
+The `cs3264` remote is already configured (`git@github.com:cs3264/cs3264.github.io.git`).
+That one command is also the update path — commit to `website/` as normal, then re-run it.
 
-**Why this matters.** The parent repo also tracks `CS3264-Materials/`, which holds
-`meetings.md` (TA contracted hours), `TA-Details.xlsx` and `Syllabus.xlsx`. A plain
-`git push` of the whole repo would publish all of it. `--prefix=website` sends only the
-site, with its contents at the repo root, which is what Pages needs.
+**Why subtree and not a plain push.** The parent repo also tracks `CS3264-Materials/`,
+which holds `meetings.md` (TA contracted hours), `TA-Details.xlsx` and `Syllabus.xlsx`.
+Pushing the whole repo would publish all of it. `--prefix=website` sends only the site,
+with its contents at the repo root, which is what Pages needs.
 
-Then: repo **Settings → Pages → Source: Deploy from a branch → `main` / `(root)`**.
+### The alternative, if you ever want it
 
-Both options work with the site as written — every path is relative, so nothing breaks at
-a subpath.
+A project repo under your own account lands at **`haroldsoh.com/cs3264`** — because
+`haroldsoh.github.io` CNAMEs to `haroldsoh.com`, and GitHub serves project sites from the
+user site's custom domain. It cannot break the existing Jekyll site (separate repo,
+separate Pages deployment), but the org site keeps the course self-contained.
+
+Every path in the site is relative, so it works at a root or a subpath either way.
 
 ---
 
