@@ -91,7 +91,10 @@ ul.plain{list-style:none}
 ul.plain li{position:relative;padding-left:22px;margin-bottom:9px}
 ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;
   border-radius:50%;background:var(--accent)}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px}
+/* min(280px,100%) rather than a bare 280px: nested inside a card the available width
+   drops to ~277px on a 375px phone, and a hard 280px minimum makes the track wider than
+   its own container. */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:26px}
 .card{background:var(--bg-alt);border:1px solid var(--rule);border-radius:12px;padding:22px 24px;
   box-shadow:var(--shadow)}
 .card.accent{border-color:var(--accent)}
