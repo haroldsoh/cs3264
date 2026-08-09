@@ -659,36 +659,26 @@ const SLIDES = [
 
 {s:"Part I", t:"When we do know the rule", html:`
   <div class="eyebrow">Machine learning in action</div>
-  <h2 style="margin-bottom:14px">Sometimes we know the rule exactly</h2>
-  <div class="row top" style="gap:30px">
-    <div class="col" style="flex:1.15">
-      <div class="fig ytwrap" data-yt="aoW4HRi8VKg" data-title="Cyberpunk 2077 | Ray Tracing: Overdrive Technology Preview - Full Ray Tracing Deep Dive"><span class="vidbadge">Video</span>
-        <button class="ytfacade" type="button" aria-label="Play the NVIDIA ray tracing deep dive on YouTube">
-          <img src="https://i.ytimg.com/vi/aoW4HRi8VKg/maxresdefault.jpg" alt="A path-traced neon street scene from Cyberpunk 2077">
+  <h2 style="margin-bottom:16px">Sometimes we know the rule &#8212; it is just too slow</h2>
+  <div class="row top" style="gap:32px">
+    <div class="col" style="flex:1.5">
+      <div class="fig ytwrap" data-yt="M9yHtS8EoFg" data-title="Portal with RTX | Ray Reconstruction Off/On Comparison"><span class="vidbadge">Video</span>
+        <button class="ytfacade" type="button" aria-label="Play the NVIDIA ray reconstruction comparison on YouTube">
+          <img src="https://i.ytimg.com/vi/M9yHtS8EoFg/sddefault.jpg" alt="Portal with RTX, side by side: noisy ray tracing on the left, ray reconstruction on the right"
+               style="aspect-ratio:16/9;object-fit:cover">
           <span class="ytplay" aria-hidden="true"></span>
         </button></div>
-      <p class="cred"><a href="https://www.youtube.com/watch?v=aoW4HRi8VKg" target="_blank" rel="noopener">&#8220;Ray Tracing: Overdrive&#8221;</a>
-        — NVIDIA GeForce. Every bounce of light simulated, at playable frame rates.</p>
+      <p class="cred"><a href="https://www.youtube.com/watch?v=M9yHtS8EoFg" target="_blank" rel="noopener">Ray Reconstruction off / on</a> &#8212; NVIDIA GeForce</p>
     </div>
     <div class="col">
-      <p style="font-size:17.5px">Nobody could write the rule for the cat, and nobody wrote that gait.
-      Here the opposite is true: light transport is <em class="hl">settled physics</em>. We can say
-      exactly what a pixel should be.</p>
-      <div class="eq" style="font-size:15px;margin:11px 0 9px"><span class="texd" data-tex="L_o(\\mathbf{x},\\omega_o) = L_e(\\mathbf{x},\\omega_o) + \\int_{\\Omega} f_r(\\mathbf{x},\\omega_i,\\omega_o)\\, L_i(\\mathbf{x},\\omega_i)\\,(\\omega_i\\!\\cdot\\!\\mathbf{n})\\; d\\omega_i"></span></div>
-      <p class="frag" data-f="0" style="font-size:17px">Path tracing estimates that integral by firing
-      rays, and it does converge — but the error only falls as
-      <span class="tex" data-tex="1/\\sqrt{N}"></span>. Halving the noise costs <strong>four times</strong>
-      the rays. A film frame gets hours. A game frame gets milliseconds.</p>
-      <div class="card accent frag" data-f="1" style="margin-top:11px;padding:14px 17px">
-        <p style="font-size:17px;max-width:none">So we stop computing it. Train a network on pairs the
-        slow algorithm produced offline, and it predicts the converged frame from a one-sample render.
-        <strong>The cost is paid once, in training.</strong></p>
-      </div>
+      <p style="font-size:19px">Ray tracing is exact physics. Simulating every bounce, for every
+      pixel, sixty times a second is not affordable.</p>
+      <p style="font-size:19px;margin-top:14px"><strong>DLSS Ray Reconstruction</strong> does the
+      expensive work once, offline, and looks the answer up as you play.</p>
     </div>
   </div>
-  <p class="figcap frag" data-f="2" style="margin-top:11px;text-align:center;font-size:16.5px">
-    <em class="hl">Amortised computation</em> — the second reason to reach for machine learning.
-    Not that the rule is unknown, but that it is too slow.</p>`},
+  <p class="figcap" style="margin-top:18px;text-align:center;font-size:18px">
+    A network as a way to <em class="hl">store an expensive computation</em> and interpolate it at run time.</p>`},
 
 {s:"Part I", t:"Applications", vid:true, html:`
   <div class="eyebrow">Applications</div>
@@ -1993,7 +1983,7 @@ def fitPoly(xs, ts, order):
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 2.6, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
+const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
