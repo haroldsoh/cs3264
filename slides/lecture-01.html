@@ -78,15 +78,18 @@ body.blank #stage,body.blank #themebar,body.blank #hint{opacity:0}
 .eyebrow{font-family:var(--font-sans);font-size:12px;font-weight:600;letter-spacing:.19em;
   text-transform:uppercase;color:var(--ink-soft);margin-bottom:18px}
 h1{font-family:var(--font-display);font-size:64px;line-height:1.06;font-weight:700;letter-spacing:-.018em}
-h2{font-family:var(--font-display);font-size:44px;line-height:1.12;font-weight:700;letter-spacing:-.014em;margin-bottom:24px}
+h2{font-family:var(--font-display);font-size:46px;line-height:1.1;font-weight:700;letter-spacing:-.014em;margin-bottom:24px}
 h3{font-family:var(--font-display);font-size:25px;font-weight:700;margin-bottom:10px}
-p{font-size:20px;line-height:1.55;max-width:62ch}
+/* No measure cap. A slide is not a page of prose: paragraphs are short, the room is
+   wide, and a line that stops halfway across looks broken from the back of LT15.
+   Where a narrower measure is wanted, use a .col — the column supplies it. */
+p{font-size:23px;line-height:1.5;max-width:none}
 .lede{font-size:24px;line-height:1.5;color:var(--ink-soft)}
 .caption{font-size:16px;font-style:italic;color:var(--ink-soft)}
 .small{font-size:14.5px;color:var(--ink-soft);line-height:1.5}
 em.hl{font-style:normal;color:var(--accent);font-weight:700}
 ul{list-style:none}
-li{font-size:19.5px;line-height:1.5;margin-bottom:12px;padding-left:25px;position:relative}
+li{font-size:22px;line-height:1.45;margin-bottom:12px;padding-left:25px;position:relative}
 li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--accent)}
 li.sub{font-size:17.5px;margin-left:25px;color:var(--ink-soft)}
 li.sub::before{width:5px;height:5px;background:var(--ink-soft);top:.66em}
@@ -107,6 +110,10 @@ li.no::before{background:var(--ink-soft);opacity:.4}
 .tex,.texd{color:inherit}
 .texd{display:block}
 .katex{font-size:1em}
+/* colour classes usable from inside maths via \htmlClass */
+.c-post{color:var(--accent)}
+.c-lik{color:var(--accent-soft)}
+.c-prior{color:var(--accent2)}
 .eq .katex{font-size:1em}
 .dgrid .lhs .katex,.dgrid .rhs .katex{font-size:1.02em}
 .m .up{font-style:normal}
@@ -161,7 +168,7 @@ math[display="block"]{margin:0;width:fit-content}
 .m .big{font-size:1.35em;font-style:normal;vertical-align:-.16em}
 /* Display equations are plain blocks, NOT flex: a flex context blockifies the
    inline math span and collapses the stacked fraction/sum boxes inside it. */
-.eq{font-family:var(--font-math);font-size:25px;margin:14px 0;display:block;line-height:1.55}
+.eq{font-family:var(--font-math);font-size:29px;margin:14px 0;display:block;line-height:1.5}
 .eq.center{text-align:center}
 .eq-box{display:inline-block;padding:12px 20px;border:1.5px solid var(--accent);border-radius:7px;
   background:color-mix(in srgb,var(--accent) 6%,transparent)}
@@ -610,7 +617,7 @@ const SLIDES = [
 
 {s:"Part I", t:"What is common to ML problems?", html:`
   <div class="eyebrow">Orientation</div>
-  <h2>What is common to all ML problems?</h2>
+  <h2>What these problems have in common</h2>
   <div class="row top" style="gap:40px">
     <div class="col">
       <ul style="margin-top:8px">
@@ -2318,7 +2325,10 @@ function renderTeX(){
   document.querySelectorAll('[data-tex]').forEach(function(el){
     if(el.dataset.done) return;
     try{ katex.render(el.dataset.tex, el,
-      {displayMode: el.classList.contains('texd'), throwOnError:false, output:'html'}); }
+      {displayMode: el.classList.contains('texd'), throwOnError:false, output:'html',
+       /* \htmlClass lets an equation colour its own parts through CSS variables, so
+          colour coding follows the theme instead of freezing to the paper palette. */
+       trust: c => c.command === '\\htmlClass', strict: false}); }
     catch(e){ el.textContent=el.dataset.tex; }
     el.dataset.done='1';
   });
