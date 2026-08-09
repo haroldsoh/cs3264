@@ -1374,41 +1374,35 @@ def fitPoly(xs, ts, order):
     <strong>training set</strong>. Fitting <em>is</em> hiring the top scorer &#8212;
     and you inherit <em class="hl">their luck along with their ability</em>.</p>`},
 
-{s:"Part II", t:"Goodhart's law", html:`
+{s:"Part II", t:"The winner's curse", html:`
   <div class="eyebrow">Why this happens</div>
-  <h2 style="margin-bottom:10px">The trouble is the <em>argmin</em>, not the measure</h2>
-  <div class="row top" style="gap:32px">
-    <div class="col" style="flex:1.2">
-      <p style="margin-bottom:6px">For <strong>any single</strong> function, training error is an
-      honest estimate of test error — it is off only by sampling noise, and that noise averages out:</p>
-      <div class="eq" style="margin:2px 0 4px;font-size:22px"><span class="texd" data-tex="\\widehat{E}(h) = E(h) + \\varepsilon(h)"></span></div>
-      <div class="eq" style="margin:0 0 12px;font-size:19px"><span class="texd" data-tex="\\mathbb{E}\\bigl[\\varepsilon(h)\\bigr] = 0"></span></div>
-      <div class="frag" data-f="0">
-        <p style="margin-bottom:6px">But we do not evaluate one function. We
-        <em class="hl">search a whole set</em> and keep the winner:</p>
-        <div class="eq" style="margin:2px 0 12px;font-size:21px"><span class="texd" data-tex="\\widehat{h} = \\operatorname*{arg\\,min}_{h\\in\\mathcal{H}}\\ \\bigl(E(h) + \\varepsilon(h)\\bigr)"></span></div>
-      </div>
-      <p class="frag" data-f="1" style="font-size:17.5px">
-        That argmin chases <strong>both</strong> terms. It rewards a genuinely good function — and
-        equally rewards one that merely <em class="hl">got lucky</em> on this particular dataset.
-        The winner is systematically the luckiest, so its training error is
-        <strong>biased downwards</strong>.</p>
+  <h2 style="margin-bottom:14px">The trouble is the <em>argmin</em>, not the measure</h2>
+  <div class="row top" style="gap:34px">
+    <div class="col" style="flex:1.15">
+      <p style="font-size:17.5px;margin-bottom:4px">For <strong>any single</strong> function, training
+      error is honest &#8212; off only by noise, and that noise averages out:</p>
+      <div class="eq" style="margin:6px 0 12px;font-size:20px"><span class="texd" data-tex="\\widehat{E}(h) = E(h) + \\varepsilon(h), \\qquad \\mathbb{E}\\bigl[\\varepsilon(h)\\bigr] = 0"></span></div>
+      <p class="frag" data-f="0" style="font-size:17.5px;margin-bottom:4px">But we do not evaluate one
+      function. We <em class="hl">search a set</em> and keep the winner:</p>
+      <div class="eq frag" data-f="0" style="margin:6px 0 12px;font-size:20px"><span class="texd" data-tex="\\widehat{h} = \\operatorname*{arg\\,min}_{h\\in\\mathcal{H}}\\ \\bigl(E(h) + \\varepsilon(h)\\bigr)"></span></div>
+      <p class="frag" data-f="1" style="font-size:17.5px">The argmin chases <strong>both</strong> terms.
+      It rewards a genuinely good function and one that merely <em class="hl">got lucky</em> alike &#8212;
+      so the winner is systematically the luckiest, and its training error is
+      <strong>biased downwards</strong>.</p>
     </div>
     <div class="col">
       <div class="card accent">
-        <p style="font-size:18.5px;font-style:italic;max-width:none;line-height:1.32">
-          &ldquo;When a measure becomes a target, it ceases to be a good measure.&rdquo;</p>
-        <p class="caption" style="margin-top:8px">Charles Goodhart, 1975 — on monetary policy,
-        not neural networks.</p>
+        <p style="font-size:17.5px;max-width:none">The richer the set
+        <span class="tex" data-tex="\\mathcal{H}"></span>, the more functions there are to get lucky.
+        <strong>Capacity buys luck</strong> &#8212; exactly the knob we were turning with polynomial order.</p>
       </div>
-      <div class="frag" data-f="2" style="margin-top:14px">
-        <p style="font-size:17px">The richer the set <span class="tex" data-tex="\\mathcal{H}"></span>, the more
-        functions there are to get lucky — so <strong>capacity buys luck</strong>. That is exactly
-        the knob we were turning with polynomial order.</p>
-      </div>
-      <p class="caption frag" data-f="3" style="margin-top:12px">
-        Week 6 makes this precise: computational learning theory bounds how large that gap can get,
-        in terms of the size of <span class="tex" data-tex="\\mathcal{H}"></span>.</p>
+      <p class="caption frag" data-f="2" style="margin-top:14px">Week 6 makes this precise: computational
+      learning theory bounds how large the gap can get, in terms of the size of
+      <span class="tex" data-tex="\\mathcal{H}"></span>.</p>
+      <p class="caption frag" data-f="3" style="margin-top:12px;font-style:italic">Not quite
+      <strong>Goodhart&#8217;s law</strong> &#8212; nobody here is gaming anything, and the measure is
+      perfectly good for any one function. This is pure selection bias: the
+      <strong>optimiser&#8217;s curse</strong> (Smith &amp; Winkler, 2006).</p>
     </div>
   </div>`},
 
@@ -2009,7 +2003,7 @@ def fitPoly(xs, ts, order):
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 3.2, 4.1, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
+const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 3.2, 2.2, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
