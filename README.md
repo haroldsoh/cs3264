@@ -83,13 +83,17 @@ some day.
 
 ## Adding a lecture's slides
 
-The decks are self-contained HTML. To publish one:
+Lecture 1 is published at `slides/lecture-01.html` and linked from the schedule.
+
+The decks are self-contained HTML. To republish after an edit — regenerate the web build
+first, then:
 
 ```bash
-mkdir -p website/slides && cp "../CS3264-Materials/Lectures/Lecture 01 - Intro to CS3264 (web).html" website/slides/lecture-01.html && cp -R "../CS3264-Materials/Lectures/media" website/slides/media && rm -f website/slides/media/atlas.mp4
+cd "AY26-27S1" && cp "CS3264-Materials/Lectures/Lecture 01 - Intro to CS3264 (web).html" website/slides/lecture-01.html && rm -rf website/slides/media && cp -R CS3264-Materials/Lectures/media website/slides/media && rm -f website/slides/media/atlas.mp4
 ```
 
-The schedule already links to `slides/lecture-01.html`.
+Only `atlas.mp4` is dropped — `atlas-poster.jpg` must stay, since the applications-tiles
+slide still uses it as a still. Deleting it silently breaks that slide.
 
 There are two builds of Lecture 1:
 
