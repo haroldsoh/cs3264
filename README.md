@@ -8,6 +8,7 @@ website/
 ├── index.html      the whole site (one page, anchored sections)
 ├── style.css       palette and type, matched to the lecture deck
 ├── .nojekyll       stops GitHub Pages running Jekyll over the files
+├── notes/          past years' collaborative notes (PDF)
 ├── slides/         lecture decks (see "Publishing slides" below)
 └── README.md
 ```
