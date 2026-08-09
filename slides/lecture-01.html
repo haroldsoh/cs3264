@@ -2665,9 +2665,10 @@ document.getElementById('wigo')?.addEventListener('input',drawWig);
 
 
 /* ============================================================
-   DEMO 10 — the hiring test.  Goodhart made concrete before it is made algebraic:
-   every score is ability + luck, we keep the maximum, and the winner is
-   systematically the luckiest rather than the best. Raising "candidates" is the
+   DEMO 10 — the hiring test.  The winner's curse made concrete before it is made
+   algebraic: every score is ability + luck, we keep the maximum, and the winner is
+   systematically the luckiest rather than the best. Note this is NOT Goodhart —
+   nothing is being gamed, and an unbiased estimator is enough to produce it. Raising "candidates" is the
    same knob as raising model capacity — more draws, more chances to get lucky.
    ============================================================ */
 const H_W=560,H_H=330,H_ML=46,H_MR=14,H_MT=18,H_MB=44;
