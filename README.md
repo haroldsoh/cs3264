@@ -38,19 +38,17 @@ grep -n 'class="tbc"' website/index.html
 
 ## Publishing it
 
-Live at **`https://cs3264.github.io`** — a GitHub **organisation** site, so the course
-owns its own URL and nothing touches `haroldsoh.com`.
+Live at **`https://haroldsoh.com/cs3264`**, from the public repo
+**`haroldsoh/cs3264`**.
 
-### One-time setup
+Note the URL. `haroldsoh.github.io` 301-redirects to `haroldsoh.com` — the user site repo
+has a CNAME — and GitHub serves project sites from the user site's custom domain. So this
+repo lands at `haroldsoh.com/cs3264`, *not* `haroldsoh.github.io/cs3264`.
 
-1. Create an organisation named `cs3264` (github.com → **+** → New organization → Free).
-2. Inside it, create a **public** repo named exactly `cs3264.github.io`, with no README,
-   .gitignore or licence — it must be empty.
-3. Push (see below).
-4. Repo **Settings → Pages → Source: Deploy from a branch → `main` / `(root)`**.
-
-Live within a minute or two. Add the TAs as org members if they should be able to edit;
-that gives them this repo and nothing else.
+**It cannot break the existing site.** A project repo is a separate repo with its own
+Pages deployment; nothing in `haroldsoh/haroldsoh.github.io` is touched — no config
+change, no rebuild. The only shared thing is the URL namespace: if the Jekyll site ever
+gains its own `/cs3264/` page, this repo wins. It has no such page today.
 
 ### Deploying — `git subtree`, not a nested repo
 
@@ -62,22 +60,24 @@ instead:
 cd "AY26-27S1" && git subtree push --prefix=website cs3264 main
 ```
 
-The `cs3264` remote is already configured (`git@github.com:cs3264/cs3264.github.io.git`).
-That one command is also the update path — commit to `website/` as normal, then re-run it.
+The `cs3264` remote is already configured (`git@github.com:haroldsoh/cs3264.git`). That
+one command is also the update path — commit to `website/` as normal, then re-run it.
+
+Then, once: repo **Settings → Pages → Source: Deploy from a branch → `main` / `(root)`**.
 
 **Why subtree and not a plain push.** The parent repo also tracks `CS3264-Materials/`,
 which holds `meetings.md` (TA contracted hours), `TA-Details.xlsx` and `Syllabus.xlsx`.
 Pushing the whole repo would publish all of it. `--prefix=website` sends only the site,
 with its contents at the repo root, which is what Pages needs.
 
-### The alternative, if you ever want it
+Every path in the site is relative, so it works at a subpath without changes.
 
-A project repo under your own account lands at **`haroldsoh.com/cs3264`** — because
-`haroldsoh.github.io` CNAMEs to `haroldsoh.com`, and GitHub serves project sites from the
-user site's custom domain. It cannot break the existing Jekyll site (separate repo,
-separate Pages deployment), but the org site keeps the course self-contained.
+### If you ever want the course on its own URL
 
-Every path in the site is relative, so it works at a root or a subpath either way.
+`cs3264` was still free as a GitHub organisation name as of this writing, which would give
+`https://cs3264.github.io` and let TAs be added as org members. It needs an organisation
+though — more administration than it is worth unless you want to hand the course over
+some day.
 
 ---
 
