@@ -1399,10 +1399,6 @@ def fitPoly(xs, ts, order):
       <p class="caption frag" data-f="2" style="margin-top:14px">Week 6 makes this precise: computational
       learning theory bounds how large the gap can get, in terms of the size of
       <span class="tex" data-tex="\\mathcal{H}"></span>.</p>
-      <p class="caption frag" data-f="3" style="margin-top:12px;font-style:italic">Not quite
-      <strong>Goodhart&#8217;s law</strong> &#8212; nobody here is gaming anything, and the measure is
-      perfectly good for any one function. This is pure selection bias: the
-      <strong>optimiser&#8217;s curse</strong> (Smith &amp; Winkler, 2006).</p>
     </div>
   </div>`},
 
@@ -2003,7 +1999,7 @@ def fitPoly(xs, ts, order):
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 3.2, 2.2, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
+const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 1.6, 0.4, 1.7, 2.5, 2.3, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 3.2, 2.0, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 3.3, 4.0, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2667,8 +2663,7 @@ document.getElementById('wigo')?.addEventListener('input',drawWig);
 /* ============================================================
    DEMO 10 — the hiring test.  The winner's curse made concrete before it is made
    algebraic: every score is ability + luck, we keep the maximum, and the winner is
-   systematically the luckiest rather than the best. Note this is NOT Goodhart —
-   nothing is being gamed, and an unbiased estimator is enough to produce it. Raising "candidates" is the
+   systematically the luckiest rather than the best. Raising "candidates" is the
    same knob as raising model capacity — more draws, more chances to get lucky.
    ============================================================ */
 const H_W=560,H_H=330,H_ML=46,H_MR=14,H_MT=18,H_MB=44;
