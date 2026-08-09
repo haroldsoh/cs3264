@@ -99,8 +99,9 @@ ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;he
   box-shadow:var(--shadow)}
 .card.accent{border-color:var(--accent)}
 .small{font-size:15px;color:var(--ink-soft)}
-/* Values not yet confirmed. Kept visually distinct so a student never mistakes a
-   placeholder for a commitment — and so it is obvious which ones still need filling in. */
+/* Values not yet settled — "TBC" where nothing is decided, "Provisional" where a date
+   exists but an external authority could still move it. Kept visually distinct so a
+   student never mistakes either for a commitment, and so both are easy to find later. */
 .tbc{font-family:var(--font-sans);font-size:10.5px;font-weight:700;letter-spacing:.1em;
   text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);
   border-radius:4px;padding:1px 5px;vertical-align:2px;white-space:nowrap}

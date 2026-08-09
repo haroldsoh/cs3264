@@ -23,9 +23,8 @@ The schedule, term dates and venues come from the AY26/27 calendar, NUSMods and
 | Item | Where | Status |
 |---|---|---|
 | **Piazza URL** | hero button, announcement, footer | Set to `piazza.com/nus.edu.sg/fall2025/cs3264` as supplied. Piazza serves an identical landing page for any term slug, so this could not be verified from outside — click it once and confirm it lands on the right class. |
-| **Assessment weights** 30/10/20/40 | `#assessment` | Carried over from AY25/26. Confirm before students read it. |
 | **Assignments — everything** | `#assessment`, deck slides 47/48/55 | Number, format and dates are all open; the page and both decks say "still being planned". Minghao is leading the design. |
-| **Final exam 25 Nov, 5–7pm** | `#assessment`, schedule | From NUSMods; the page says it is provisional. Confirm against the official exam timetable. |
+| **Final exam 25 Nov, 5–7pm** | `#assessment`, schedule, key dates | Looks right, but marked **Provisional** on the page in all three places. Drop the badges once the official NUS exam timetable confirms it. |
 | **Tutorial slot count** (five) | `#policies` | T03 closed; Shashank T06/T01/T02, Oscar T04/T05. Further merging depends on post-add/drop numbers. |
 | **Week 13 topic + cover** | `#schedule` reads "optional topic — TBA" | Guest lecturer vs pre-record — decide by early October, then fill the title in here, on slides 44 and 53, and in `Syllabus.xlsx`. |
 
@@ -60,14 +59,9 @@ cd website && git init -b main && git add -A && git commit -m "CS3264 course sit
 
 Live within a minute or two at `https://cs3264.github.io`.
 
-### Option B — `https://haroldsoh.com/cs3264` (recommended if the slides stay on Canvas)
+### Option B — `https://haroldsoh.com/cs3264` (in use)
 
-A **project repo** under your own account. No organisation needed: create a public repo
-named `cs3264`, push this folder, enable Pages the same way.
-
-```bash
-cd website && git init -b main && git add -A && git commit -m "CS3264 course site" && git remote add origin git@github.com:haroldsoh/cs3264.git && git push -u origin main
-```
+A **project repo** under your own account: `haroldsoh/cs3264`, public.
 
 Note the URL. `haroldsoh.github.io` 301-redirects to `haroldsoh.com`, i.e. the user site
 repo has a CNAME. GitHub serves project sites from the user site's custom domain, so this
@@ -77,6 +71,26 @@ repo lands at **`haroldsoh.com/cs3264`**, not `haroldsoh.github.io/cs3264`.
 Pages deployment; nothing in `haroldsoh/haroldsoh.github.io` is touched. The only shared
 thing is the URL namespace — if the Jekyll site ever gains its own `/cs3264/` page, this
 repo wins. It has no such page today.
+
+#### Deploying — `git subtree`, not a nested repo
+
+This folder is **not** its own repository; the git dir is at `AY26-27S1/`. Do not run
+`git init` in here — that nests a second repo inside the first. Push the subfolder
+instead, which also guarantees only `website/` ever leaves the machine:
+
+```bash
+cd "AY26-27S1" && git subtree push --prefix=website cs3264 main
+```
+
+The `cs3264` remote is already configured (`git@github.com:haroldsoh/cs3264.git`). That
+one command is also the update path — commit to `website/` as normal, then re-run it.
+
+**Why this matters.** The parent repo also tracks `CS3264-Materials/`, which holds
+`meetings.md` (TA contracted hours), `TA-Details.xlsx` and `Syllabus.xlsx`. A plain
+`git push` of the whole repo would publish all of it. `--prefix=website` sends only the
+site, with its contents at the repo root, which is what Pages needs.
+
+Then: repo **Settings → Pages → Source: Deploy from a branch → `main` / `(root)`**.
 
 Both options work with the site as written — every path is relative, so nothing breaks at
 a subpath.
