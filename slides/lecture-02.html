@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 2 — Regression II: Probabilistic Modelling</title>
+<!-- KaTeX, bundled locally in media/katex so the deck still works with no network -->
+<link rel="stylesheet" href="media/katex/katex.min.css">
+<script defer src="media/katex/katex.min.js"></script>
+<style>
+/* ============================================================
+   CS3264 · Lecture 1 — self-contained slide deck
+   No external dependencies: opens offline in any modern browser.
+   Keys: ← →  navigate · O overview · T theme · F fullscreen · B blank
+   ============================================================ */
+:root{
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --font-body:"Iowan Old Style",Palatino,Georgia,serif;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+  --font-math:"Cambria Math","Latin Modern Math",Georgia,"Times New Roman",serif;
+  --font-mono:"SF Mono",Menlo,Consolas,monospace;
+}
+[data-theme="paper"]{
+  --bg:#FBF7EF;--bg-alt:#F4EDE0;--ink:#1E1A17;--ink-soft:#6B6157;--rule:#DCD2C0;
+  --accent:#9B2C2C;--accent-soft:#C97A6D;--accent2:#2F6F6B;--grid:#E7DFCF;
+  --shadow:0 1px 2px rgba(60,45,25,.07),0 8px 30px rgba(60,45,25,.06);
+}
+[data-theme="academic"]{
+  --bg:#FAFAF6;--bg-alt:#F0F1EA;--ink:#14213A;--ink-soft:#5C6780;--rule:#D6D9CE;
+  --accent:#1B4D8F;--accent-soft:#6C93C4;--accent2:#B08424;--grid:#E4E6DC;
+  --shadow:0 1px 2px rgba(20,33,58,.07),0 8px 30px rgba(20,33,58,.07);
+}
+[data-theme="swiss"]{
+  --bg:#FFFFFF;--bg-alt:#F2F2F2;--ink:#111111;--ink-soft:#6E6E6E;--rule:#E0E0E0;
+  --accent:#EF7C00;--accent-soft:#F5B26B;--accent2:#003D7C;--grid:#EDEDED;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 30px rgba(0,0,0,.06);
+  --font-display:var(--font-sans);--font-body:var(--font-sans);
+}
+[data-theme="nocturne"]{
+  --bg:#0E0E11;--bg-alt:#191920;--ink:#ECEAE6;--ink-soft:#9A968E;--rule:#2C2C36;
+  --accent:#7FB3FF;--accent-soft:#4E7FC4;--accent2:#D6A15E;--grid:#20202A;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 40px rgba(0,0,0,.5);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);overflow:hidden;
+  transition:background .5s ease,color .5s ease;-webkit-font-smoothing:antialiased}
+body.blank #stage,body.blank #themebar,body.blank #hint{opacity:0}
+
+#stage{position:fixed;inset:0;display:grid;place-items:center;transition:opacity .2s}
+#canvas{position:relative;width:1280px;height:720px;transform-origin:center center;
+  background:var(--bg);overflow:hidden;transition:background .5s ease}
+/* Slide transition: opacity only, short, and NO transform.
+   A transform (especially a scale) promotes the slide to a composited layer and
+   re-rasterises the text, which makes heavy glyphs read as arriving before light
+   ones. Nothing that carries text is allowed to animate transform or scale. */
+.slide{position:absolute;inset:0;padding:66px 88px;display:flex;flex-direction:column;justify-content:center;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .14s linear,visibility .14s}
+.slide.active{opacity:1;visibility:visible;pointer-events:auto}
+.slide.leaving{opacity:0}
+
+/* type */
+.eyebrow{font-family:var(--font-sans);font-size:12px;font-weight:600;letter-spacing:.19em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:18px}
+/* uppercase applies to KaTeX glyphs too, which silently turns a lambda into a capital
+   Lambda and a beta into something that reads as a Latin B. Exempt rendered maths. */
+.eyebrow .katex{text-transform:none;letter-spacing:normal}
+h1{font-family:var(--font-display);font-size:64px;line-height:1.06;font-weight:700;letter-spacing:-.018em}
+h2{font-family:var(--font-display);font-size:46px;line-height:1.1;font-weight:700;letter-spacing:-.014em;margin-bottom:24px}
+h3{font-family:var(--font-display);font-size:25px;font-weight:700;margin-bottom:10px}
+/* No measure cap. A slide is not a page of prose: paragraphs are short, the room is
+   wide, and a line that stops halfway across looks broken from the back of LT15.
+   Where a narrower measure is wanted, use a .col — the column supplies it. */
+p{font-size:23px;line-height:1.5;max-width:none}
+.lede{font-size:24px;line-height:1.5;color:var(--ink-soft)}
+.caption{font-size:19px;font-style:italic;color:var(--ink-soft);line-height:1.45}
+.small{font-size:18px;color:var(--ink-soft);line-height:1.5}
+em.hl{font-style:normal;color:var(--accent);font-weight:700}
+ul{list-style:none}
+li{font-size:22px;line-height:1.45;margin-bottom:12px;padding-left:25px;position:relative}
+li::before{content:"";position:absolute;left:2px;top:.62em;width:7px;height:7px;border-radius:50%;background:var(--accent)}
+li.sub{font-size:17.5px;margin-left:25px;color:var(--ink-soft)}
+li.sub::before{width:5px;height:5px;background:var(--ink-soft);top:.66em}
+li.no::before{background:var(--ink-soft);opacity:.4}
+
+/* math */
+.m{font-family:var(--font-math);font-style:italic;white-space:nowrap}
+.m .vec,.m .mat{font-weight:700;font-style:normal}
+/* letters in a subscript are variables and stay italic; digits and labels are
+   made upright by uprightDelimiters() / an explicit .up span */
+.m sub,.m sup{font-size:.68em}
+.m .op{font-style:normal;padding:0 .18em}
+/* Only letters are variables. Brackets, digits, operators and punctuation are set
+   upright — applied automatically by uprightDelimiters() at load. */
+/* ---- maths ----
+   Authored as LaTeX in data-tex and rendered by KaTeX at load.
+   .tex is inline, .texd a display block. */
+.tex,.texd{color:inherit}
+.texd{display:block}
+.katex{font-size:1em}
+/* colour classes usable from inside maths via \htmlClass */
+.c-post{color:var(--accent)}
+.c-lik{color:var(--accent-soft)}
+.c-prior{color:var(--accent2)}
+.eq .katex{font-size:1em}
+.dgrid .lhs .katex,.dgrid .rhs .katex{font-size:1.02em}
+.m .up{font-style:normal}
+/* ---- MathML: real maths typesetting, native, no dependency ----
+   <mi> is an italic variable, <mn> an upright number, <mo> an upright operator —
+   so subscript indices italicise and brackets stay upright without any help. */
+math{font-size:1em;color:inherit}
+/* Do NOT set a display value on the math element — MathML lays out with its own,
+   and overriding it collapses the rows. Only margins/alignment here. */
+/* A block-level math element fills its container and centres its own rows, so left-aligning
+   needs the box to shrink-wrap (width:fit-content), not a margin override. */
+math[display="block"]{margin:0;width:fit-content}
+.eq.center math[display="block"]{margin-inline:auto}
+/* derivation rows: equation left-aligned, reason in a fixed column beside it */
+/* One grid for the whole derivation so the "=" columns line up across every row.
+   The fragment class goes on each CELL, not on a wrapping row: a wrapper would
+   need display:contents to join the grid, and opacity does not apply to that. */
+.dgrid{display:grid;grid-template-columns:auto auto minmax(0,300px);gap:11px 16px;align-items:center}
+.dgrid .lhs{text-align:right;font-size:23px}
+.dgrid .rhs{text-align:left;font-size:23px}
+.dgrid .lhs.big,.dgrid .rhs.big{font-size:26px}
+.dgrid .why{font-size:19px;font-style:italic;color:var(--ink-soft);padding-left:22px}
+/* Lecture 2 names this column .dnote. It had no rule at all, so the notes inherited the
+   grid's own font size and sat in body type right up against the equations — visibly
+   unlike Lecture 1. Same treatment, and a wider gutter so the two columns read apart. */
+.dgrid .dnote{font-size:19px;font-style:italic;color:var(--ink-soft);padding-left:22px}
+.dgrid mtable{line-height:1.1}
+.dgrid math{margin:0}
+/* Matrix delimiters are drawn in CSS. MathML operator stretching needs glyph
+   assembly data that the default math font does not supply, so a stretchy="true"
+   bracket stays one line tall no matter what — these grow with the content. */
+.derow mtable{line-height:1.1}
+.mrow-h{display:inline-flex;align-items:center;gap:.28em}
+.matx{position:relative;display:inline-flex;align-items:center;padding:3px 13px;margin:0 .3em}
+.matx::before,.matx::after{content:"";position:absolute;top:0;bottom:0;width:7px;
+  border:2.1px solid currentColor}
+.matx::before{left:0;border-right:0}
+.matx::after{right:0;border-left:0}
+.matx math{margin:0}
+
+/* ---- live site preview ----
+   An iframe sized to the box would render the site at ~470px, i.e. its mobile
+   layout, squashed. Instead we render at a real desktop width and scale the whole
+   thing down, so the page looks like the page. The screenshot behind it shows
+   through if the site cannot load (no network in the lecture hall). */
+.siteframe{position:relative;width:100%;height:388px;overflow:hidden;border-radius:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,.09);
+  background:#fff url("media/harold-site.jpg") no-repeat center top;background-size:100% auto}
+.siteframe iframe{position:absolute;top:0;left:0;width:1440px;height:980px;border:0;
+  transform-origin:0 0;display:block}
+.derow .why{font-size:14.5px;font-style:italic;color:var(--ink-soft);text-align:left;line-height:1.35}
+.derow .step{font-size:24px;text-align:left}
+.derow .step math{margin-inline:0;width:fit-content}
+.derow .step.big{font-size:27px}
+.derow .step.big math{padding:5px 0}
+.m .big{font-size:1.35em;font-style:normal;vertical-align:-.16em}
+/* Display equations are plain blocks, NOT flex: a flex context blockifies the
+   inline math span and collapses the stacked fraction/sum boxes inside it. */
+.eq{font-family:var(--font-math);font-size:29px;margin:14px 0;display:block;line-height:1.5}
+.eq.center{text-align:center}
+.eq-box{display:inline-block;padding:12px 20px;border:1.5px solid var(--accent);border-radius:7px;
+  background:color-mix(in srgb,var(--accent) 6%,transparent)}
+/* stacked fraction — inline-block with block children.
+   Numerals are set upright; wrap a variable numerator in <i> to keep it italic. */
+.frac{display:inline-block;vertical-align:-.52em;text-align:center;font-size:.78em;margin:0 .26em;font-style:normal}
+.frac .num{display:block;border-bottom:1.2px solid currentColor;padding:0 .3em 2px;line-height:1.18}
+.frac .den{display:block;padding:2px .3em 0;line-height:1.18}
+.frac i{font-style:italic}
+/* big operator with limits set above and below */
+.sum{display:inline-block;vertical-align:-.44em;text-align:center;margin:0 .2em;font-style:normal}
+.sum .lim{display:block;font-size:.4em;line-height:1.3;font-style:normal}
+.sum .sig{display:block;font-size:1.45em;line-height:.92;font-style:normal}
+
+/* layout */
+.row{display:flex;gap:46px;align-items:center}
+.row.top{align-items:flex-start}
+.row.stretch{align-items:stretch}
+.col{flex:1;min-width:0}
+.rule{height:1.5px;background:var(--rule);margin:20px 0;border:0}
+.card{background:var(--bg-alt);border:1px solid var(--rule);border-radius:12px;padding:22px 24px;box-shadow:var(--shadow)}
+.card.accent{border-color:var(--accent)}
+.pill{display:inline-block;padding:4px 13px;border-radius:20px;background:var(--accent);color:var(--bg);
+  font-family:var(--font-sans);font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.pill.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+
+/* section divider */
+.divider{justify-content:center;align-items:flex-start}
+.divider .num{font-family:var(--font-sans);font-size:13px;letter-spacing:.22em;color:var(--accent);
+  font-weight:700;margin-bottom:16px}
+.divider h1{font-size:72px}
+.divider .sub{font-size:23px;color:var(--ink-soft);font-style:italic;margin-top:18px}
+.divider .bar{width:90px;height:4px;background:var(--accent);border-radius:2px;margin-top:26px}
+
+/* title */
+.title-rule{width:82px;height:4px;background:var(--accent);margin:24px 0 28px;border-radius:2px}
+.meta{font-family:var(--font-sans);font-size:15.5px;color:var(--ink-soft);line-height:1.85}
+.meta b{color:var(--ink);font-weight:600}
+
+/* tables */
+table{border-collapse:collapse;width:100%;font-size:14px}
+.sched td{padding:4px 10px;font-size:13.2px;line-height:1.28}
+.sched th{padding:5px 10px}
+th{font-family:var(--font-sans);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-soft);text-align:left;padding:7px 10px;border-bottom:1.5px solid var(--rule);font-weight:600}
+td{padding:5.5px 10px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.35}
+tr.hi td{background:color-mix(in srgb,var(--accent) 9%,transparent);font-weight:700}
+tr.dim td{color:var(--ink-soft);font-style:italic}
+/* A cancelled slot stays on the list rather than vanishing — anyone who registered for
+   it needs to see that it is gone. The strike lives on an <s> around the text, not on
+   the row: text-decoration inherits into descendants and cannot be switched off there,
+   so a row-level line-through would score through the badge too. */
+tr.closed td{color:var(--ink-soft)}
+.tag{font-family:var(--font-sans);font-size:9.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);
+  border-radius:3px;padding:1px 5px;margin-left:8px;vertical-align:1px;white-space:nowrap}
+td.wk{font-family:var(--font-sans);font-weight:700;font-size:13px;width:44px}
+td.dt{font-family:var(--font-sans);font-size:12.5px;color:var(--ink-soft);width:88px;white-space:nowrap}
+
+/* assessment bars */
+/* one bar, adding to 100% */
+.stackbar{display:flex;width:100%;height:104px;border-radius:10px;overflow:hidden;
+  box-shadow:var(--shadow);margin-top:10px}
+.stackbar .seg{display:flex;flex-direction:column;justify-content:center;align-items:center;
+  color:var(--bg);padding:0 6px;text-align:center;min-width:0}
+.stackbar .sp{font-family:var(--font-math);font-size:31px;font-weight:700;line-height:1}
+.stackbar .sn{font-family:var(--font-sans);font-size:12.5px;font-weight:600;letter-spacing:.04em;
+  margin-top:5px;opacity:.92}
+.stacknote{display:flex;width:100%;margin-top:9px;font-family:var(--font-sans);
+  font-size:11.5px;color:var(--ink-soft)}
+.stacknote span:nth-child(1){flex:30}.stacknote span:nth-child(2){flex:10}
+.stacknote span:nth-child(3){flex:20}.stacknote span:nth-child(4){flex:40}
+.stacknote span{text-align:center;padding:0 4px}
+.assess{display:flex;flex-direction:column;gap:13px;margin-top:8px}
+.abar{display:flex;align-items:center;gap:16px}
+.abar .nm{width:210px;font-size:19px;font-weight:700}
+.abar .tr{flex:1;height:26px;background:var(--bg-alt);border-radius:5px;overflow:hidden;border:1px solid var(--rule)}
+.abar .fl{height:100%;background:var(--accent);border-radius:4px 0 0 4px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.abar .pc{width:56px;text-align:right;font-family:var(--font-math);font-size:21px;font-weight:700}
+.abar .dt2{width:150px;font-family:var(--font-sans);font-size:12.5px;color:var(--ink-soft)}
+
+/* Fragments: opacity only, and fast.
+   A `transform` promotes the element to its own composited layer, which switches text
+   from subpixel to grayscale antialiasing for the duration -- most visible on bold.
+   And any slow fade makes heavy glyphs readable before light ones. So: no transform,
+   and short enough that nothing can be perceived as arriving first. */
+/* Fragments appear instantly. With no intermediate opacity there is no window in
+   which one weight of text can be more legible than another. */
+.frag{opacity:0}
+.frag.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.slide{transition:none}}
+
+/* chrome */
+#progress{position:fixed;left:0;bottom:0;height:3px;background:var(--accent);width:0;
+  transition:width .4s cubic-bezier(.4,0,.2,1);z-index:60}
+#pagenum{position:fixed;right:20px;bottom:15px;font-family:var(--font-sans);font-size:12px;
+  color:var(--ink-soft);letter-spacing:.06em;z-index:60}
+#themebar{position:fixed;left:18px;bottom:13px;display:flex;gap:7px;z-index:60;
+  font-family:var(--font-sans);align-items:center;transition:opacity .2s}
+#themebar .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-right:3px}
+.swatch{width:22px;height:22px;border-radius:6px;cursor:pointer;border:1.5px solid var(--rule);
+  position:relative;transition:transform .18s ease,box-shadow .18s ease}
+.swatch:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.swatch.sel{outline:2px solid var(--accent);outline-offset:2px}
+.swatch i{position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-radius:50%}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:60;font-family:var(--font-sans);
+  font-size:11px;color:var(--ink-soft);letter-spacing:.05em;opacity:.7;transition:opacity .2s}
+
+/* overview */
+/* ---- annotation layer: draw straight onto the slide, pen or mouse ---- */
+#ink{position:fixed;inset:0;z-index:70;pointer-events:none;touch-action:none}
+body.inking #ink{pointer-events:auto;cursor:crosshair}
+#inkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:44px;z-index:75;display:none;
+  align-items:center;gap:9px;padding:8px 14px;border-radius:26px;background:var(--bg-alt);
+  border:1px solid var(--rule);box-shadow:var(--shadow);font-family:var(--font-sans)}
+body.inking #inkbar{display:flex}
+#inkbar .ib-lbl{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.ib-sw{width:19px;height:19px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.ib-sw.sel{border-color:var(--ink)}
+.ib-sep{width:1px;height:20px;background:var(--rule);margin:0 3px}
+.ib-sz{width:22px;height:22px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  border:1.5px solid transparent}
+.ib-sz::after{content:"";width:var(--d);height:var(--d);border-radius:50%;background:var(--ink-soft)}
+.ib-sz.sel{border-color:var(--ink)}
+.ib-sz.sel::after{background:var(--ink)}
+.ib-btn{font-size:11.5px;color:var(--ink-soft);cursor:pointer;padding:3px 8px;border-radius:12px}
+.ib-btn:hover{background:var(--rule);color:var(--ink)}
+/* Multi-column, not grid: multicol flows top-to-bottom then across, which is the
+   reading order for a slide sorter. A grid would fill left-to-right first. */
+#overview{position:fixed;inset:0;background:var(--bg);z-index:80;overflow-y:auto;padding:30px;
+  display:none;column-width:210px;column-gap:15px}
+#overview.on{display:block}
+#overview .thumb{break-inside:avoid;margin-bottom:15px;width:100%}
+.thumb{aspect-ratio:16/9;border:1.5px solid var(--rule);border-radius:9px;cursor:pointer;background:var(--bg-alt);
+  padding:12px;overflow:hidden;position:relative;transition:transform .18s ease,border-color .18s ease}
+.thumb:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:var(--shadow)}
+.thumb .tt{font-family:var(--font-display);font-size:13.5px;font-weight:700;line-height:1.25}
+.thumb .ts{font-family:var(--font-sans);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:5px;font-weight:700}
+.thumb .tn{position:absolute;right:8px;bottom:6px;font-family:var(--font-sans);font-size:10px;color:var(--ink-soft)}
+.thumb .tm{position:absolute;left:12px;bottom:6px;font-family:var(--font-sans);font-size:9.5px;color:var(--accent);font-weight:700}
+/* presenter clock: elapsed against the planned cumulative time */
+#clock{position:fixed;right:20px;top:16px;z-index:62;display:none;align-items:center;gap:10px;
+  padding:7px 14px;border-radius:22px;background:var(--bg-alt);border:1px solid var(--rule);
+  box-shadow:var(--shadow);font-family:var(--font-sans);font-size:13px}
+body.timing #clock{display:flex}
+#clock .el{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+#clock .dl{font-size:11.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+#clock .dl.ahead{color:var(--accent2)}
+#clock .dl.behind{color:var(--accent)}
+.thumb.cur{border-color:var(--accent);border-width:2.5px}
+.thumb.divider-t{background:var(--ink);border-color:var(--ink)}
+.thumb.divider-t .tt{color:var(--bg)}
+
+/* demos */
+.demo{display:flex;gap:28px;align-items:flex-start}
+.demo-plot{flex:1.35}
+.demo-plot svg,.fig svg{width:100%;display:block}
+.demo-ctrl{flex:.72}
+.ctrl-row{margin-bottom:18px}
+.ctrl-row label{font-family:var(--font-sans);font-size:11.5px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:8px}
+.ctrl-row .val{color:var(--accent);font-weight:700;font-size:14.5px;letter-spacing:0}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;
+  background:var(--rule);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:2.5px solid var(--bg);box-shadow:var(--shadow)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);
+  cursor:pointer;border:2.5px solid var(--bg)}
+.readout{display:flex;gap:10px;margin-top:20px}
+.readout .stat{padding:11px 12px}
+.readout .stat .v{font-size:25px}
+.stat{flex:1;background:var(--bg-alt);border:1px solid var(--rule);border-radius:9px;padding:12px 14px}
+.stat .k{font-family:var(--font-sans);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft)}
+.stat .v{font-family:var(--font-math);font-size:27px;font-weight:700;margin-top:3px;line-height:1}
+.stat.train .v{color:var(--accent2)}
+.stat.test .v{color:var(--accent)}
+.warn{margin-top:14px;font-size:15px;font-style:italic;color:var(--accent);min-height:2.8em;line-height:1.4}
+svg{display:block;overflow:visible}
+.axis{stroke:var(--rule);stroke-width:1.4}
+.gridline{stroke:var(--grid);stroke-width:1}
+.tick{font-family:var(--font-sans);font-size:13px;fill:var(--ink-soft)}
+.datapt{fill:var(--ink)}
+.truefn{fill:none;stroke:var(--accent2);stroke-width:2.2;stroke-dasharray:7 5;opacity:.85}
+.fitfn{fill:none;stroke:var(--accent);stroke-width:3}
+.legend{font-family:var(--font-sans);font-size:14px;fill:var(--ink-soft)}
+.matn{font-family:var(--font-math);font-size:16px;fill:var(--ink)}
+.tx-node{font-family:var(--font-display);font-weight:700}
+.tx-link{stroke:var(--rule);stroke-width:1.8;fill:none}
+.tx-leaf{font-family:var(--font-sans);font-size:12.5px;fill:var(--ink-soft)}
+.flowbox{fill:var(--bg-alt);stroke:var(--ink);stroke-width:1.8}
+.flowtxt{font-family:var(--font-display);font-size:16px;font-weight:700;fill:var(--ink);text-anchor:middle}
+.flowarr{stroke:var(--ink);stroke-width:1.8;fill:none;marker-end:url(#ah)}
+.appcard{background:var(--bg-alt);border:1px solid var(--rule);border-radius:10px;padding:15px 17px}
+.appcard .t{font-family:var(--font-display);font-size:18px;font-weight:700;margin-bottom:3px}
+.appcard .d{font-size:13.5px;color:var(--ink-soft);line-height:1.4}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+/* TA portraits. The sources are already cropped square, but object-fit:cover keeps the
+   face centred even if one is swapped for an off-ratio photo later. */
+.avatar{width:150px;height:150px;border-radius:50%;object-fit:cover;display:block;
+  margin:0 auto 15px;border:3px solid var(--rule);background:var(--bg-alt)}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+
+/* ---- figures, images, video ---- */
+/* Rounded corners, no outline. A border plus a filled background drew a visible
+   box around every image — obvious when the image letterboxes inside it. */
+.fig{border-radius:10px;overflow:hidden;line-height:0;position:relative;
+  background:transparent;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.fig img,.fig video{display:block;width:100%;height:auto}
+/* Click-to-load YouTube facade. Nothing is requested from Google until the play button is
+   pressed, so the deck opens instantly and makes no third-party connection if the video is
+   never reached. Used wherever we point at someone else's clip instead of re-hosting it. */
+.ytfacade{display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;
+  position:relative;line-height:0;border-radius:inherit;overflow:hidden}
+.ytfacade img{display:block;width:100%;height:auto}
+.ytplay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:55px;
+  border-radius:13px;background:rgba(18,18,18,.72);transition:background .16s ease}
+.ytplay::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-38%,-50%);
+  border-style:solid;border-width:11px 0 11px 19px;border-color:transparent transparent transparent #fff}
+.ytfacade:hover .ytplay,.ytfacade:focus-visible .ytplay{background:#cc0000}
+.ytwrap iframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+/* Height-capped figures: letterbox rather than crop.
+   Flex + max-height (not grid + height:100%) — a percentage height inside an
+   auto-sized grid row resolves to auto, which lets the image overflow and clip. */
+/* letterboxed figures get no shadow either — there is nothing to cast one */
+.fig[class*="h-"]{display:flex;align-items:center;justify-content:center;background:transparent;box-shadow:none}
+.fig[class*="h-"] img,.fig[class*="h-"] video{width:auto;height:auto;max-width:100%;max-height:100%}
+.fig[class*="h-"] svg{width:100%;height:100%}
+/* Stock chart, drawn from Yahoo! Finance closes rather than shipped as a picture:
+   it themes with the deck, stays sharp at any projector resolution, and carries no
+   third-party image licence. */
+.sc-grid{stroke:var(--grid);stroke-width:1}
+.sc-axis{stroke:var(--rule);stroke-width:1}
+.sc-ax{font-family:var(--font-sans);font-size:10px;fill:var(--ink-soft)}
+.sc-lab{font-family:var(--font-sans);font-size:11px;font-weight:600}
+.sc-val{font-size:11px;font-weight:800}
+.fig.h-190{height:190px}.fig.h-230{height:230px}.fig.h-260{height:260px}
+.fig.h-290{height:290px}.fig.h-330{height:330px}
+.figcap{font-size:22px;font-style:italic;color:var(--ink-soft);margin-top:12px;line-height:1.4}
+.cred{font-family:var(--font-sans);font-size:16px;color:var(--ink-soft);margin-top:6px;
+  line-height:1.35;opacity:.8;letter-spacing:.01em;text-align:center}
+.tile{position:relative;border-radius:10px;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.09);line-height:0;min-height:0}
+.tile img,.tile video{display:block;width:100%;height:100%;object-fit:cover}
+.tile svg{display:block;width:100%;height:100%;background:var(--bg-alt)}
+.tile .lbl{position:absolute;left:0;right:0;bottom:0;padding:20px 14px 10px;
+  font-family:var(--font-sans);font-size:13.5px;font-weight:700;color:#fff;letter-spacing:.02em;
+  background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,0));line-height:1.25}
+.vidbadge{position:absolute;top:11px;left:11px;z-index:2;font-family:var(--font-sans);font-size:10.5px;
+  font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;
+  background:rgba(0,0,0,.55);padding:5px 11px;border-radius:20px;backdrop-filter:blur(6px)}
+
+/* ---- notebook code cells ---- */
+.nb{border:1px solid var(--rule);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.nb-bar{display:flex;align-items:center;gap:8px;padding:7px 13px;background:var(--bg-alt);
+  border-bottom:1px solid var(--rule);font-family:var(--font-sans);font-size:10.5px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+.nb-bar .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);opacity:.65}
+pre.code{margin:0;padding:15px 17px;background:var(--bg);font-family:var(--font-mono);
+  font-size:13.5px;line-height:1.62;overflow:hidden;white-space:pre;color:var(--ink);tab-size:2}
+pre.code.sm{font-size:12.4px;line-height:1.55}
+.tok-kw{color:var(--accent);font-weight:600}
+.tok-fn{color:var(--accent2);font-weight:600}
+.tok-num{color:var(--accent2)}
+.tok-str{color:var(--accent2)}
+.tok-com{color:var(--ink-soft);font-style:italic}
+.tok-op{color:var(--ink-soft)}
+.nb-out{border-top:1px solid var(--rule);background:var(--bg-alt);padding:11px 15px;
+  font-family:var(--font-mono);font-size:13px;line-height:1.55;color:var(--ink)}
+.nb-out .ol{font-family:var(--font-sans);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-soft);font-weight:700;margin-bottom:5px}
+.nblink{font-family:var(--font-sans);font-size:17px;color:var(--ink-soft)}
+.nblink b{color:var(--accent)}
+
+/* ---- in-class activities ---- */
+.actbadge{display:inline-block;align-self:flex-start;padding:5px 15px;border-radius:20px;background:var(--accent);color:var(--bg);
+  font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.actq{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1.2;margin:16px 0 20px}
+.actopt{display:flex;gap:13px;align-items:flex-start;margin-bottom:12px;font-size:19px;line-height:1.35}
+.actopt .k{flex:none;width:27px;height:27px;border-radius:50%;border:1.8px solid var(--accent);
+  color:var(--accent);font-family:var(--font-sans);font-size:12.5px;font-weight:700;
+  display:grid;place-items:center;margin-top:1px}
+.actqr{text-align:center}
+.actqr img{width:170px;display:block;margin:0 auto 10px}
+.actqr .u{font-family:var(--font-sans);font-size:14px;font-weight:700}
+.predcards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:6px}
+.predcard{border:1.8px solid var(--rule);border-radius:10px;padding:12px 12px 8px;background:var(--bg-alt)}
+.predcard .pl{font-family:var(--font-sans);font-size:11px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+.predcard .pd{font-size:14px;color:var(--ink-soft);line-height:1.35;margin-top:6px}
+.predcard svg{display:block;width:100%}
+.basisbtns{display:flex;gap:8px;margin-bottom:12px}
+.bbtn{font-family:var(--font-sans);font-size:13px;padding:6px 15px;border-radius:18px;cursor:pointer;
+  border:1.5px solid var(--rule);color:var(--ink-soft);background:var(--bg);transition:none}
+.bbtn.sel{border-color:var(--accent);color:var(--bg);background:var(--accent);font-weight:700}
+/* a candidate button carries its line's colour via --k */
+.bbtn[style*='--k']{border-color:var(--k);color:var(--k)}
+.bbtn.sel[style*='--k']{background:var(--k);border-color:var(--k);color:var(--bg)}
+</style>
+</head>
+<body data-theme="paper">
+<div id="stage"><div id="canvas"></div></div>
+<div id="progress"></div><div id="pagenum"></div>
+<div id="hint">← → navigate · O overview · T theme · F fullscreen · B blank · D draw · P timer</div>
+<div id="themebar"><span class="lbl">Theme</span>
+  <div class="swatch" data-t="paper" style="background:#FBF7EF"><i style="background:#9B2C2C"></i></div>
+  <div class="swatch" data-t="academic" style="background:#FAFAF6"><i style="background:#1B4D8F"></i></div>
+  <div class="swatch" data-t="swiss" style="background:#FFFFFF"><i style="background:#EF7C00"></i></div>
+  <div class="swatch" data-t="nocturne" style="background:#0E0E11"><i style="background:#7FB3FF"></i></div>
+</div>
+<canvas id="ink"></canvas>
+<div id="inkbar">
+  <span class="ib-lbl">Ink</span>
+  <span class="ib-sw" data-c="#9B2C2C" style="background:#9B2C2C"></span>
+  <span class="ib-sw" data-c="#1B4D8F" style="background:#1B4D8F"></span>
+  <span class="ib-sw" data-c="#2F6F6B" style="background:#2F6F6B"></span>
+  <span class="ib-sw" data-c="#C9A227" style="background:#C9A227"></span>
+  <span class="ib-sw" data-c="#7B3FA0" style="background:#7B3FA0"></span>
+  <span class="ib-sw" data-c="#1E1A17" style="background:#1E1A17"></span>
+  <span class="ib-sep"></span>
+  <span class="ib-sz" data-w="1.1" style="--d:4px"></span>
+  <span class="ib-sz sel" data-w="2.2" style="--d:7px"></span>
+  <span class="ib-sz" data-w="4.5" style="--d:11px"></span>
+  <span class="ib-btn" id="ib-clear">clear</span>
+  <span class="ib-btn" id="ib-off">done (D)</span>
+</div>
+<div id="clock"><span class="el" id="cl-el">0:00</span><span class="dl" id="cl-dl"></span></div>
+<div id="overview"></div>
+
+<script>
+const ARROW = `<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+  <path d="M0,0 L7,3.2 L0,6.4 z" fill="currentColor" style="color:var(--ink)"/></marker></defs>`;
+
+const SLIDES = [
+{s:"", t:"Title", html:`
+  <div class="eyebrow">CS3264 &#183; Semester 1, AY2026/27</div>
+  <h1>Regression II<br>Probabilistic Modelling</h1>
+  <div class="title-rule"></div>
+  <p class="lede" style="margin-bottom:28px">Lecture 2 &#8212; where the loss function comes from</p>
+  <div class="meta">
+    <b>Harold Soh</b> &#183; harold@nus.edu.sg &#183; COM3-02-58 &#183; haroldsoh.com<br>
+    Teaching Assistants: <b>Oscar Jiang</b> &#183; <b>Sun Minghao</b> &#183; <b>Shashank Rao Marpally</b><br>
+    Tuesday 4&#8211;6pm &#183; LT15 &nbsp;|&nbsp; 18 August 2026
+  </div>`},
+
+{s:"", t:"Admin", html:`
+  <div class="eyebrow">Before we start</div>
+  <h2>Admin</h2>
+  <div class="row top stretch" style="gap:24px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px;color:var(--accent)">Tutorials start next week</div>
+      <p style="font-size:21px">First tutorial is <strong>Wednesday 26 August</strong>, Week 3,
+      BIZ2-0302. Attendance is taken and counts for 10%.</p>
+      <hr class="rule">
+      <p class="small"><strong>T03 (12&#8211;1pm) is closed.</strong> Five slots run:
+      T06, T01, T02, T04, T05.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Add/drop closes this week</div>
+      <p style="font-size:21px">Slots may still be <strong>merged</strong> once we see final
+      numbers. If yours moves you will be reassigned and told on Piazza.</p>
+      <hr class="rule">
+      <p class="small">Not on Piazza yet? Sign up today &#8212; that is where everything is announced.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:18px;text-align:center;font-size:20px">
+    Reading for today: <strong>PRML &#167;1.2</strong> (probability), <strong>&#167;3.1.1</strong>
+    (maximum likelihood), <strong>&#167;3.3</strong> (Bayesian linear regression).</p>`},
+
+{s:"Recap", t:"Recap", div:true, html:`
+  <div class="divider">
+    <div class="part">Recap</div>
+    <h1>Where we got to</h1>
+    <div class="bar"></div>
+    <div class="sub">Three ingredients, one unexplained choice.</div>
+  </div>`},
+
+{s:"Recap", t:"Three ingredients", html:`
+  <div class="eyebrow">Last week</div>
+  <h2 style="margin-bottom:16px">Every method in this course has three ingredients</h2>
+  <div class="grid3" style="margin-top:6px">
+    <div class="appcard frag" data-f="0" style="padding:22px"><div class="t">Data</div>
+      <div class="d" style="font-size:17.5px;margin-top:6px"><span class="tex" data-tex="\\mathcal{D} = \\{(x_n, t_n)\\}_{n=1}^{N}"></span><br>what we are given</div></div>
+    <div class="appcard frag" data-f="1" style="padding:22px"><div class="t">Model</div>
+      <div class="d" style="font-size:17.5px;margin-top:6px"><span class="tex" data-tex="y(x;\\mathbf{w}) = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x)"></span><br>the shape we assume</div></div>
+    <div class="appcard frag" data-f="2" style="padding:22px"><div class="t">Loss</div>
+      <div class="d" style="font-size:17.5px;margin-top:6px"><span class="tex" data-tex="E(\\mathbf{w}) = \\tfrac12\\sum_n \\bigl(y(x_n;\\mathbf{w}) - t_n\\bigr)^2"></span><br>what counts as wrong</div></div>
+  </div>
+  <div class="frag" data-f="3" style="margin-top:26px">
+    <hr class="rule">
+    <p style="font-size:22.5px">We fixed the first two by looking at the problem. The third we simply
+    <em class="hl">wrote down</em> &#8212; squared error, because it seemed reasonable.</p>
+  </div>`},
+
+{s:"Recap", t:"The story so far", html:`
+  <div class="eyebrow">Last week, in one slide</div>
+  <h2 style="margin-bottom:14px">Linear &#8594; nonlinear &#8594; overfitting &#8594; ridge</h2>
+  <div class="row top" style="gap:22px">
+    <div class="col card frag" data-f="0" style="padding:16px 18px">
+      <div class="eyebrow" style="margin-bottom:8px">Fit a line</div>
+      <p style="font-size:19px">Least squares has a closed form.</p>
+      <div class="eq" style="margin:8px 0 0;font-size:20px"><span class="texd" data-tex="\\mathbf{w}_{\\mathrm{ML}} = (\\mathbf{X}^\\top\\mathbf{X})^{-1}\\mathbf{X}^\\top\\mathbf{t}"></span></div>
+    </div>
+    <div class="col card frag" data-f="1" style="padding:16px 18px">
+      <div class="eyebrow" style="margin-bottom:8px">Bend it</div>
+      <p style="font-size:19px">Swap the design matrix <span class="tex" data-tex="\\mathbf{X}"></span> for <span class="tex" data-tex="\\boldsymbol{\\Phi} \\text{ with rows } \\boldsymbol{\\phi}(x_n)^\\top"></span>. Still linear
+      <em>in the weights</em>, so the same formula solves it.</p>
+    </div>
+    <div class="col card frag" data-f="2" style="padding:16px 18px">
+      <div class="eyebrow" style="margin-bottom:8px">It overfits</div>
+      <p style="font-size:19px">Enough capacity and the curve chases the noise. Weights explode.</p>
+    </div>
+    <div class="col card accent frag" data-f="3" style="padding:16px 18px">
+      <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">Penalise size</div>
+      <div class="eq" style="margin:4px 0 0;font-size:20px"><span class="texd" data-tex="\\widetilde{E} = \\tfrac12\\lVert\\mathbf{t}-\\boldsymbol{\\Phi}\\mathbf{w}\\rVert^2 + \\tfrac{\\lambda}{2}\\lVert\\mathbf{w}\\rVert^2"></span></div>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="4" style="margin-top:20px;text-align:center;font-size:20.5px">
+    It works. But <em class="hl">why these formulas?</em></p>`},
+
+{s:"Recap", t:"Two unexplained choices", html:`
+  <div class="eyebrow">The gap in the story</div>
+  <h2 style="margin-bottom:18px">We never justified either formula</h2>
+  <div class="row top" style="gap:34px">
+    <div class="col">
+      <div class="card" style="padding:18px 22px">
+        <p style="font-size:20px;max-width:none">Why <strong>squared</strong> error? Why not absolute
+        error, or the fourth power?</p>
+        <div class="eq" style="margin:10px 0 0;font-size:24px"><span class="texd" data-tex="\\tfrac12\\textstyle\\sum_n (y_n - t_n)^2"></span></div>
+      </div>
+      <div class="card frag" data-f="0" style="padding:18px 22px;margin-top:14px">
+        <p style="font-size:20px;max-width:none">Why penalise <strong><span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert_2^2"></span></strong>? Why not
+        <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert_1"></span>, or the number of non-zero weights?</p>
+        <div class="eq" style="margin:10px 0 0;font-size:24px"><span class="texd" data-tex="\\tfrac{\\lambda}{2}\\lVert\\mathbf{w}\\rVert_2^2"></span></div>
+      </div>
+    </div>
+    <div class="col card accent frag" data-f="1" style="flex:.9">
+      <div class="eyebrow" style="margin-bottom:10px;color:var(--accent)">Today</div>
+      <p style="font-size:22.5px;max-width:none">Both fall out of a single move: <em class="hl">write
+      down a probability model of how the data was generated</em>, then ask which parameters make
+      the data most probable.</p>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none">The loss stops being a design choice and becomes a
+      <strong>consequence</strong>.</p>
+    </div>
+  </div>`},
+
+{s:"Part I", t:"Part I", div:true, html:`
+  <div class="divider">
+    <div class="part">Part I</div>
+    <h1>Why a point is not enough</h1>
+    <div class="bar"></div>
+    <div class="sub">A number with no error bar is a number you cannot act on.</div>
+  </div>`},
+
+{s:"Part I", t:"The used-car problem", draw:"car", html:`
+  <div class="eyebrow">A problem our current model cannot answer</div>
+  <h2 style="margin-bottom:12px">You are buying a used car</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <p style="font-size:22px">The model sees mileage, age and model year, and returns
+      <strong>$14,200</strong>. The seller wants <strong>$15,000</strong>. Walk away?</p>
+      <div class="card frag" data-f="0" style="margin-top:13px">
+        <p style="font-size:20.5px;max-width:none">$14,200 is an <em>average</em> over cars with
+        those three numbers. Condition, history and seller are things the model never saw &#8212; so
+        what we need is the <em class="hl">spread of real selling prices</em> for cars like this.</p>
+      </div>
+      <div class="card accent frag" data-f="1" style="margin-top:13px">
+        <p style="font-size:20.5px;max-width:none">Narrow spread &#8594; $15,000 is an unusual price,
+        so push back.<br>
+        Wide spread &#8594; $800 is ordinary variation, and there is nothing to argue about.</p>
+      </div>
+    </div>
+    <div class="col frag" data-f="2" style="flex:1.05">
+      <div class="fig h-290"><svg viewBox="0 0 460 320"><g id="carfig"></g></svg></div>
+      <p class="cred">Same prediction of $14,200 in both. Only the spread differs.</p>
+    </div>
+  </div>`},
+
+{s:"Part I", t:"Learning objectives", html:`
+  <div class="eyebrow">Where we are going</div>
+  <h2 style="margin-bottom:16px">Today</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <ul>
+        <li style="margin-bottom:10px"><strong>Probability preliminaries</strong> &#8212; two rules,
+          independence, the Gaussian.</li>
+        <li style="margin-bottom:10px"><strong>Maximum likelihood</strong> &#8212; fit a Gaussian;
+          then fit a regression.</li>
+        <li style="margin-bottom:10px"><strong>Squared loss, derived</strong> &#8212; not chosen.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <ul>
+        <li style="margin-bottom:10px"><strong>The Bayesian view</strong> &#8212; priors, posteriors,
+          and what a probability even means.</li>
+        <li style="margin-bottom:10px"><strong>MAP</strong> &#8212; and the regulariser, derived.</li>
+        <li style="margin-bottom:10px"><strong>The full posterior</strong> &#8212; predictions that
+          come with error bars.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:16px;text-align:center">
+    By the end, both terms of the regularised loss will have a probabilistic name.</p>`},
+
+{s:"Part I", t:"Part I in one slide", html:`
+  <div class="eyebrow">Before we move on</div>
+  <h2 style="margin-bottom:16px">Part I in one slide</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The problem</div><p style="font-size:20px;max-width:none">A point prediction cannot support a decision. $14,200 against an asking price of $15,000 means nothing until you know the spread.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">What is missing</div><p style="font-size:20px;max-width:none">A model that returns a <strong>distribution</strong>, not a number.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">How we get there</div><p style="font-size:20px;max-width:none">Write down how the data was generated, then ask which parameters make it most probable.</p></div>
+  </div>`},
+
+{s:"Part I", t:"Questions (Part I)", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Questions?</h1>
+    <div class="bar" style="margin:18px auto 20px"></div>
+    <p class="lede" style="font-size:20px;margin-bottom:20px;max-width:44ch">About why a single number is not enough to act on</p>
+    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
+  </div>`},
+
+{s:"Part II", t:"Part II", div:true, html:`
+  <div class="divider">
+    <div class="part">Part II</div>
+    <h1>Preliminaries</h1>
+    <div class="bar"></div>
+    <div class="sub">The sum and product rules, Bayes rule, and the Gaussian.</div>
+  </div>`},
+
+{s:"Part II", t:"Two rules", html:`
+  <div class="eyebrow">We will use these constantly today</div>
+  <h2 style="margin-bottom:18px">Two useful rules in probability</h2>
+  <div class="row top" style="gap:34px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:12px">Product (chain) rule</div>
+      <div class="eq" style="margin:0;font-size:28.5px"><span class="texd" data-tex="p(x,y) = p(x \\mid y)\\,p(y) = p(y \\mid x)\\,p(x)"></span></div>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none">A joint distribution can always be built one
+      variable at a time.</p>
+    </div>
+    <div class="col card frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:12px">Sum rule (marginalisation)</div>
+      <div class="eq" style="margin:0;font-size:28.5px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y) \\quad\\text{or}\\quad \\int p(x,y)\\,dy"></span></div>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none">A variable you do not care about is removed by
+      summing &#8212; or integrating &#8212; it away.</p>
+    </div>
+  </div>
+  <div class="card accent frag" data-f="1" style="margin-top:20px;text-align:center">
+    <p style="font-size:22px;max-width:none">Applied together, these two give <strong>Bayes&#8217;
+    rule</strong>, which we use in the second half of the lecture.</p>
+  </div>`},
+
+{s:"Part II", t:"Deriving Bayes rule", html:`
+  <div class="eyebrow">Built from the two rules above</div>
+  <h2 style="margin-bottom:10px">Bayes&#8217; rule is three lines of algebra</h2>
+  <p style="font-size:20.5px;margin-bottom:8px">Start from the definition of conditional
+  probability &#8212; the product rule, written two ways for the same joint:</p>
+  <div class="dgrid" style="grid-template-columns:max-content max-content minmax(0,1fr);justify-content:start;font-size:22px">
+    <div><span class="tex" data-tex="p(A, B)"></span></div><div><span class="tex" data-tex="= p(A \\mid B)\\,p(B) = p(B \\mid A)\\,p(A)"></span></div>
+      <div class="dnote">the product rule, both orderings</div>
+    <div class="frag" data-f="0"><span class="tex" data-tex="p(A \\mid B)"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= \\dfrac{p(B \\mid A)\\,p(A)}{p(B)}"></span></div>
+      <div class="dnote frag" data-f="0">divide through by <span class="tex" data-tex="p(B)"></span></div>
+    <div class="frag" data-f="1"><span class="tex" data-tex="p(B)"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="= \\textstyle\\sum_{A'} p(B \\mid A')\\,p(A')"></span></div>
+      <div class="dnote frag" data-f="1">and the <strong>sum rule</strong> supplies the denominator</div>
+  </div>
+  <div class="card accent frag" data-f="2" style="margin-top:16px;text-align:center;padding:14px 20px">
+    <p style="font-size:20.5px;max-width:none">Nothing has been assumed. It follows from the two
+    rules we just wrote down.</p>
+  </div>`},
+
+{s:"Part II", t:"Bayes rule", html:`
+  <div class="eyebrow">What each piece is called</div>
+  <h2 style="margin-bottom:14px">Prior, likelihood, posterior</h2>
+  <p style="font-size:20.5px;margin-bottom:6px">Put a concrete pair of events in it. Let
+  <span class="tex" data-tex="D"></span> be having a disease and <span class="tex" data-tex="{+}"></span> be testing positive:</p>
+  <div class="eq" style="margin:8px 0 18px;font-size:30px"><span class="texd" data-tex="\\underbrace{\\htmlClass{c-post}{p(D \\mid {+})}}_{\\htmlClass{c-post}{\\text{posterior}}} = \\frac{\\overbrace{\\htmlClass{c-lik}{p({+} \\mid D)}}^{\\htmlClass{c-lik}{\\text{likelihood}}}\\ \\overbrace{\\htmlClass{c-prior}{p(D)}}^{\\htmlClass{c-prior}{\\text{prior}}}}{\\underbrace{p({+})}_{\\text{evidence}}}"></span></div>
+  <div class="grid3">
+    <div class="appcard frag" data-f="0" style="padding:19px;border-color:var(--accent2)">
+      <div class="t" style="font-size:22px;color:var(--accent2)">Prior</div>
+      <div class="d" style="font-size:18.5px;margin-top:6px"><span class="tex" data-tex="p(D)"></span> &#8212; how common the disease is,
+      before any test.</div></div>
+    <div class="appcard frag" data-f="1" style="padding:19px;border-color:var(--accent-soft)">
+      <div class="t" style="font-size:22px;color:var(--accent-soft)">Likelihood</div>
+      <div class="d" style="font-size:18.5px;margin-top:6px"><span class="tex" data-tex="p({+} \\mid D)"></span> &#8212; how the test behaves on
+      someone who is ill.</div></div>
+    <div class="appcard frag" data-f="2" style="padding:19px;border-color:var(--accent)">
+      <div class="t" style="font-size:22px;color:var(--accent)">Posterior</div>
+      <div class="d" style="font-size:18.5px;margin-top:6px"><span class="tex" data-tex="p(D \\mid {+})"></span> &#8212; what you actually want to
+      know, given your result.</div></div>
+  </div>
+  <p class="figcap frag" data-f="3" style="margin-top:16px;text-align:center">
+    Later we put <span class="tex" data-tex="\\boldsymbol{\\theta}"></span> and <span class="tex" data-tex="\\mathcal{D}"></span> in the same slots, and the same rule learns parameters from data.</p>`},
+
+{s:"Part II", t:"Who was Bayes", html:`
+  <div class="eyebrow">Notion before notation</div>
+  <h2 style="margin-bottom:12px">What Bayes&#8217; rule is for</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col" style="flex:.5">
+      <div class="fig h-250"><img src="media/bayes.jpg" alt="Portrait said to be of Thomas Bayes"></div>
+      <p class="cred">Thomas Bayes, c.1701&#8211;1761. The only portrait said to be of him, and even
+        that is disputed.</p>
+    </div>
+    <div class="col" style="flex:1.5">
+      <p style="font-size:21px">A Presbyterian minister and mathematician. The rule was published in
+      1763, two years after he died, from a paper found among his notes.</p>
+      <div class="frag" data-f="0" style="margin-top:13px">
+        <hr class="rule">
+        <p style="font-size:21px">It answers one question: <em class="hl">how do I turn what I can
+        measure into what I want to know?</em></p>
+      </div>
+      <div class="row top frag" data-f="1" style="gap:22px;margin-top:13px">
+        <div class="col card">
+          <div class="eyebrow" style="margin-bottom:8px">What a lab can measure</div>
+          <p style="font-size:20px;max-width:none"><span class="tex" data-tex="p({+} \\mid D)"></span><br>
+          <span style="color:var(--ink-soft);font-size:18px">test 1,000 known cases and count</span></p>
+        </div>
+        <div class="col card accent">
+          <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">What a patient asks</div>
+          <p style="font-size:20px;max-width:none"><span class="tex" data-tex="p(D \\mid {+})"></span><br>
+          <span style="color:var(--ink-soft);font-size:18px">my test is positive &#8212; am I ill?</span></p>
+        </div>
+      </div>
+    </div>
+  </div>`},
+
+{s:"Part II", t:"Bayes example", html:`
+  <span class="actbadge">Predict first</span>
+  <div class="actq" style="font-size:27px;margin:10px 0 14px">A disease affects <strong>1 in 100</strong>
+    people. A test is right <strong>99&#37;</strong> of the time, either way.<br>
+    Your test comes back <span style="color:var(--accent)">positive</span>. What is the chance you
+    have it?</div>
+  <div class="predcards" style="margin-bottom:6px">
+    <div class="predcard"><div class="pl">A</div><div class="pd" style="font-size:23px;padding:14px 0">about 99&#37;</div></div>
+    <div class="predcard"><div class="pl">B</div><div class="pd" style="font-size:23px;padding:14px 0">about 90&#37;</div></div>
+    <div class="predcard"><div class="pl">C</div><div class="pd" style="font-size:23px;padding:14px 0">about 50&#37;</div></div>
+    <div class="predcard"><div class="pl">D</div><div class="pd" style="font-size:23px;padding:14px 0">about 1&#37;</div></div>
+  </div>
+  <p class="figcap" style="text-align:center">Commit to one before we work it out.</p>`},
+
+{s:"Part II", t:"Bayes example — the computation", html:`
+  <div class="eyebrow">Put the numbers in the rule</div>
+  <h2 style="margin-bottom:10px">Turn the handle</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <p style="font-size:20.5px;margin-bottom:6px">What we are given:</p>
+      <div class="eq" style="margin:6px 0 12px;font-size:21px"><span class="texd" data-tex="p(D) = 0.01, \\qquad p({+} \\mid D) = 0.99, \\qquad p({+} \\mid \\lnot D) = 0.01"></span></div>
+      <p style="font-size:20.5px;margin-bottom:6px" class="frag" data-f="0">The denominator comes
+      from the sum rule &#8212; positives arrive from both groups:</p>
+      <div class="eq frag" data-f="0" style="margin:6px 0 0;font-size:20px"><span class="texd" data-tex="p({+}) = \\underbrace{0.99 \\times 0.01}_{\\text{ill}} + \\underbrace{0.01 \\times 0.99}_{\\text{well}} = 0.0198"></span></div>
+    </div>
+    <div class="col frag" data-f="1">
+      <p style="font-size:20.5px;margin-bottom:6px">So:</p>
+      <div class="eq" style="margin:6px 0 12px;font-size:20px"><span class="texd" data-tex="p(D \\mid {+}) = \\frac{0.99 \\times 0.01}{0.0198} = \\frac{0.0099}{0.0198} = 0.5"></span></div>
+      <div class="card accent frag" data-f="2">
+        <p style="font-size:21px;max-width:none">The prior is doing the work. A disease this rare
+        means the 99&#37; of well people who test correctly still leave <em class="hl">as many false
+        positives as true ones</em>.</p>
+      </div>
+    </div>
+  </div>`},
+
+{s:"Part II", t:"Bayes example — answer", draw:"med", html:`
+  <div class="eyebrow">Why the answer surprises people</div>
+  <h2 style="margin-bottom:12px">It is <strong>C</strong> &#8212; about 50&#37;</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <div class="card accent">
+        <p style="font-size:21px;max-width:none">The same thing as counts. Take
+        <strong>10,000</strong> people.</p>
+        <hr class="rule">
+        <p style="font-size:20.5px;max-width:none"><strong>100</strong> are ill, and 99 of them test
+        positive.</p>
+        <p style="font-size:20.5px;max-width:none;margin-top:8px"><strong>9,900</strong> are well,
+        and 1&#37; of them &#8212; another <strong>99</strong> &#8212; also test positive.</p>
+        <hr class="rule">
+        <p style="font-size:21px;max-width:none">Two groups of the same size, so a positive result
+        is a coin flip.</p>
+      </div>
+    </div>
+    <div class="col frag" data-f="0" style="flex:1.05">
+      <div class="fig h-290"><svg viewBox="0 0 460 300"><g id="medfig"></g></svg></div>
+      <p class="cred">10,000 people. Teal: ill. Red outline: tested positive.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="1" style="margin-top:12px;text-align:center">
+    When a condition is rare, most positives are false ones &#8212; and test accuracy alone can
+    never tell you that.</p>`},
+
+{s:"Part II", t:"Independence", html:`
+  <div class="eyebrow">An assumption we make all lecture</div>
+  <h2 style="margin-bottom:16px">Independence</h2>
+  <p style="font-size:22px;margin-bottom:10px">Two random variables <span class="tex" data-tex="x"></span> and <span class="tex" data-tex="y"></span> are
+  <strong>independent</strong> if and only if</p>
+  <div class="eq" style="margin:10px 0 6px;font-size:33px"><span class="texd" data-tex="p(x,y) = p(x)\\,p(y)"></span></div>
+  <div class="row top frag" data-f="0" style="gap:26px;margin-top:20px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:9px">Independent</div>
+      <p style="font-size:20px;max-width:none">Two rolls of a die. Knowing the first came up 6 tells
+      you nothing about the second.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:9px">Not independent</div>
+      <p style="font-size:20px;max-width:none">Today&#8217;s temperature and tomorrow&#8217;s.
+      Knowing one tells you a good deal about the other.</p>
+    </div>
+  </div>
+  <div class="card accent frag" data-f="1" style="margin-top:16px">
+    <p style="font-size:20px;max-width:none">We assume the <em>noise</em> on each point is
+    independent &#8212; which turns a joint distribution over all N points into a <strong>product of
+    N one-dimensional terms</strong>. It is an assumption, and it can be wrong.</p>
+  </div>`},
+
+{s:"Part II", t:"The Gaussian", draw:"gauss", html:`
+  <div class="eyebrow">Our model for continuous noise</div>
+  <h2 style="margin-bottom:10px">The normal distribution</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="gsvg" viewBox="0 0 560 300"></svg></div>
+    <div class="demo-ctrl">
+      <div class="eq" style="margin:0 0 16px;font-size:20px"><span class="texd" data-tex="\\mathcal{N}(x \\mid \\mu, \\sigma^2) = \\frac{1}{\\sqrt{2\\pi\\sigma^2}}\\exp\\!\\left(-\\frac{(x-\\mu)^2}{2\\sigma^2}\\right)"></span></div>
+      <div class="ctrl-row"><label>mean <span class="val" id="gmuv">0.0</span></label>
+        <input type="range" id="gmu" min="-3" max="3" step="0.1" value="0"></div>
+      <div class="ctrl-row"><label>variance <span class="val" id="gs2v">1.0</span></label>
+        <input type="range" id="gs2" min="0.1" max="4" step="0.1" value="1"></div>
+      <p class="caption" style="margin-top:6px">Two numbers fix the curve: where it sits and how
+      wide it is. It is symmetric about the mean, and never exactly reaches zero &#8212; every value
+      keeps some density, however far out.</p>
+      <p class="caption" style="margin-top:8px">We use it for measurement noise because errors from
+      many small independent causes tend towards this shape.</p>
+    </div>
+  </div>`},
+
+{s:"Part II", t:"What a likelihood is", draw:"lik", html:`
+  <div class="eyebrow">Notion before notation</div>
+  <h2 style="margin-bottom:4px">What is a likelihood?</h2>
+  <p style="font-size:20px;margin-bottom:2px">Same formula as the density, but the
+  <strong>data is fixed</strong> and the <em class="hl">parameter varies</em>.</p>
+  <div class="demo" style="margin-top:4px">
+    <div class="demo-plot"><svg id="likfig-wrap" viewBox="0 0 470 300"><g id="likfig"></g></svg></div>
+    <div class="demo-ctrl">
+      <div class="eq" style="margin:0 0 14px;font-size:21px"><span class="texd" data-tex="L(\\mu) = p(\\mathcal{D} \\mid \\mu)"></span></div>
+      <div class="ctrl-row"><label>mean &#956; <span class="val" id="likmuv">-1.60</span></label>
+        <input type="range" id="likmu" min="-3" max="3" step="0.02" value="-1.6"></div>
+      <div class="readout">
+        <div class="stat test"><div class="k">likelihood</div><div class="v" id="likval" style="font-size:20px">&#8212;</div></div>
+        <div class="stat train"><div class="k">log-likelihood</div><div class="v" id="liklog" style="font-size:20px">&#8212;</div></div>
+      </div>
+      <div class="warn" id="likwarn"></div>
+      <p class="caption" style="margin-top:2px">A score, not a distribution over <span class="tex" data-tex="\\mu"></span>.</p>
+    </div>
+  </div>`},
+
+{s:"Part II", t:"Part II in one slide", html:`
+  <div class="eyebrow">Before we move on</div>
+  <h2 style="margin-bottom:16px">Part II in one slide</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Two rules</div><p style="font-size:20px;max-width:none">The product rule factorises a joint; the sum rule integrates a variable away. Bayes rule follows from just these two.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Bayes&#8217; rule</div><p style="font-size:20px;max-width:none">Follows from them in three lines. Turns <span class="tex" data-tex="p(B \\mid A)"></span>, which you can measure, into <span class="tex" data-tex="p(A \\mid B)"></span>, which you want.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Likelihood</div><p style="font-size:20px;max-width:none">The same density read with the <em>data fixed</em> and the parameter varying. A score, not a distribution.</p></div>
+  </div>
+  <p class="figcap" style="margin-top:16px;text-align:center">And the Gaussian, which is the density we will use for noise from here on.</p>`},
+
+{s:"Part II", t:"Questions (Part II)", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Questions?</h1>
+    <div class="bar" style="margin:18px auto 20px"></div>
+    <p class="lede" style="font-size:20px;margin-bottom:20px;max-width:44ch">About the sum and product rules, Bayes rule, or the Gaussian</p>
+    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
+  </div>`},
+
+{s:"Part III", t:"Part III", div:true, html:`
+  <div class="divider">
+    <div class="part">Part III</div>
+    <h1>Fitting a Gaussian</h1>
+    <div class="bar"></div>
+    <div class="sub">A simple case &#8212; likelihood, log, derivative, solve.</div>
+  </div>`},
+
+{s:"Part III", t:"Gaussian MLE — setup", html:`
+  <div class="eyebrow">Data, model, loss</div>
+  <h2 style="margin-bottom:16px">Learning a Gaussian</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Data</div>
+      <div class="eq" style="margin:6px 0 0;font-size:24px"><span class="texd" data-tex="\\mathcal{D} = \\{t_n\\}_{n=1}^{N}"></span></div>
+      <p class="caption" style="margin-top:10px">N numbers. No inputs, no targets &#8212; just values.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Model</div>
+      <div class="eq" style="margin:6px 0 0;font-size:24px"><span class="texd" data-tex="t_n \\sim \\mathcal{N}(\\mu, \\sigma^2)"></span></div>
+      <p class="caption" style="margin-top:10px">They came from one Gaussian.
+        Unknown: <span class="tex" data-tex="\\mu"></span>. Take <span class="tex" data-tex="\\sigma^2"></span> as known for now.</p>
+    </div>
+    <div class="col card accent">
+      <div class="eyebrow" style="margin-bottom:10px;color:var(--accent)">Loss</div>
+      <p style="font-size:20px;max-width:none">Not written down by hand &#8212; obtained from
+      <strong>maximum likelihood estimation</strong>.</p>
+      <p class="caption" style="margin-top:10px">Which <span class="tex" data-tex="\\mu"></span> makes this data least surprising?</p>
+    </div>
+  </div>
+  <div class="card frag" data-f="0" style="margin-top:20px;text-align:center">
+    <p style="font-size:22.5px;max-width:none">Key assumption: the samples are
+    <strong>independent and identically distributed</strong> &#8212; <em class="hl">i.i.d.</em></p>
+  </div>`},
+
+{s:"Part III", t:"Gaussian MLE — the likelihood", html:`
+  <div class="eyebrow">Step 1 &#8212; write the probability of the data</div>
+  <h2 style="margin-bottom:12px">The likelihood</h2>
+  <div class="dgrid" style="grid-template-columns:max-content max-content minmax(0,1fr);justify-content:start;font-size:22.5px">
+    <div><span class="tex" data-tex="p(\\mathcal{D} \\mid \\theta)"></span></div><div><span class="tex" data-tex="= p(t_1, t_2, \\ldots, t_N \\mid \\theta)"></span></div>
+      <div class="dnote">the joint probability of all N values</div>
+    <div class="frag" data-f="0"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= p(t_1 \\mid \\theta)\\,p(t_2 \\mid \\theta)\\cdots p(t_N \\mid \\theta)"></span></div>
+      <div class="dnote frag" data-f="0">independence &#8212; the joint factorises</div>
+    <div class="frag" data-f="1"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="= \\prod_{n=1}^{N} p(t_n \\mid \\theta)"></span></div>
+      <div class="dnote frag" data-f="1">and identically distributed</div>
+    <div class="frag" data-f="2"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="2"><span class="tex" data-tex="= \\prod_{n=1}^{N} \\mathcal{N}(t_n \\mid \\mu, \\sigma^2)"></span></div>
+      <div class="dnote frag" data-f="2">now put the Gaussian in</div>
+  </div>
+  <p class="figcap frag" data-f="3" style="margin-top:22px;text-align:center;font-size:20.5px">
+    A product of N terms, each of them small. Multiplied together they underflow a float within a
+    few hundred points &#8212; a practical reason for the next step, quite apart from the algebra.</p>`},
+
+{s:"Part III", t:"Gaussian MLE — the log", html:`
+  <div class="eyebrow">Step 2 &#8212; take logs, then throw things away</div>
+  <h2 style="margin-bottom:8px">Maximum likelihood</h2>
+  <p style="font-size:20.5px;margin-bottom:10px"><span class="tex" data-tex="\\log"></span> is increasing, so maximising the log
+  maximises the thing itself &#8212; and it turns the product into a sum:</p>
+  <div class="dgrid" style="grid-template-columns:max-content max-content minmax(0,1fr);justify-content:start;font-size:21px">
+    <div><span class="tex" data-tex="\\log p(\\mathcal{D} \\mid \\mu)"></span></div><div><span class="tex" data-tex="= \\log \\prod_n \\mathcal{N}(t_n \\mid \\mu,\\sigma^2)"></span></div><div class="dnote"></div>
+    <div class="frag" data-f="0"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= \\sum_n \\log \\mathcal{N}(t_n \\mid \\mu, \\sigma^2)"></span></div>
+      <div class="dnote frag" data-f="0">log of a product is a sum of logs</div>
+    <div class="frag" data-f="1"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="= \\sum_n \\log\\!\\left[\\tfrac{1}{\\sqrt{2\\pi\\sigma^2}}\\exp\\!\\left(-\\tfrac{(t_n-\\mu)^2}{2\\sigma^2}\\right)\\right]"></span></div>
+      <div class="dnote frag" data-f="1">write the density out</div>
+    <div class="frag" data-f="2"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="2"><span class="tex" data-tex="= \\underbrace{\\sum_n \\log\\tfrac{1}{\\sqrt{2\\pi\\sigma^2}}}_{\\text{constant in } \\mu} - \\sum_n \\tfrac{(t_n-\\mu)^2}{2\\sigma^2}"></span></div>
+      <div class="dnote frag" data-f="2">the first term has no <span class="tex" data-tex="\\mu"></span> in it &#8212; drop it</div>
+  </div>
+  <div class="card accent frag" data-f="3" style="margin-top:18px;text-align:center">
+    <p style="font-size:23.5px;max-width:none">Maximising that is the same as
+    <strong>minimising</strong> <span class="tex" data-tex="\\tfrac12\\sum_n (t_n - \\mu)^2"></span></p>
+    <p class="caption" style="margin-top:8px">Squared error, derived from the Gaussian noise
+    assumption &#8212; not chosen.</p>
+  </div>`},
+
+{s:"Part III", t:"Gaussian MLE — solve", html:`
+  <div class="eyebrow">Step 3 &#8212; set the derivative to zero</div>
+  <h2 style="margin-bottom:14px">The answer is the one you would have guessed</h2>
+  <div class="row top" style="gap:34px">
+    <div class="col">
+      <div class="eq" style="margin:4px 0 12px;font-size:26px"><span class="texd" data-tex="\\mathcal{L}(\\mu) = \\tfrac12\\sum_n (t_n-\\mu)^2"></span></div>
+      <div class="frag" data-f="0">
+        <div class="eq" style="margin:4px 0 12px;font-size:26px"><span class="texd" data-tex="\\frac{\\partial \\mathcal{L}}{\\partial \\mu} = -\\sum_n (t_n - \\mu) \\stackrel{!}{=} 0"></span></div>
+      </div>
+      <div class="card accent frag" data-f="1">
+        <div class="eq" style="margin:0;font-size:31px"><span class="texd" data-tex="\\mu_{\\mathrm{ML}} = \\frac{1}{N}\\sum_{n=1}^{N} t_n"></span></div>
+      </div>
+    </div>
+    <div class="col" style="flex:.95">
+      <div class="card frag" data-f="2">
+        <div class="eyebrow" style="margin-bottom:9px">And the variance</div>
+        <p style="font-size:20px;max-width:none">The same argument applied to <span class="tex" data-tex="\\sigma^2"></span> gives</p>
+        <div class="eq" style="margin:8px 0 0;font-size:21px"><span class="texd" data-tex="\\sigma^2_{\\mathrm{ML}} = \\frac{1}{N}\\sum_n (t_n - \\mu_{\\mathrm{ML}})^2"></span></div>
+      </div>
+      <div class="card accent frag" data-f="3" style="margin-top:14px">
+        <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">Worth noticing</div>
+        <p style="font-size:20px;max-width:none">The sample mean was never assumed &#8212; it is what
+        maximum likelihood <em class="hl">returns</em> under Gaussian noise. Assume Laplace noise
+        instead and you get the <strong>median</strong>.</p>
+      </div>
+    </div>
+  </div>`},
+
+{s:"Part III", t:"Why MLE", html:`
+  <div class="eyebrow">Is this a good idea in general?</div>
+  <h2 style="margin-bottom:16px">Three properties that make MLE respectable</h2>
+  <div class="grid3">
+    <div class="appcard frag" data-f="0" style="padding:20px"><div class="t" style="font-size:23.5px">Consistency</div>
+      <div class="d" style="font-size:18.5px;margin-top:8px">With enough data it converges to the
+      true parameter &#8212; provided the model can express it.</div></div>
+    <div class="appcard frag" data-f="1" style="padding:20px"><div class="t" style="font-size:23.5px">Asymptotic normality</div>
+      <div class="d" style="font-size:18.5px;margin-top:8px">Its sampling distribution becomes
+      Gaussian around the true value, so error bars are computable.</div></div>
+    <div class="appcard frag" data-f="2" style="padding:20px"><div class="t" style="font-size:23.5px">Asymptotic efficiency</div>
+      <div class="d" style="font-size:18.5px;margin-top:8px">No unbiased estimator does better in
+      the limit. You are not leaving accuracy on the table.</div></div>
+  </div>
+  <div class="card accent frag" data-f="3" style="margin-top:22px">
+    <p style="font-size:20.5px;max-width:none">All three are <strong>asymptotic</strong> &#8212; they
+    are promises about large N. With small N, maximum likelihood
+    <em class="hl">overfits</em>, and <span class="tex" data-tex="\\sigma^2_{\\mathrm{ML}}"></span> is biased low: it divides by N when it should divide by
+    <span class="tex" data-tex="N-1"></span>. Which is exactly the problem the second half of this lecture fixes.</p>
+  </div>`},
+
+{s:"Part III", t:"Multivariate Gaussian", draw:"cov", html:`
+  <div class="eyebrow">Scaling up</div>
+  <h2 style="margin-bottom:12px">The same thing in D dimensions</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <div class="eq" style="margin:0 0 14px;font-size:23px"><span class="texd" data-tex="\\mathcal{N}(\\mathbf{x} \\mid \\boldsymbol{\\mu}, \\boldsymbol{\\Sigma}) = \\frac{1}{(2\\pi)^{D/2}\\lvert\\boldsymbol{\\Sigma}\\rvert^{1/2}}\\exp\\!\\left(-\\tfrac12(\\mathbf{x}-\\boldsymbol{\\mu})^\\top\\boldsymbol{\\Sigma}^{-1}(\\mathbf{x}-\\boldsymbol{\\mu})\\right)"></span></div>
+      <p style="font-size:20.5px">A <span class="tex" data-tex="D"></span> mean vector, and a <span class="tex" data-tex="D\\times D"></span> covariance matrix that must be
+      <strong>symmetric positive definite</strong>.</p>
+      <p class="frag" data-f="0" style="font-size:20.5px;margin-top:12px">The quadratic form
+      <span class="tex" data-tex="(\\mathbf{x}-\\boldsymbol{\\mu})^\\top\\boldsymbol{\\Sigma}^{-1}(\\mathbf{x}-\\boldsymbol{\\mu})"></span> replaces <span class="tex" data-tex="(x-\\mu)^2/\\sigma^2"></span>.</p>
+    </div>
+    <div class="col frag" data-f="1" style="flex:1.1">
+      <div class="fig h-260"><svg viewBox="0 0 470 260"><g id="covfig"></g></svg></div>
+      <p class="cred">Spherical, diagonal, full &#8212; increasing freedom in the covariance.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="2" style="margin-top:14px;text-align:center;font-size:20px">
+    Independent univariate Gaussians are exactly the <strong>diagonal</strong> case:
+    <span class="tex" data-tex="\\boldsymbol{\\Sigma} = \\mathrm{diag}(\\sigma_1^2,\\ldots,\\sigma_D^2)"></span>.</p>`},
+
+{s:"Part III", t:"Part III in one slide", html:`
+  <div class="eyebrow">Before we move on</div>
+  <h2 style="margin-bottom:16px">Part III in one slide</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The recipe</div><p style="font-size:20px;max-width:none">Write the likelihood, take logs, drop what does not depend on the parameter, set the derivative to zero.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">What came out</div><p style="font-size:20px;max-width:none"><span class="tex" data-tex="\\mu_{\\mathrm{ML}} = \\tfrac1N\\sum_n t_n"></span> &#8212; the sample mean, which nobody assumed. It is what maximum likelihood returns under Gaussian noise.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The catch</div><p style="font-size:20px;max-width:none">MLE&#8217;s guarantees are asymptotic. On small N it overfits, and its variance estimate is biased low.</p></div>
+  </div>`},
+
+{s:"Part III", t:"Questions (Part III)", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Questions?</h1>
+    <div class="bar" style="margin:18px auto 20px"></div>
+    <p class="lede" style="font-size:20px;margin-bottom:20px;max-width:44ch">About maximum likelihood, or fitting the Gaussian</p>
+    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
+  </div>`},
+
+{s:"Part IV", t:"Part IV", div:true, html:`
+  <div class="divider">
+    <div class="part">Part IV</div>
+    <h1>Linear regression, again</h1>
+    <div class="bar"></div>
+    <div class="sub">Same model. This time we derive the loss instead of inventing it.</div>
+  </div>`},
+
+{s:"Part IV", t:"The generative picture", draw:"gen", html:`
+  <div class="eyebrow">Notion before notation</div>
+  <h2 style="margin-bottom:10px">Where does a target come from?</h2>
+  <div class="fig" style="background:transparent;box-shadow:none;margin-bottom:6px">
+    <svg viewBox="0 0 900 170"><g id="genfig"></g></svg>
+  </div>
+  <div class="row top frag" data-f="0" style="gap:30px;margin-top:4px">
+    <div class="col">
+      <p style="font-size:20.5px">A <strong>deterministic</strong> part &#8212; the function we are
+      trying to learn &#8212; plus a <strong>stochastic</strong> part we cannot predict.</p>
+      <div class="eq" style="margin:10px 0 0;font-size:22px"><span class="texd" data-tex="t = y(x;\\mathbf{w}) + \\varepsilon, \\qquad y(x;\\mathbf{w}) = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x)"></span></div>
+    </div>
+    <div class="col frag" data-f="1">
+      <p style="font-size:20.5px">Take the noise to be Gaussian with zero mean:</p>
+      <div class="eq" style="margin:9px 0 0;font-size:22px"><span class="texd" data-tex="\\varepsilon \\sim \\mathcal{N}(0, \\sigma^2), \\qquad \\beta \\equiv \\sigma^{-2}"></span></div>
+    </div>
+  </div>`},
+
+{s:"Part IV", t:"What distribution is the target?", html:`
+  <span class="actbadge">Predict first</span>
+  <div class="actq" style="font-size:28px;margin:12px 0 16px">If <span class="tex" data-tex="t = y(x;\\mathbf{w}) + \\varepsilon"></span> and
+    <span class="tex" data-tex="\\varepsilon \\sim \\mathcal{N}(0,\\sigma^2)"></span>, what is the distribution of the target,
+    <span class="tex" data-tex="p(t_n \\mid x_n, \\mathbf{w})"></span>?</div>
+  <div class="predcards">
+    <div class="predcard"><div class="pl">A</div><div class="pd" style="font-size:21px;padding:12px 4px"><span class="tex" data-tex="\\mathcal{N}(t_n \\mid 0,\\ \\sigma^2)"></span></div></div>
+    <div class="predcard"><div class="pl">B</div><div class="pd" style="font-size:21px;padding:12px 4px"><span class="tex" data-tex="\\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}_n,\\ \\sigma^2\\bigr)"></span></div></div>
+    <div class="predcard"><div class="pl">C</div><div class="pd" style="font-size:21px;padding:12px 4px"><span class="tex" data-tex="\\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}_n,\\ \\sigma^2 + \\lVert\\boldsymbol{\\phi}_n\\rVert^2\\bigr)"></span></div></div>
+  </div>
+  <p class="figcap" style="margin-top:14px;text-align:center">And <em class="hl">why?</em></p>`},
+
+{s:"Part IV", t:"The target distribution", html:`
+  <div class="eyebrow">The answer is B</div>
+  <h2 style="margin-bottom:14px">Adding a constant shifts a Gaussian; it does not reshape it</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <p style="font-size:20.5px">Given <span class="tex" data-tex="\\mathbf{w}"></span>, the prediction <span class="tex" data-tex="\\mathbf{w}^\\top\\boldsymbol{\\phi}_n"></span> is a fixed number. We are adding
+      zero-mean Gaussian noise to that number.</p>
+      <p style="font-size:20.5px;margin-top:12px">Shifting a Gaussian moves its mean and leaves its
+      variance alone, so:</p>
+      <div class="eq" style="margin:12px 0 0;font-size:23px"><span class="texd" data-tex="p(t_n \\mid x_n, \\mathbf{w}) = \\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}_n,\\ \\sigma^2\\bigr)"></span></div>
+    </div>
+    <div class="col card accent frag" data-f="0" style="flex:.9">
+      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">Read it out loud</div>
+      <p style="font-size:20.5px;max-width:none">The model no longer predicts a number. It says: for
+      this input, targets are <em class="hl">distributed around</em> <span class="tex" data-tex="\\mathbf{w}^\\top\\boldsymbol{\\phi}_n"></span> with spread <span class="tex" data-tex="\\sigma"></span>.</p>
+      <hr class="rule">
+      <p style="font-size:20.5px;max-width:none">Every point in the dataset now has a probability,
+      and that is what we are about to maximise.</p>
+    </div>
+  </div>`},
+
+{s:"Part IV", t:"Linear regression MLE", html:`
+  <div class="eyebrow">The derivation, and it is the one you just saw</div>
+  <h2 style="margin-bottom:6px">Maximum likelihood for regression</h2>
+  <p style="font-size:21px;margin-bottom:10px">We want the <span class="tex" data-tex="\\mathbf{w}"></span> that maximises the log-likelihood. So
+  first, write that log-likelihood out:</p>
+  <div class="dgrid" style="grid-template-columns:max-content max-content minmax(0,1fr);justify-content:start;font-size:21px">
+    <div><span class="tex" data-tex="\\log p(\\mathcal{D} \\mid \\mathbf{w})"></span></div><div><span class="tex" data-tex="= \\log \\prod_n p(t_n \\mid x_n, \\mathbf{w})"></span></div>
+      <div class="dnote">i.i.d. noise &#8212; the joint factorises</div>
+    <div class="frag" data-f="0"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= \\sum_n \\log \\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}_n, \\sigma^2\\bigr)"></span></div>
+      <div class="dnote frag" data-f="0">put the Gaussian in</div>
+    <div class="frag" data-f="1"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="\\propto\\ -\\tfrac12\\sum_n \\bigl(t_n - \\mathbf{w}^\\top\\boldsymbol{\\phi}_n\\bigr)^2"></span></div>
+      <div class="dnote frag" data-f="1">drop every term with no <span class="tex" data-tex="\\mathbf{w}"></span> in it</div>
+  </div>
+  <div class="card accent frag" data-f="2" style="margin-top:14px;padding:14px 20px;text-align:center">
+    <p style="font-size:20px;max-width:none;margin-bottom:6px">Maximising that is the same as</p>
+    <div class="eq" style="margin:0;font-size:27px"><span class="texd" data-tex="\\min_{\\mathbf{w}}\\ \\tfrac12 \\sum_n \\bigl(t_n - \\mathbf{w}^\\top\\boldsymbol{\\phi}_n\\bigr)^2"></span></div>
+  </div>
+  <p class="figcap frag" data-f="3" style="margin-top:11px;text-align:center;font-size:20px">
+    the sum of squared errors from last week &#8212; so <span class="tex" data-tex="\\mathbf{w}_{\\mathrm{ML}} = (\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi})^{-1}\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span>, the same normal equations.</p>`},
+
+{s:"Part IV", t:"The loss was never arbitrary", draw:"noise", html:`
+  <div class="eyebrow">Where the squared loss came from</div>
+  <h2 style="margin-bottom:16px">Squared error <em>follows from</em> the Gaussian assumption</h2>
+  <div class="card accent" style="padding:15px 22px">
+    <p style="font-size:21px;max-width:none">Minimising squared error is what you get when the noise
+    is assumed <em class="hl">Gaussian, zero-mean and the same everywhere</em>. A different
+    assumption gives a different loss.</p>
+  </div>
+  <div class="demo frag" data-f="1" style="margin-top:18px">
+    <div class="demo-plot"><svg id="nsvg" viewBox="0 0 560 236"></svg></div>
+    <div class="demo-ctrl">
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="bbtn sel" data-noise="gauss" type="button">Gaussian</button>
+        <button class="bbtn" data-noise="laplace" type="button">Laplace</button>
+      </div>
+      <div class="readout"><div class="stat train" style="flex:1">
+        <div class="k">negative log-likelihood</div>
+        <div class="v" id="nloss" style="font-size:21px">&#8212;</div></div></div>
+      <div class="warn" id="nwarn"></div>
+    </div>
+  </div>`},
+
+{s:"Part IV", t:"Back to the car", html:`
+  <div class="eyebrow">What we gained</div>
+  <h2 style="margin-bottom:16px">The model can now answer the question</h2>
+  <div class="row top" style="gap:32px">
+    <div class="col">
+      <p style="font-size:22px">Before, the model returned a number. Now it returns a
+      <strong>distribution</strong>:</p>
+      <div class="eq" style="margin:14px 0 0;font-size:26px"><span class="texd" data-tex="p(t \\mid x, \\mathbf{w}_{\\mathrm{ML}}) = \\mathcal{N}\\bigl(t \\mid \\mathbf{w}_{\\mathrm{ML}}^\\top\\boldsymbol{\\phi}(x),\\ \\sigma^2_{\\mathrm{ML}}\\bigr)"></span></div>
+      <p class="frag" data-f="0" style="font-size:21px;margin-top:16px">Fit <span class="tex" data-tex="\\sigma^2"></span> the same way you fit
+      <span class="tex" data-tex="\\mathbf{w}"></span>, and you have an error bar &#8212; so &#8220;is $15,000 reasonable?&#8221; becomes a
+      question with an answer.</p>
+    </div>
+    <div class="col card frag" data-f="1" style="flex:.92">
+      <div class="eyebrow" style="margin-bottom:10px">But be careful what it means</div>
+      <p style="font-size:20px;max-width:none">This <span class="tex" data-tex="\\sigma^2"></span> is <strong>constant</strong> &#8212; the same
+      width everywhere. The model is equally confident about a car it has seen a thousand of and one
+      it has never seen.</p>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none">Fixing <em>that</em> needs the full posterior, at the
+      end of the lecture.</p>
+    </div>
+  </div>`},
+
+{s:"Part IV", t:"Two kinds of not knowing", html:`
+  <div class="eyebrow">A distinction worth having early</div>
+  <h2 style="margin-bottom:14px">Two reasons to be unsure</h2>
+  <div class="row top stretch" style="gap:26px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Noise in the world</div>
+      <p style="font-size:20.5px;max-width:none">Two identical cars sell for different prices. Even
+      with perfect knowledge of the market you could not predict which.</p>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none"><strong>More data does not help.</strong> This is
+      called <em class="hl">aleatoric</em> uncertainty, from the Latin <em>alea</em>, a die.</p>
+    </div>
+    <div class="col card accent">
+      <div class="eyebrow" style="margin-bottom:10px;color:var(--accent)">Ignorance about the model</div>
+      <p style="font-size:20.5px;max-width:none">We have seen forty cars, not forty thousand. We are
+      not sure which weights are right &#8212; especially for a car unlike any we have seen.</p>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none"><strong>More data does help.</strong> This is
+      <em class="hl">epistemic</em> uncertainty, from <em>episteme</em>, knowledge.</p>
+    </div>
+  </div>
+  <div class="card frag" data-f="0" style="margin-top:18px">
+    <p style="font-size:20.5px;max-width:none">The <span class="tex" data-tex="\\sigma^2_{\\mathrm{ML}}"></span> we just fitted captures the
+    <strong>first</strong> one only. It is a single number, the same for every car &#8212; so the
+    model is equally confident about a common hatchback and one it has never seen.</p>
+  </div>
+  <p class="figcap frag" data-f="1" style="margin-top:12px;text-align:center">
+    Getting the second one requires keeping a distribution over the weights. That is the rest of the
+    lecture.</p>`},
+
+{s:"Part IV", t:"Part IV in one slide", html:`
+  <div class="eyebrow">Before we move on</div>
+  <h2 style="margin-bottom:16px">Part IV in one slide</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The move</div><p style="font-size:20px;max-width:none">Model the target as prediction plus noise, <span class="tex" data-tex="t = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x) + \\varepsilon"></span>. Then every data point has a probability.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The result</div><p style="font-size:20px;max-width:none">Maximising that likelihood <em>is</em> minimising squared error. The loss was a consequence of the noise assumption all along.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">What is still missing</div><p style="font-size:20px;max-width:none">One fixed spread for every input &#8212; aleatoric only. Nothing yet says &#8220;I have not seen a car like this&#8221;.</p></div>
+  </div>`},
+
+{s:"Part IV", t:"Questions (Part IV)", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Questions?</h1>
+    <div class="bar" style="margin:18px auto 20px"></div>
+    <p class="lede" style="font-size:20px;margin-bottom:20px;max-width:44ch">About where squared error came from</p>
+    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
+  </div>`},
+
+{s:"Part V", t:"Part V", div:true, html:`
+  <div class="divider">
+    <div class="part">Part V</div>
+    <h1>But what about the regulariser?</h1>
+    <div class="bar"></div>
+    <div class="sub">Maximum likelihood gave us the first term. The second needs a new idea.</div>
+  </div>`},
+
+{s:"Part V", t:"Frequentist vs Bayesian", html:`
+  <div class="eyebrow">Two readings of the word &#8220;probability&#8221;</div>
+  <h2 style="margin-bottom:16px">Frequentist and Bayesian</h2>
+  <div class="row top stretch" style="gap:26px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Frequentist</div>
+      <p style="font-size:20.5px;max-width:none">A probability is a <strong>long-run frequency</strong>.
+      Parameters are fixed but unknown; the <em>data</em> is random.</p>
+      <hr class="rule">
+      <p class="caption">The foundation of t-tests, p-values, confidence intervals &#8212; and of
+      maximum likelihood.</p>
+    </div>
+    <div class="col card frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:10px">Bayesian</div>
+      <p style="font-size:20.5px;max-width:none">A probability is a <strong>degree of belief</strong>.
+      The data is what it is; the <em>parameters</em> get a distribution.</p>
+      <hr class="rule">
+      <p class="caption">Lets you say &#8220;the weight is probably small&#8221; before seeing any
+      data &#8212; which is exactly what a regulariser does.</p>
+    </div>
+  </div>
+  <div class="card frag" data-f="1" style="margin-top:20px">
+    <p style="font-size:19.5px;max-width:none">The two camps disagreed sharply for much of the
+    twentieth century. In practice most people now use whichever is more convenient, and the two
+    agree in the limit of plenty of data.</p>
+  </div>`},
+
+{s:"Part V", t:"Coin flip", draw:"coin", html:`
+  <div class="eyebrow">The smallest possible example</div>
+  <h2 style="margin-bottom:10px">Four coins, and a bet on heads</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="csvg" viewBox="0 0 560 300"></svg></div>
+    <div class="demo-ctrl">
+      <p style="font-size:19.5px;margin-bottom:12px">Only four kinds of coin exist, with
+      <span class="tex" data-tex="\\theta \\in \\{0,\\ 0.2,\\ 0.8,\\ 1.0\\}"></span>. You start believing each is equally likely.</p>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="bbtn" id="cflipH" type="button">Flip: heads</button>
+        <button class="bbtn" id="cflipT" type="button">Flip: tails</button>
+        <button class="bbtn" id="creset" type="button">Reset</button>
+      </div>
+      <div class="readout">
+        <div class="stat train"><div class="k">observed</div><div class="v" id="cobs" style="font-size:22.5px">&#8212;</div></div>
+        <div class="stat test"><div class="k">MLE</div><div class="v" id="cmle" style="font-size:22.5px">&#8212;</div></div>
+      </div>
+      <div class="warn" id="cwarn">Flip a few times. Watch what maximum likelihood says after the
+      very first flip.</div>
+    </div>
+  </div>`},
+
+{s:"Part V", t:"MAP", html:`
+  <div class="eyebrow">The cheap version</div>
+  <h2 style="margin-bottom:12px">Maximum a posteriori</h2>
+  <div class="row top" style="gap:32px">
+    <div class="col">
+      <p style="font-size:20.5px;margin-bottom:8px">A full posterior is a whole distribution and is
+      often expensive. The cheap option: keep only its <strong>peak</strong>.</p>
+      <div class="dgrid" style="grid-template-columns:auto auto;font-size:21px;margin-top:10px">
+        <div><span class="tex" data-tex="{}"></span></div><div><span class="tex" data-tex="\\max_{\\theta}\\ \\log p(\\theta \\mid \\mathcal{D})"></span></div>
+        <div class="frag" data-f="0"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= \\log \\frac{p(\\mathcal{D}\\mid\\theta)\\,p(\\theta)}{p(\\mathcal{D})}"></span></div>
+        <div class="frag" data-f="1"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="= \\log p(\\mathcal{D}\\mid\\theta) + \\log p(\\theta) - \\underbrace{\\log p(\\mathcal{D})}_{\\text{no }\\theta\\text{: drop it}}"></span></div>
+      </div>
+      <div class="card accent frag" data-f="2" style="margin-top:16px">
+        <div class="eq" style="margin:0;font-size:27px"><span class="texd" data-tex="\\max_{\\theta}\\ \\log p(\\mathcal{D}\\mid\\theta) + \\log p(\\theta)"></span></div>
+      </div>
+    </div>
+    <div class="col card frag" data-f="3" style="flex:.85">
+      <div class="eyebrow" style="margin-bottom:10px">Poor man&#8217;s Bayes</div>
+      <p style="font-size:20px;max-width:none">MAP keeps the mode and throws the width away. You get
+      a point estimate that respects the prior, but <strong>no uncertainty</strong>.</p>
+      <hr class="rule">
+      <p class="caption">Compared with MLE it costs one extra term. Compared with the full posterior
+      it answers with a point, not a distribution.</p>
+    </div>
+  </div>`},
+
+{s:"Part V", t:"MAP for regression — setup", html:`
+  <div class="eyebrow">Now put the regression model in</div>
+  <h2 style="margin-bottom:14px">A prior over the weights</h2>
+  <div class="row top stretch" style="gap:24px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Likelihood &#8212; unchanged</div>
+      <div class="eq" style="margin:6px 0 0;font-size:23px"><span class="texd" data-tex="p(\\mathbf{t} \\mid \\mathbf{X}, \\mathbf{w}) = \\mathcal{N}\\bigl(\\mathbf{t} \\mid \\boldsymbol{\\Phi}\\mathbf{w},\\ \\beta^{-1}\\mathbf{I}\\bigr)"></span></div>
+      <p class="caption" style="margin-top:10px"><span class="tex" data-tex="\\beta = 1/\\sigma_\\varepsilon^2"></span> is the <strong>precision</strong> of the noise
+      &#8212; the inverse of its variance.</p>
+    </div>
+    <div class="col card accent frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:10px;color:var(--accent)">Prior &#8212; new</div>
+      <div class="eq" style="margin:6px 0 0;font-size:23px"><span class="texd" data-tex="p(\\mathbf{w}) = \\mathcal{N}\\bigl(\\mathbf{w} \\mid \\mathbf{0},\\ \\alpha^{-1}\\mathbf{I}\\bigr)"></span></div>
+      <p class="caption" style="margin-top:10px">Zero-mean, and <span class="tex" data-tex="\\alpha = 1/\\sigma_w^2"></span> is the
+      <strong>precision of the weights</strong>. Large <span class="tex" data-tex="\\alpha"></span> means &#8220;I expect small weights&#8221;.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="1" style="margin-top:18px;text-align:center;font-size:20.5px">
+    That is the modelling change: <em class="hl">a belief, stated before seeing data, that the
+    weights are probably not large.</em></p>`},
+
+{s:"Part V", t:"MAP for regression — derivation", html:`
+  <div class="eyebrow">Two logs, and the ridge appears</div>
+  <h2 style="margin-bottom:10px">The regulariser, derived</h2>
+  <div class="dgrid" style="grid-template-columns:max-content max-content minmax(0,1fr);justify-content:start;font-size:20.5px">
+    <div><span class="tex" data-tex="{}"></span></div><div><span class="tex" data-tex="\\max_{\\mathbf{w}}\\ \\log p(\\mathcal{D}\\mid\\mathbf{w}) + \\log p(\\mathbf{w})"></span></div><div class="dnote">from the previous slide</div>
+    <div class="frag" data-f="0"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= \\log\\mathcal{N}(\\mathbf{t}\\mid\\boldsymbol{\\Phi}\\mathbf{w}, \\beta^{-1}\\mathbf{I}) + \\log\\mathcal{N}(\\mathbf{w}\\mid\\mathbf{0},\\alpha^{-1}\\mathbf{I})"></span></div>
+      <div class="dnote frag" data-f="0">write out both Gaussians</div>
+    <div class="frag" data-f="1"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="= -\\tfrac{\\beta}{2}\\lVert\\mathbf{t}-\\boldsymbol{\\Phi}\\mathbf{w}\\rVert_2^2 - \\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert_2^2 + \\text{const}"></span></div>
+      <div class="dnote frag" data-f="1">keep only what depends on <span class="tex" data-tex="\\mathbf{w}"></span></div>
+  </div>
+  <div class="card accent frag" data-f="2" style="margin-top:16px">
+    <p style="font-size:20px;margin-bottom:8px;max-width:none">Flip the sign to get something to
+    minimise, and divide through by <span class="tex" data-tex="\\beta"></span>:</p>
+    <div class="eq" style="margin:0;font-size:27px"><span class="texd" data-tex="\\mathcal{L}(\\mathbf{w}) = \\tfrac12\\lVert\\mathbf{t}-\\boldsymbol{\\Phi}\\mathbf{w}\\rVert_2^2 + \\tfrac{\\lambda}{2}\\lVert\\mathbf{w}\\rVert_2^2, \\qquad \\lambda = \\frac{\\alpha}{\\beta}"></span></div>
+  </div>
+  <p class="figcap frag" data-f="3" style="margin-top:14px;text-align:center;font-size:21px">
+    Sum of squared errors, plus a penalty on <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert_2^2"></span>. <em class="hl">That is ridge regression.</em></p>`},
+
+{s:"Part V", t:"What lambda means", html:`
+  <div class="eyebrow">The knob you were turning last week</div>
+  <h2 style="margin-bottom:16px"><span class="tex" data-tex="\\lambda"></span> now means something</h2>
+  <div class="eq" style="margin:6px 0 20px;font-size:35px"><span class="texd" data-tex="\\lambda = \\frac{\\alpha}{\\beta} = \\frac{1/\\sigma_w^2}{1/\\sigma_\\varepsilon^2} = \\frac{\\sigma_\\varepsilon^2}{\\sigma_w^2} = \\frac{\\text{variance of the noise}}{\\text{variance of the weights}}"></span></div>
+  <div class="row top" style="gap:30px">
+    <div class="col card frag" data-f="0">
+      <p style="font-size:20.5px;max-width:none"><strong>Noisy data, confident prior</strong><br>
+      <span class="tex" data-tex="\\beta"></span> small, <span class="tex" data-tex="\\alpha"></span> large &#8594; <span class="tex" data-tex="\\lambda"></span> large: shrink the weights hard.</p>
+    </div>
+    <div class="col card frag" data-f="1">
+      <p style="font-size:20.5px;max-width:none"><strong>Clean data, vague prior</strong><br>
+      <span class="tex" data-tex="\\beta"></span> large, <span class="tex" data-tex="\\alpha"></span> small &#8594; <span class="tex" data-tex="\\lambda"></span> near zero: plain least squares.</p>
+    </div>
+  </div>
+  <div class="card accent frag" data-f="2" style="margin-top:18px;text-align:center">
+    <p style="font-size:22px;max-width:none">Last week <span class="tex" data-tex="\\lambda"></span> was a number we tuned by watching a
+    validation curve. It is really a <em class="hl">ratio of two variances</em> &#8212; how noisy you
+    think the data is, against how large you think the weights should be.</p>
+  </div>
+  <p class="caption frag" data-f="3" style="margin-top:9px;text-align:center">Solving as before:
+    <span class="tex" data-tex="\\mathbf{w}_{\\mathrm{MAP}} = (\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi} + \\tfrac{\\alpha}{\\beta}\\mathbf{I})^{-1}\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span></p>`},
+
+{s:"Part V", t:"Part V in one slide", html:`
+  <div class="eyebrow">Before we move on</div>
+  <h2 style="margin-bottom:16px">Part V in one slide</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The new ingredient</div><p style="font-size:20px;max-width:none">A <strong>prior</strong> over the weights, <span class="tex" data-tex="p(\\mathbf{w}) = \\mathcal{N}(\\mathbf{0}, \\alpha^{-1}\\mathbf{I})"></span>: a belief, stated before seeing data, that they are probably not large.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The result</div><p style="font-size:20px;max-width:none">Maximising the posterior gives ridge regression. The regulariser is the negative log-prior.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">And <span class="tex" data-tex="\\lambda"></span></div><p style="font-size:20px;max-width:none">Is <span class="tex" data-tex="\\alpha/\\beta = \\sigma_\\varepsilon^2/\\sigma_w^2"></span> &#8212; how noisy you think the data is, against how large you think the weights should be.</p></div>
+  </div>`},
+
+{s:"Part V", t:"Questions (Part V)", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Questions?</h1>
+    <div class="bar" style="margin:18px auto 20px"></div>
+    <p class="lede" style="font-size:20px;margin-bottom:20px;max-width:44ch">About priors, MAP, or the regulariser</p>
+    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
+  </div>`},
+
+{s:"Part VI", t:"Part VI", div:true, html:`
+  <div class="divider">
+    <div class="part">Part VI</div>
+    <h1>Keeping the whole distribution</h1>
+    <div class="bar"></div>
+    <div class="sub">MAP threw the width away. Here is what it cost.</div>
+  </div>`},
+
+{s:"Part VI", t:"The full posterior", html:`
+  <div class="eyebrow">PRML &#167;3.3</div>
+  <h2 style="margin-bottom:14px">Do not collapse to a point</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <p style="font-size:21px;margin-bottom:10px">With a Gaussian likelihood and a Gaussian prior,
+      the posterior can be written down exactly &#8212; and it is Gaussian too:</p>
+      <div class="eq" style="margin:12px 0 14px;font-size:24px"><span class="texd" data-tex="p(\\mathbf{w}\\mid\\mathcal{D}) = \\mathcal{N}(\\mathbf{w}\\mid\\mathbf{m}_N, \\mathbf{S}_N)"></span></div>
+      <div class="eq frag" data-f="0" style="margin:0 0 12px;font-size:21px"><span class="texd" data-tex="\\mathbf{S}_N^{-1} = \\alpha\\mathbf{I} + \\beta\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi}, \\qquad \\mathbf{m}_N = \\beta\\mathbf{S}_N\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span></div>
+    </div>
+    <div class="col card frag" data-f="1" style="flex:.85">
+      <div class="eyebrow" style="margin-bottom:10px">What MAP was keeping</div>
+      <p style="font-size:20px;max-width:none">The MAP estimate is exactly <span class="tex" data-tex="\\mathbf{m}_N"></span> &#8212; the mean of
+      this distribution.</p>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none">Everything in <span class="tex" data-tex="\\mathbf{S}_N"></span>, the whole notion of <em>how sure we
+      are</em>, is what MAP discarded.</p>
+    </div>
+  </div>`},
+
+{s:"Part VI", t:"Posterior predictive", html:`
+  <div class="eyebrow">Built from the two rules we started with</div>
+  <h2 style="margin-bottom:12px">Predicting without picking a single w</h2>
+  <p style="font-size:21px;margin-bottom:8px">We want <span class="tex" data-tex="p(t \\mid x, \\mathcal{D})"></span> &#8212; a prediction at a new input, given
+  the data. The weights are in the way, so introduce them and then remove them.</p>
+  <div class="dgrid" style="grid-template-columns:max-content max-content minmax(0,1fr);justify-content:start;font-size:22px">
+    <div><span class="tex" data-tex="p(t \\mid x, \\mathcal{D})"></span></div><div><span class="tex" data-tex="= \\displaystyle\\int p(t, \\mathbf{w} \\mid x, \\mathcal{D})\\,d\\mathbf{w}"></span></div>
+      <div class="dnote">the <strong>sum rule</strong>: introduce <span class="tex" data-tex="\\mathbf{w}"></span>, then integrate it away</div>
+    <div class="frag" data-f="0"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="0"><span class="tex" data-tex="= \\displaystyle\\int p(t \\mid x, \\mathbf{w}, \\mathcal{D})\\ p(\\mathbf{w} \\mid \\mathcal{D})\\,d\\mathbf{w}"></span></div>
+      <div class="dnote frag" data-f="0">the <strong>product rule</strong> on the joint</div>
+    <div class="frag" data-f="1"><span class="tex" data-tex="{}"></span></div><div class="frag" data-f="1"><span class="tex" data-tex="= \\displaystyle\\int \\underbrace{p(t \\mid x, \\mathbf{w})}_{\\text{model}}\\ \\underbrace{p(\\mathbf{w} \\mid \\mathcal{D})}_{\\text{posterior}}\\,d\\mathbf{w}"></span></div>
+      <div class="dnote frag" data-f="1">given <span class="tex" data-tex="\\mathbf{w}"></span>, the new point does not depend on the old data</div>
+  </div>
+  <div class="card accent frag" data-f="2" style="margin-top:18px">
+    <p style="font-size:21px;max-width:none">Every weight vector gets a vote, weighted by how
+    plausible the data says it is. No single <span class="tex" data-tex="\\mathbf{w}"></span> is ever chosen.</p>
+  </div>`},
+
+{s:"Part VI", t:"Averaging over weights", draw:"ens", html:`
+  <div class="eyebrow">The integral, made finite</div>
+  <h2 style="margin-bottom:8px">What does &#8220;average over every w&#8221; look like?</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="esvg" viewBox="0 0 560 300"></svg></div>
+    <div class="demo-ctrl">
+      <div class="ctrl-row"><label>weight vectors drawn <span class="val" id="ekv">1</span></label>
+        <input type="range" id="ek" min="1" max="60" step="1" value="1"></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="bbtn" id="eband" type="button">Show mean &#177;2 s.d.</button>
+      </div>
+      <div class="warn" id="ewarn"></div>
+      <p class="caption" style="margin-top:8px">Each line is one <span class="tex" data-tex="\\mathbf{w}"></span> drawn from
+      <span class="tex" data-tex="p(\\mathbf{w}\\mid\\mathcal{D})"></span> &#8212; same 8 squared-exponential basis functions, 9 data points.
+      The integral averages over all of them; a finite sample is an <strong>ensemble</strong>.</p>
+    </div>
+  </div>`},
+
+{s:"Part VI", t:"Two kinds of uncertainty", html:`
+  <div class="eyebrow">What the answer is made of</div>
+  <h2 style="margin-bottom:14px">The variance splits into two parts</h2>
+  <p style="font-size:21px;margin-bottom:10px">Doing that integral for our model gives a Gaussian
+  whose variance has exactly two terms:</p>
+  <div class="eq" style="margin:12px 0 20px;font-size:28px"><span class="texd" data-tex="\\sigma^2(x) = \\underbrace{\\beta^{-1}}_{\\text{aleatoric}} + \\underbrace{\\boldsymbol{\\phi}(x)^\\top\\mathbf{S}_N\\boldsymbol{\\phi}(x)}_{\\text{epistemic}}"></span></div>
+  <div class="row top" style="gap:28px">
+    <div class="col card frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:9px">Aleatoric &#8212; <span class="tex" data-tex="\\beta^{-1}"></span></div>
+      <p style="font-size:20px;max-width:none">Noise in the world itself. Two identical cars sell for
+      different prices. <strong>More data will not reduce it</strong>, because it is not ignorance.</p>
+    </div>
+    <div class="col card accent frag" data-f="1">
+      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">Epistemic &#8212; <span class="tex" data-tex="\\boldsymbol{\\phi}^\\top\\mathbf{S}_N\\boldsymbol{\\phi}"></span></div>
+      <p style="font-size:20px;max-width:none">Uncertainty about <span class="tex" data-tex="\\mathbf{w}"></span>: we have not seen enough to pin
+      the weights down. <strong>This one shrinks as data arrives</strong>, and it is what grows far
+      from the training points.</p>
+    </div>
+  </div>`},
+
+{s:"Part VI", t:"Three estimates, one picture", draw:"bayes", html:`
+  <div class="eyebrow">Side by side</div>
+  <h2 style="margin-bottom:12px">MLE, MAP, and the full posterior</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="bsvg" viewBox="0 0 560 300"></svg></div>
+    <div class="demo-ctrl">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="bbtn sel" data-b="mle" type="button">MLE</button>
+        <button class="bbtn" data-b="map" type="button">MAP</button>
+        <button class="bbtn" data-b="post" type="button">Posterior</button>
+      </div>
+      <div class="ctrl-row"><label>data points <span class="val" id="bnv">6</span></label>
+        <input type="range" id="bn" min="2" max="25" step="1" value="6"></div>
+      <div class="warn" id="bwarn"></div>
+      <p class="caption" style="margin-top:6px">Model: 8 squared-exponential basis functions, not a polynomial.
+      Dashed grey is the function the data was generated from.</p>
+    </div>
+  </div>`},
+
+{s:"Part VI", t:"Back to the car, properly", html:`
+  <div class="eyebrow">The question we opened with</div>
+  <h2 style="margin-bottom:14px">Is $15,000 reasonable?</h2>
+  <div class="row top" style="gap:26px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:9px">With maximum likelihood</div>
+      <p style="font-size:20.5px;max-width:none">One price, one fixed spread <span class="tex" data-tex="\\sigma^2_{\\mathrm{ML}}"></span>, the same for every
+      car on the lot.</p>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none">Aleatoric only. A model that has seen a thousand of
+      these and one that has seen none answer with equal confidence.</p>
+    </div>
+    <div class="col card accent">
+      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">With the posterior</div>
+      <p style="font-size:20.5px;max-width:none">A distribution whose width depends on the car:</p>
+      <div class="eq" style="margin:9px 0 0;font-size:20px"><span class="texd" data-tex="\\sigma^2(x) = \\beta^{-1} + \\boldsymbol{\\phi}(x)^\\top\\mathbf{S}_N\\boldsymbol{\\phi}(x)"></span></div>
+      <hr class="rule">
+      <p style="font-size:20px;max-width:none">Common hatchback, plenty of comparable sales &#8594;
+      narrow, so $800 over is worth arguing about. Unusual car, few comparables &#8594; wide, and
+      the honest answer is <em class="hl">we do not know enough to say</em>.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:16px;text-align:center">
+    Both terms from the earlier slide, now doing the work: <span class="tex" data-tex="\\beta^{-1}"></span> is the noise, <span class="tex" data-tex="\\boldsymbol{\\phi}^\\top\\mathbf{S}_N\\boldsymbol{\\phi}"></span> is what we have not
+    yet learned.</p>`},
+
+{s:"Part VI", t:"Why this matters now", html:`
+  <div class="eyebrow">The same distinction, somewhere you have met it</div>
+  <h2 style="margin-bottom:12px">Language models and the two uncertainties</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col">
+      <p style="font-size:20.5px">Training a network gives you <em>one</em> setting of the weights
+      &#8212; a point estimate, exactly like MAP:</p>
+      <div class="eq" style="margin:10px 0 12px;font-size:22px"><span class="texd" data-tex="\\widehat{\\mathbf{w}} = \\arg\\max_{\\mathbf{w}}\\ \\log p(\\mathcal{D}\\mid\\mathbf{w}) + \\log p(\\mathbf{w})"></span></div>
+      <p style="font-size:20.5px">Predictions then use that single <span class="tex" data-tex="\\widehat{\\mathbf{w}}"></span>, so the only spread they can
+      report is the noise term:</p>
+      <div class="eq" style="margin:10px 0 0;font-size:22px"><span class="texd" data-tex="p(t \\mid x, \\widehat{\\mathbf{w}}) \\quad\\Rightarrow\\quad \\sigma^2 = \\underbrace{\\beta^{-1}}_{\\text{aleatoric only}}"></span></div>
+      <p class="caption" style="margin-top:9px">For a language model this is the next-token
+      distribution: several words could reasonably come next.</p>
+    </div>
+    <div class="col">
+      <div class="card accent">
+        <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">What is missing</div>
+        <p style="font-size:20.5px;max-width:none">The distribution over the parameters themselves:</p>
+        <div class="eq" style="margin:10px 0 8px;font-size:22px"><span class="texd" data-tex="p(\\mathbf{w} \\mid \\mathcal{D})"></span></div>
+        <p style="font-size:20.5px;max-width:none">Without it there is no term that grows when the
+        question is unlike anything in the training data. Ask about something absent from it and the
+        model answers <em class="hl">just as fluently</em> &#8212; with nothing to signal that it is
+        guessing.</p>
+      </div>
+      <p class="caption frag" data-f="0" style="margin-top:12px">Ensembles, calibration, retrieval and
+      teaching a model to say &#8220;I do not know&#8221; are all attempts to recover a term our
+      posterior gave us for free on a linear model. It is an open problem at scale.</p>
+    </div>
+  </div>`},
+
+{s:"Part VI", t:"Summary", html:`
+  <div class="eyebrow">Today, in one slide</div>
+  <h2 style="margin-bottom:12px">Both terms, accounted for</h2>
+  <div class="eq" style="margin:4px 0 16px;font-size:31px"><span class="texd" data-tex="\\mathcal{L}(\\mathbf{w}) = \\underbrace{\\tfrac12\\lVert\\mathbf{t}-\\boldsymbol{\\Phi}\\mathbf{w}\\rVert_2^2}_{\\text{likelihood}} + \\underbrace{\\tfrac{\\lambda}{2}\\lVert\\mathbf{w}\\rVert_2^2}_{\\text{prior}}"></span></div>
+  <div class="row top" style="gap:26px">
+    <div class="col card frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:8px">The first term</div>
+      <p style="font-size:20px;max-width:none">is the <strong>negative log-likelihood</strong> of
+      Gaussian noise. Squared error was an assumption about noise all along.</p>
+    </div>
+    <div class="col card frag" data-f="1">
+      <div class="eyebrow" style="margin-bottom:8px">The second term</div>
+      <p style="font-size:20px;max-width:none">is the <strong>negative log-prior</strong> of a
+      zero-mean Gaussian on the weights. Regularisation was a belief all along.</p>
+    </div>
+    <div class="col card accent frag" data-f="2">
+      <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">And the regularisation
+        strength</div>
+      <div class="eq" style="margin:2px 0 8px;font-size:21px"><span class="texd" data-tex="\\lambda = \\alpha/\\beta = \\sigma_\\varepsilon^2/\\sigma_w^2"></span></div>
+      <p style="font-size:20px;max-width:none">is the ratio of the two variances &#8212; a statement
+      about how much you trust the data relative to the prior.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="3" style="margin-top:14px;text-align:center">
+    Write down how the data was generated, and the loss function follows.</p>`},
+
+{s:"Part VI", t:"Key ideas — the probability", html:`
+  <div class="eyebrow">Recap &#183; 1 of 2</div>
+  <h2 style="margin-bottom:16px">The probability we used</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">Two rules</div>
+      <p style="font-size:20px;max-width:none">The <strong>sum rule</strong> and the
+      <strong>product rule</strong>. Bayes rule is not a third rule &#8212; we derived it
+      from those two in three lines.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">Likelihood</div>
+      <p style="font-size:20px;max-width:none">The same expression <span class="tex" data-tex="p(\\mathcal{D} \\mid \\theta)"></span> read as a function of
+      <span class="tex" data-tex="\\theta"></span> with the data held fixed. It is <strong>not</strong> a distribution over
+      <span class="tex" data-tex="\\theta"></span> and does not integrate to 1.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">Maximum likelihood</div>
+      <p style="font-size:20px;max-width:none">Pick the parameters that make the data you saw
+      most probable. For a Gaussian that is the sample mean and the average squared deviation &#8212;
+      the answer you would have guessed.</p>
+    </div>
+  </div>`},
+
+{s:"Part VI", t:"Key ideas — what it bought", html:`
+  <div class="eyebrow">Recap &#183; 2 of 2</div>
+  <h2 style="margin-bottom:16px">What it bought us</h2>
+  <div class="row top stretch" style="gap:22px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">The loss</div>
+      <p style="font-size:20px;max-width:none">Assume Gaussian noise and squared error
+      <strong>follows</strong>. Assume Laplace noise and you get absolute error instead.
+      The loss is a statement about noise.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">The regulariser</div>
+      <p style="font-size:20px;max-width:none">A Gaussian prior on the weights gives ridge
+      regression, with <span class="tex" data-tex="\\lambda = \\sigma_\\varepsilon^2/\\sigma_w^2"></span>. Regularisation strength is a ratio of variances, not an arbitrary knob.</p>
+    </div>
+    <div class="col card accent">
+      <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">The distribution</div>
+      <p style="font-size:20px;max-width:none">Keep the whole posterior and predictions come with
+      a spread: <strong>aleatoric</strong> noise that data cannot reduce, plus
+      <strong>epistemic</strong> uncertainty that it can.</p>
+    </div>
+  </div>`},
+
+{s:"", t:"Questions", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Questions?</h1>
+    <div class="bar" style="margin:20px auto 18px"></div>
+    <div class="sub" style="max-width:40ch;margin:0 auto 20px">
+      Ask now, or on Piazza &#8212; the answer is useful to everyone either way.
+    </div>
+    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
+  </div>`},
+
+{s:"", t:"See you next week", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:60px">Tutorials start next week</h1>
+    <div class="bar" style="margin:26px auto 0"></div>
+    <div class="sub" style="max-width:38ch;margin-left:auto;margin-right:auto">
+      Wednesday 26 August, BIZ2-0302. Bring questions.
+    </div>
+    <p class="small" style="margin-top:30px">Next lecture: <strong>Classification I</strong> &#8212;
+    what changes when the target is a label. Reading: PRML &#167;4.3.2</p>
+  </div>`},
+
+];
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+/* Per-slide delivery estimate in minutes (see the timing note in the README).
+   Used for the overview cumulative marks and the presenter clock. */
+const EST=[1.0, 1.8, 0.4, 2.0, 2.6, 2.4, 0.4, 2.8, 1.4, 1.2, 1.5, 0.4, 2.2, 3.0, 2.6, 1.8, 1.6, 2.6, 2.2, 2.0, 2.6, 3.4, 1.4, 2.0, 0.4, 2.2, 3.4, 4.0, 3.0, 2.4, 3.0, 1.2, 2.0, 0.4, 3.0, 1.6, 2.0, 4.2, 3.4, 2.2, 2.4, 1.4, 2.0, 0.4, 2.4, 3.6, 3.0, 2.6, 4.2, 3.0, 1.4, 2.0, 0.4, 3.2, 3.0, 3.0, 2.4, 3.6, 2.4, 2.6, 2.4, 1.6, 1.6, 1.0, 0.5];
+const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
+const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
+
+const canvas=document.getElementById('canvas');
+let idx=0,fragStep=0;
+canvas.innerHTML=SLIDES.map((s,i)=>`<section class="slide" data-i="${i}">${s.html}</section>`).join('');
+const slides=[...canvas.querySelectorAll('.slide')];
+
+function fragsOf(i){
+  const f=[...slides[i].querySelectorAll('.frag')];
+  return {list:f,max:f.length?Math.max(...f.map(e=>+(e.dataset.f||0))):-1};
+}
+function paint(){
+  slides.forEach((s,i)=>s.classList.toggle('active',i===idx));
+  fragsOf(idx).list.forEach(e=>e.classList.toggle('on',(+(e.dataset.f||0))<fragStep));
+  document.getElementById('progress').style.width=((idx+1)/SLIDES.length*100)+'%';
+  document.getElementById('pagenum').textContent=`${idx+1} / ${SLIDES.length}`;
+  if(t0!==null) updClock();
+  const d=SLIDES[idx].draw; if(d&&DRAW[d]) requestAnimationFrame(DRAW[d]);
+  /* play video on the slide we just entered, pause and rewind everywhere else */
+  slides.forEach((s,i)=>s.querySelectorAll('video').forEach(v=>{
+    if(i===idx){ v.playbackRate=+(v.dataset.rate||1); v.play().catch(()=>{}); }
+    else if(!v.paused||v.currentTime){ v.pause(); v.currentTime=0; }
+  }));
+  /* Leaving the slide has to REMOVE the iframe, not pause it: playback cannot be controlled
+     across origins without pulling in the YouTube JS API, and an iframe left behind on a
+     hidden slide keeps playing audio. */
+  document.querySelectorAll('.ytwrap.live').forEach(w=>{
+    if(+w.closest('.slide').dataset.i !== idx) closeYT(w);
+  });
+}
+function leave(){ const s=slides[idx]; s.classList.add('leaving');
+  setTimeout(()=>s.classList.remove('leaving'),160);
+  /* Demos with a default choice reset on slide change, so a slide always opens on that
+     choice rather than on whatever was clicked the last time through. Not on paint() --
+     that also runs on every fragment step, which would undo a click mid-slide. */
+  if(typeof resetDemos==='function') resetDemos(); }
+function go(n){ if(n<0||n>=SLIDES.length)return; saveInk(); leave(); idx=n; fragStep=fragsOf(idx).max+1; paint(); loadInk(idx); }
+function next(){ const {max}=fragsOf(idx);
+  if(fragStep<=max){fragStep++;paint();}
+  else if(idx<SLIDES.length-1){saveInk();leave();idx++;fragStep=0;paint();loadInk(idx);} }
+function prev(){ if(fragStep>0){fragStep--;paint();}
+  else if(idx>0){saveInk();leave();idx--;fragStep=fragsOf(idx).max+1;paint();loadInk(idx);} }
+
+function fit(){ canvas.style.transform=`scale(${Math.min(innerWidth/1280,innerHeight/720)*.955})`; }
+addEventListener('resize',fit); fit();
+
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  /* arrows belong to a focused slider, not to navigation */
+  const ae=document.activeElement;
+  if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key==='ArrowUp'||e.key==='ArrowDown') return;
+    if(k==='d'||k==='t'||k==='o'||k==='b') return;
+  }
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();next();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev();}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(SLIDES.length-1);
+  else if(k==='o')toggleOv(); else if(k==='t')cycleTheme();
+  else if(k==='b')document.body.classList.toggle('blank');
+  else if(k==='d'){e.preventDefault();toggleInk();}
+  else if(k==='p'){e.preventDefault();toggleClock();}
+  else if(k==='c'&&document.body.classList.contains('inking'))clearInk();
+  else if(k==='f')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+  else if(e.key==='Escape')ov.classList.remove('on');
+});
+
+const ov=document.getElementById('overview');
+ov.innerHTML=SLIDES.map((s,i)=>
+  `<div class="thumb ${s.div?'divider-t':''}" data-i="${i}">
+     ${s.s?`<div class="ts">${s.s}</div>`:''}<div class="tt">${s.t}</div><div class="tn">${i+1}</div></div>`).join('');
+ov.addEventListener('click',e=>{const t=e.target.closest('.thumb');if(!t)return;go(+t.dataset.i);ov.classList.remove('on');});
+function toggleOv(){ ov.classList.toggle('on');
+  [...ov.children].forEach((c,i)=>c.classList.toggle('cur',i===idx));
+  if(ov.classList.contains('on')) ov.children[idx]?.scrollIntoView({block:'center'}); }
+
+const THEMES=['paper','academic','swiss','nocturne'];
+function setTheme(t){ document.body.dataset.theme=t;
+  document.querySelectorAll('.swatch').forEach(s=>s.classList.toggle('sel',s.dataset.t===t));
+  const d=SLIDES[idx].draw; if(d&&DRAW[d]) setTimeout(DRAW[d],520); }
+function cycleTheme(){ setTheme(THEMES[(THEMES.indexOf(document.body.dataset.theme)+1)%THEMES.length]); }
+document.querySelectorAll('.swatch').forEach(s=>s.onclick=()=>setTheme(s.dataset.t));
+
+/* ---------- minimal Python syntax highlighting ---------- */
+const PY_KW=/\b(def|return|for|in|import|from|as|if|else|elif|None|True|False|lambda|while|not|and|or)\b/g;
+function highlight(){
+  /* Placeholders are delimited by private-use code points and indexed with a
+     LETTER, not a digit: a digit index would be re-matched by the number rule. */
+  const OPEN='', CLOSE='';
+  document.querySelectorAll('pre.code').forEach(function(pre){
+    if(pre.dataset.hl) return; pre.dataset.hl='1';
+    let h=pre.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const stash=[];
+    const keep=function(html){ stash.push(html); return OPEN+String.fromCharCode(65+stash.length-1)+CLOSE; };
+    h=h.replace(/#[^\n]*/g, function(m){ return keep('<span class="tok-com">'+m+'</span>'); });
+    h=h.replace(/"[^"]*"|'[^']*'/g, function(m){ return keep('<span class="tok-str">'+m+'</span>'); });
+    h=h.replace(PY_KW,'<span class="tok-kw">$1</span>');
+    h=h.replace(/\b(\d+\.?\d*)\b/g,'<span class="tok-num">$1</span>');
+    h=h.replace(/\b([A-Za-z_]\w*)(?=\()/g,'<span class="tok-fn">$1</span>');
+    h=h.replace(new RegExp(OPEN+'([A-Z])'+CLOSE,'g'), function(_,c){ return stash[c.charCodeAt(0)-65]; });
+    pre.innerHTML=h;
+  });
+}
+
+/* ---------- upright delimiters in maths ----------
+   Only letters are variables. Brackets, digits, operators and punctuation are
+   set upright. Runs once over every .m span at load. */
+/* Render every data-tex node. Re-runnable: demos that rewrite innerHTML call it again.
+   Falls back to the raw LaTeX so a bad macro can never blank a slide. */
+function renderTeX(){
+  if(typeof katex==='undefined'){ setTimeout(renderTeX,40); return; }
+  document.querySelectorAll('[data-tex]').forEach(function(el){
+    if(el.dataset.done) return;
+    try{ katex.render(el.dataset.tex, el,
+      {displayMode: el.classList.contains('texd'), throwOnError:false, output:'html',
+       /* \htmlClass lets an equation colour its own parts through CSS variables, so
+          colour coding follows the theme instead of freezing to the paper palette. */
+       trust: c => c.command === '\\htmlClass', strict: false}); }
+    catch(e){ el.textContent=el.dataset.tex; }
+    el.dataset.done='1';
+  });
+}
+addEventListener('load', renderTeX);
+
+/* ============================================================
+   LECTURE 2 DEMOS
+   Same conventions as Lecture 1: each draw function rebuilds the innerHTML of one
+   SVG, and paint() calls it through the DRAW registry when its slide is entered.
+   ============================================================ */
+const NPDF=(x,m,s2)=>Math.exp(-(x-m)*(x-m)/(2*s2))/Math.sqrt(2*Math.PI*s2);
+const LPDF=(x,m,b)=>Math.exp(-Math.abs(x-m)/b)/(2*b);
+function lin(a,b,n){const o=[];for(let i=0;i<n;i++)o.push(a+(b-a)*i/(n-1));return o;}
+function pathOf(pts){return 'M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');}
+/* Gauss-Jordan inverse — small matrices only, which is all we need here. */
+function inv(A){
+  const n=A.length, M=A.map((r,i)=>r.concat(Array.from({length:n},(_,j)=>i===j?1:0)));
+  for(let c=0;c<n;c++){
+    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(M[r][c])>Math.abs(M[p][c])) p=r;
+    const t=M[c];M[c]=M[p];M[p]=t;
+    const d=M[c][c]||1e-12;
+    for(let j=0;j<2*n;j++) M[c][j]/=d;
+    for(let r=0;r<n;r++){ if(r===c) continue; const f=M[r][c];
+      if(!f) continue; for(let j=0;j<2*n;j++) M[r][j]-=f*M[c][j]; }
+  }
+  return M.map(r=>r.slice(n));
+}
+const matvec=(A,v)=>A.map(r=>r.reduce((s,a,i)=>s+a*v[i],0));
+/* Deterministic pseudo-randomness: a demo that rerolls on every repaint is unusable in
+   front of a room, so every draw is seeded. */
+function lcg(seed){ let x=seed>>>0; return function(){ x=(x*1664525+1013904223)>>>0; return (x>>>8)/16777216; }; }
+function gauss(r){ let u=0,v=0; while(u===0)u=r(); while(v===0)v=r();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+/* Cholesky: lower-triangular L with L L^T = A, for sampling a multivariate Gaussian. */
+function chol(A){
+  const n=A.length, L=Array.from({length:n},()=>new Array(n).fill(0));
+  for(let i=0;i<n;i++) for(let j=0;j<=i;j++){
+    let sum=A[i][j];
+    for(let k=0;k<j;k++) sum-=L[i][k]*L[j][k];
+    if(i===j) L[i][j]=Math.sqrt(Math.max(sum,1e-12));
+    else      L[i][j]=sum/(L[j][j]||1e-12);
+  }
+  return L;
+}
+
+/* ---------------------------------------------------------------- the used car */
+function drawCar(){
+  const g=document.getElementById('carfig'); if(!g) return;
+  const W=460,H=320,ML=34,MR=14,MT=14,MB=44;
+  const X=v=>ML+(W-ML-MR)*(v-6)/(24-6);          /* $k */
+  const top=H-MB;
+  let s='';
+  s+='<line x1="'+ML+'" y1="'+top+'" x2="'+(W-MR)+'" y2="'+top+'" class="axis"/>';
+  [8,12,16,20,24].forEach(v=>{ s+='<text class="tick" x="'+X(v)+'" y="'+(top+18)+'" text-anchor="middle">$'+v+'k</text>'; });
+  const draw=(sd,col,y0,hgt,lab)=>{
+    const pts=lin(6,24,140).map(v=>[X(v), y0+hgt-hgt*NPDF(v,14.2,sd*sd)/NPDF(14.2,14.2,sd*sd)]);
+    let p='<path d="'+pathOf(pts)+' L'+X(24)+' '+(y0+hgt)+' L'+X(6)+' '+(y0+hgt)+' Z" fill="'+col+'" opacity=".16"/>';
+    p+='<path d="'+pathOf(pts)+'" fill="none" stroke="'+col+'" stroke-width="2.2"/>';
+    p+='<line x1="'+X(14.2)+'" y1="'+y0+'" x2="'+X(14.2)+'" y2="'+(y0+hgt)+'" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="3 3"/>';
+    p+='<line x1="'+X(15)+'" y1="'+(y0-4)+'" x2="'+X(15)+'" y2="'+(y0+hgt)+'" stroke="var(--ink)" stroke-width="1.6"/>';
+    p+='<text class="legend" x="'+ML+'" y="'+(y0+11)+'">'+lab+'</text>';
+    return p; };
+  s+=draw(0.3,'var(--accent2)',30,92,'narrow spread — $15k is unusual');
+  s+=draw(4.0,'var(--accent)',158,92,'wide spread — $15k is ordinary');
+  s+='<text class="legend" x="'+(X(15)+6)+'" y="24">seller asks $15k</text>';
+  g.innerHTML=s;
+}
+
+/* ---------------------------------------------------------------- the Gaussian */
+let G_MU=0, G_S2=1;
+function drawGauss(){
+  const svg=document.getElementById('gsvg'); if(!svg) return;
+  const W=560,H=300,ML=44,MR=16,MT=16,MB=40;
+  const X=v=>ML+(W-ML-MR)*(v+6)/12, Y=p=>H-MB-(H-MT-MB)*p/0.62;
+  let s='';
+  for(let p=0;p<=0.6;p+=0.2){ s+='<line class="gridline" x1="'+ML+'" y1="'+Y(p)+'" x2="'+(W-MR)+'" y2="'+Y(p)+'"/>'
+    + '<text class="tick" x="'+(ML-8)+'" y="'+(Y(p)+4)+'" text-anchor="end">'+p.toFixed(1)+'</text>'; }
+  for(let v=-6;v<=6;v+=2){ s+='<text class="tick" x="'+X(v)+'" y="'+(H-MB+18)+'" text-anchor="middle">'+v+'</text>'; }
+  s+='<line class="axis" x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'"/>';
+  const pts=lin(-6,6,240).map(v=>[X(v),Y(NPDF(v,G_MU,G_S2))]);
+  s+='<path d="'+pathOf(pts)+' L'+X(6)+' '+Y(0)+' L'+X(-6)+' '+Y(0)+' Z" fill="var(--accent)" opacity=".13"/>';
+  s+='<path d="'+pathOf(pts)+'" fill="none" stroke="var(--accent)" stroke-width="2.6"/>';
+  /* mean and one standard deviation */
+  const sd=Math.sqrt(G_S2);
+  s+='<line x1="'+X(G_MU)+'" y1="'+Y(0)+'" x2="'+X(G_MU)+'" y2="'+Y(NPDF(G_MU,G_MU,G_S2))+'" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/>';
+  s+='<text class="legend" x="'+(X(G_MU)+6)+'" y="'+(Y(NPDF(G_MU,G_MU,G_S2))+14)+'">&#956;</text>';
+  const yh=Y(NPDF(G_MU+sd,G_MU,G_S2));
+  s+='<line x1="'+X(G_MU-sd)+'" y1="'+yh+'" x2="'+X(G_MU+sd)+'" y2="'+yh+'" stroke="var(--accent2)" stroke-width="2"/>';
+  s+='<text class="legend" x="'+X(G_MU+sd)+'" y="'+(yh-7)+'" text-anchor="middle" fill="var(--accent2)">&#177;&#963;</text>';
+  svg.innerHTML=s;
+}
+
+/* ---------------------------------------------------------------- densities as likelihoods
+   Interactive rather than three fixed panels: slide mu and watch the likelihood rise and
+   fall. The peak is the MLE, found by eye before it is found by calculus. */
+const LIK_T=[-1.1,-0.4,0.2,0.6,1.4];
+let LIK_MU=-1.6;
+const likL=m=>LIK_T.reduce((p,t)=>p*NPDF(t,m,1),1);
+function drawLik(){
+  const g=document.getElementById('likfig'); if(!g) return;
+  const W=470,H=300,ML=44,MR=16;
+  const X=v=>ML+(W-ML-MR)*(v+4)/8;
+  let s='';
+  /* upper panel: the density sitting over the data */
+  const y0=22,hgt=100;
+  const pts=lin(-4,4,220).map(v=>[X(v), y0+hgt-hgt*NPDF(v,LIK_MU,1)/NPDF(0,0,1)]);
+  s+='<path d="'+pathOf(pts)+'" fill="none" stroke="var(--accent)" stroke-width="2.6"/>';
+  LIK_T.forEach(t=>{ const p=NPDF(t,LIK_MU,1), py=y0+hgt-hgt*p/NPDF(0,0,1);
+    s+='<line x1="'+X(t)+'" y1="'+(y0+hgt)+'" x2="'+X(t)+'" y2="'+py+'" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="2 3" opacity=".75"/>';
+    s+='<circle cx="'+X(t)+'" cy="'+py+'" r="4" fill="var(--accent)"/>';
+    s+='<circle cx="'+X(t)+'" cy="'+(y0+hgt)+'" r="3.4" fill="var(--ink)"/>'; });
+  s+='<line x1="'+ML+'" y1="'+(y0+hgt)+'" x2="'+(W-MR)+'" y2="'+(y0+hgt)+'" class="axis"/>';
+  s+='<line x1="'+X(LIK_MU)+'" y1="'+y0+'" x2="'+X(LIK_MU)+'" y2="'+(y0+hgt)+'" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="5 4" opacity=".8"/>';
+  s+='<text class="legend" x="'+ML+'" y="'+(y0-8)+'">the five observations, and a Gaussian centred at &#956;</text>';
+  /* lower panel: likelihood as mu moves */
+  const ly=178, lh=88, MUS=lin(-4,4,200);
+  const peak=Math.max.apply(null,MUS.map(likL));
+  const lp=MUS.map(m=>[X(m), ly+lh-lh*likL(m)/peak]);
+  s+='<path d="'+pathOf(lp)+'" fill="none" stroke="var(--accent2)" stroke-width="2.6"/>';
+  s+='<line x1="'+ML+'" y1="'+(ly+lh)+'" x2="'+(W-MR)+'" y2="'+(ly+lh)+'" class="axis"/>';
+  const cy=ly+lh-lh*likL(LIK_MU)/peak;
+  s+='<line x1="'+X(LIK_MU)+'" y1="'+cy+'" x2="'+X(LIK_MU)+'" y2="'+(ly+lh)+'" stroke="var(--accent2)" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  s+='<circle cx="'+X(LIK_MU)+'" cy="'+cy+'" r="5.5" fill="var(--accent2)"/>';
+  s+='<text class="legend" x="'+ML+'" y="'+(ly-8)+'">likelihood, as a function of &#956;</text>';
+  [-4,-2,0,2,4].forEach(v=>s+='<text class="tick" x="'+X(v)+'" y="'+(ly+lh+18)+'" text-anchor="middle">'+v+'</text>');
+  g.innerHTML=s;
+  const L=likL(LIK_MU);
+  const mant=L.toExponential(1).split('e')[0], ex=L.toExponential(1).split('e')[1];
+  const el=document.getElementById('likval');
+  if(el) el.innerHTML=mant+'&#215;10<sup>'+ex+'</sup>';
+  const lg=document.getElementById('liklog'); if(lg) lg.textContent=Math.log(L).toFixed(1);
+  const mu=document.getElementById('likmuv'); if(mu) mu.textContent=LIK_MU.toFixed(2);
+  const best=LIK_T.reduce((a,b)=>a+b,0)/LIK_T.length;
+  const wn=document.getElementById('likwarn');
+  if(wn) wn.innerHTML = Math.abs(LIK_MU-best)<0.06
+    ? 'That is the peak &#8212; and it sits exactly at the <strong>sample mean</strong>, '+best.toFixed(2)+'. Maximum likelihood will land here by calculus in a moment.'
+    : 'Move &#956; until the lower curve peaks. Every observation contributes a factor, so points far from &#956; drag the product down fast.';
+}
+
+/* ---------------------------------------------------------------- covariance shapes */
+function drawCov(){
+  const g=document.getElementById('covfig'); if(!g) return;
+  let s='';
+  const cell=150, gap=8;
+  const M=[['spherical',1,1,0,   ['1','0','0','1']],
+           ['diagonal', 1.5,0.55,0, ['2','0','0','0.5']],
+           ['full',     1.4,0.6,-0.62, ['1.6','0.8','0.8','0.9']]];
+  M.forEach(([lab,a,b,rot,m],k)=>{
+    const cx=cell/2+k*(cell+gap)+6, cy=96;
+    s+='<text class="legend" x="'+cx+'" y="16" text-anchor="middle">'+lab+'</text>';
+    s+='<g transform="translate('+cx+','+cy+')">';
+    [1,2,3].forEach(r=>{ s+='<ellipse rx="'+(a*17*r)+'" ry="'+(b*17*r)+'" fill="none" stroke="var(--accent)"'
+      + ' stroke-width="'+(r===1?2.2:1.2)+'" opacity="'+(r===1?1:0.4)+'"'
+      + ' transform="rotate('+(rot*57.3)+')"/>'; });
+    s+='<circle r="2.6" fill="var(--ink)"/>';
+    s+='<line x1="-58" y1="0" x2="58" y2="0" stroke="var(--rule)" stroke-width="1"/>';
+    s+='<line x1="0" y1="-58" x2="0" y2="58" stroke="var(--rule)" stroke-width="1"/>';
+    s+='</g>';
+    /* the matrix that produced the shape, drawn with real brackets */
+    const bx=cx-46, by=176;
+    s+='<path d="M'+bx+' '+by+' h-7 v46 h7" fill="none" stroke="var(--ink-soft)" stroke-width="1.6"/>';
+    s+='<path d="M'+(bx+92)+' '+by+' h7 v46 h-7" fill="none" stroke="var(--ink-soft)" stroke-width="1.6"/>';
+    s+='<text class="matn" x="'+(bx+24)+'" y="'+(by+19)+'" text-anchor="middle">'+m[0]+'</text>';
+    s+='<text class="matn" x="'+(bx+68)+'" y="'+(by+19)+'" text-anchor="middle">'+m[1]+'</text>';
+    s+='<text class="matn" x="'+(bx+24)+'" y="'+(by+41)+'" text-anchor="middle">'+m[2]+'</text>';
+    s+='<text class="matn" x="'+(bx+68)+'" y="'+(by+41)+'" text-anchor="middle">'+m[3]+'</text>';
+  });
+  g.innerHTML=s;
+}
+
+/* ---------------------------------------------------------------- generative diagram */
+function drawGen(){
+  const g=document.getElementById('genfig'); if(!g) return;
+  /* Own marker: the deck's shared ${ARROW} marker lives in a different SVG, and a marker
+     reference does not cross SVG roots. */
+  const defs='<defs><marker id="genar" markerWidth="10" markerHeight="10" refX="8" refY="3.4"'
+   + ' orient="auto"><path d="M0,0 L8,3.4 L0,6.8 z" fill="var(--ink)"/></marker></defs>';
+  const arrow=(x1,y1,x2,y2)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"'
+   + ' stroke="var(--ink)" stroke-width="2" marker-end="url(#genar)"/>';
+  const box=(x,y,w,h,txt,sub)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="9"'
+   + ' fill="var(--bg-alt)" stroke="var(--rule)"/>'
+   + '<text class="flowtxt" x="'+(x+w/2)+'" y="'+(y+h/2+3)+'" text-anchor="middle" style="font-size:21px">'+txt+'</text>'
+   + (sub?'<text class="legend" x="'+(x+w/2)+'" y="'+(y+h+18)+'" text-anchor="middle">'+sub+'</text>':'');
+  let s=defs;
+  s+='<text class="flowtxt" x="46" y="66" text-anchor="middle" style="font-size:24px">x</text>';
+  s+='<text class="legend" x="46" y="92" text-anchor="middle">input</text>';
+  s+=arrow(66,60,168,60);
+  s+=box(175,28,200,64,'y(x; w)','the deterministic part');
+  s+=arrow(382,60,468,60);
+  s+='<circle cx="500" cy="60" r="28" fill="var(--bg-alt)" stroke="var(--rule)"/>'
+   + '<text class="flowtxt" x="500" y="69" text-anchor="middle" style="font-size:27px">+</text>';
+  /* noise enters the sum from below */
+  s+=arrow(500,140,500,94);
+  s+='<text class="flowtxt" x="500" y="162" text-anchor="middle" style="font-size:20px;fill:var(--accent)">noise &#949;</text>';
+  s+='<text class="legend" x="500" y="22" text-anchor="middle">the stochastic part</text>';
+  s+=arrow(530,60,632,60);
+  s+='<text class="flowtxt" x="660" y="68" text-anchor="middle" style="font-size:24px">t</text>';
+  s+='<text class="legend" x="660" y="92" text-anchor="middle">target</text>';
+  g.innerHTML=s;
+}
+
+/* ---------------------------------------------------------------- noise choice -> loss */
+let NOISE='gauss';
+function drawNoise(){
+  const svg=document.getElementById('nsvg'); if(!svg) return;
+  const W=560,H=236,ML=44,MR=14,MT=18,MB=32, half=(W-ML-MR-52)/2;
+  /* Matched variance, so the comparison is fair: Laplace with b = 1/sqrt(2) also has
+     variance 1. They cross at |x| = 0.49 and again at |x| = 2.34; past the second
+     crossing the Laplace tail is the heavier one, which is the whole point and is
+     invisible on a linear axis. */
+  const b=1/Math.SQRT2, R=6;
+  const lgG=v=>-v*v/2 - 0.5*Math.log(2*Math.PI);
+  const lgL=v=>-Math.abs(v)/b - Math.log(2*b);
+  const sel=NOISE;
+  let g='';
+  /* ---- left: the densities, linear ---- */
+  (function(){
+    const x0=ML, X=v=>x0+half*(v+R)/(2*R), Y=p=>H-MB-(H-MT-MB)*p/0.75;
+    g+='<text class="legend" x="'+(x0+half/2)+'" y="'+(MT+2)+'" text-anchor="middle">density  p(&#949;)</text>';
+    g+='<line class="axis" x1="'+x0+'" y1="'+(H-MB)+'" x2="'+(x0+half)+'" y2="'+(H-MB)+'"/>';
+    [[lgG,'var(--accent2)',sel==='gauss',false],[lgL,'var(--accent)',sel==='laplace',true]].forEach(([f,c,on,dash])=>{
+      const pts=lin(-R,R,300).map(v=>[X(v),Y(Math.exp(f(v)))]);
+      g+='<path d="'+pathOf(pts)+'" fill="none" stroke="'+c+'" stroke-width="'+(on?2.8:1.5)+'"'
+       + ' opacity="'+(on?1:.42)+'"'+(dash?' stroke-dasharray="5 4"':'')+'/>'; });
+    [-5,0,5].forEach(v=>g+='<text class="tick" x="'+X(v)+'" y="'+(H-MB+16)+'" text-anchor="middle">'+v+'</text>');
+  })();
+  /* ---- right: log density, where the tails separate ---- */
+  (function(){
+    const x0=ML+half+52, X=v=>x0+half*(v+R)/(2*R);
+    const LO=-20, HI=0, Y=l=>MT+14+(H-MT-MB-14)*(HI-l)/(HI-LO);
+    g+='<text class="legend" x="'+(x0+half/2)+'" y="'+(MT+2)+'" text-anchor="middle">log p(&#949;)   &#8212;   the loss, negated</text>';
+    for(let l=0;l>=-20;l-=5){
+      g+='<line class="gridline" x1="'+x0+'" y1="'+Y(l)+'" x2="'+(x0+half)+'" y2="'+Y(l)+'"/>'
+       + '<text class="tick" x="'+(x0-6)+'" y="'+(Y(l)+4)+'" text-anchor="end">'+l+'</text>'; }
+    [[lgG,'var(--accent2)',sel==='gauss',false],[lgL,'var(--accent)',sel==='laplace',true]].forEach(([f,c,on,dash])=>{
+      const pts=lin(-R,R,300).map(v=>[X(v),Y(Math.max(f(v),LO))]);
+      g+='<path d="'+pathOf(pts)+'" fill="none" stroke="'+c+'" stroke-width="'+(on?2.8:1.7)+'"'
+       + ' opacity="'+(on?1:.5)+'"'+(dash?' stroke-dasharray="5 4"':'')+'/>'; });
+    /* Mark the outer crossing and the gap past it. The label goes in the empty wedge
+       under the peak — anywhere near the crossing itself lands on top of a curve. */
+    [-2.34,2.34].forEach(c=>{
+      g+='<line x1="'+X(c)+'" y1="'+Y(lgG(c))+'" x2="'+X(c)+'" y2="'+Y(LO)+'" stroke="var(--ink-soft)"'
+       + ' stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>'
+       + '<circle cx="'+X(c)+'" cy="'+Y(lgG(c))+'" r="3.6" fill="var(--ink)"/>'; });
+    g+='<text class="legend" x="'+X(0)+'" y="'+Y(-15.2)+'" text-anchor="middle">they cross at &#177;2.34</text>';
+    const xg=5.2, yG=Y(lgG(xg)), yL=Y(lgL(xg));
+    g+='<line x1="'+X(xg)+'" y1="'+yL+'" x2="'+X(xg)+'" y2="'+yG+'" stroke="var(--accent)" stroke-width="1.4"/>'
+     + '<text class="legend" x="'+(X(xg)-10)+'" y="'+((yL+yG)/2)+'" text-anchor="end" fill="var(--accent)">&#8776;400&#215; more likely</text>';
+    [-5,0,5].forEach(v=>g+='<text class="tick" x="'+X(v)+'" y="'+(H-MB+16)+'" text-anchor="middle">'+v+'</text>');
+  })();
+  g+='<g transform="translate('+(ML+4)+','+(H-4)+')">'
+   + '<line x1="0" y1="-4" x2="20" y2="-4" stroke="var(--accent2)" stroke-width="2.6"/>'
+   + '<text class="legend" x="27" y="0">Gaussian</text>'
+   + '<line x1="104" y1="-4" x2="124" y2="-4" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="5 4"/>'
+   + '<text class="legend" x="131" y="0">Laplace &#8212; same variance</text></g>';
+  svg.innerHTML=g;
+  const L=document.getElementById('nloss'), wn=document.getElementById('nwarn');
+  if(sel==='gauss'){
+    L.innerHTML='&#189;&#8721;(t&#8722;y)&#178;';
+    wn.innerHTML='On the log axis the Gaussian is a <strong>parabola</strong> &#8212; so the loss grows quadratically, and beyond &#177;2.34 it falls below the Laplace. A far-out residual is very surprising, and one outlier can dominate the fit.';
+  }else{
+    L.innerHTML='&#8721;|t&#8722;y|';
+    wn.innerHTML='The Laplace is a <strong>straight V</strong> on the log axis &#8212; the loss grows only linearly. Past &#177;2.34 it sits above the Gaussian: the same large residual is far less surprising, so the fit is robust to outliers.';
+  }
+  document.querySelectorAll('[data-noise]').forEach(x=>x.classList.toggle('sel',x.dataset.noise===sel));
+}
+
+/* ---------------------------------------------------------------- Bayesian coin flip */
+const COIN=[0,0.2,0.8,1.0];
+let CPOST=[0.25,0.25,0.25,0.25], CH=0, CT=0;
+function drawCoin(){
+  const svg=document.getElementById('csvg'); if(!svg) return;
+  const W=560,H=300,ML=52,MR=16,MT=26,MB=46;
+  const bw=(W-ML-MR)/COIN.length;
+  let s='<text class="legend" x="'+ML+'" y="'+(MT-8)+'">posterior belief over &#952;</text>';
+  for(let p=0;p<=1.001;p+=0.25){ const y=H-MB-(H-MT-MB)*p;
+    s+='<line class="gridline" x1="'+ML+'" y1="'+y+'" x2="'+(W-MR)+'" y2="'+y+'"/>'
+     + '<text class="tick" x="'+(ML-8)+'" y="'+(y+4)+'" text-anchor="end">'+(p*100).toFixed(0)+'%</text>'; }
+  s+='<line class="axis" x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'"/>';
+  const top=Math.max.apply(null,CPOST);
+  COIN.forEach((th,i)=>{
+    const h=(H-MT-MB)*CPOST[i], x=ML+i*bw+bw*0.22, w=bw*0.56;
+    const hot=CPOST[i]>=top-1e-9;
+    s+='<rect x="'+x+'" y="'+(H-MB-h)+'" width="'+w+'" height="'+h+'" rx="4" fill="'+(hot?'var(--accent)':'var(--ink-soft)')+'" opacity="'+(hot?1:.55)+'"/>';
+    s+='<text class="tick" x="'+(x+w/2)+'" y="'+(H-MB+18)+'" text-anchor="middle">&#952; = '+th+'</text>';
+    s+='<text class="legend" x="'+(x+w/2)+'" y="'+(H-MB-h-7)+'" text-anchor="middle">'+(CPOST[i]*100).toFixed(1)+'%</text>';
+  });
+  svg.innerHTML=s;
+  const n=CH+CT;
+  document.getElementById('cobs').textContent = n? (CH+'H '+CT+'T') : '—';
+  const mle = n? (CH/n).toFixed(2) : '—';
+  document.getElementById('cmle').textContent = mle;
+  const wn=document.getElementById('cwarn');
+  if(n===0) wn.innerHTML='Flip a few times. Watch what maximum likelihood says after the very first flip.';
+  else if(n===1) wn.innerHTML='MLE already commits to <strong>'+mle+'</strong> on one observation. The posterior still keeps every possibility open &#8212; that is the prior doing its job.';
+  else if(CH===n) wn.innerHTML='All heads so far. MLE says &#952; = 1.00; the posterior still gives &#952; = 0.8 real weight, because it has only seen '+n+' flips.';
+  else if(CT===n) wn.innerHTML='All tails. Same story in reverse.';
+  else wn.innerHTML='With both outcomes seen, &#952; = 0 and &#952; = 1 are ruled out entirely &#8212; their likelihood is exactly zero, so no amount of prior can revive them.';
+}
+function coinFlip(head){
+  CPOST=CPOST.map((p,i)=>p*(head?COIN[i]:1-COIN[i]));
+  const z=CPOST.reduce((a,b)=>a+b,0);
+  CPOST = z>0 ? CPOST.map(p=>p/z) : [0.25,0.25,0.25,0.25];
+  if(head) CH++; else CT++;
+  drawCoin();
+}
+
+/* ---------------------------------------------------------------- MLE / MAP / posterior */
+let BMODE='mle', BN=6;
+const B_ALL_X=[0.04,0.13,0.21,0.30,0.38,0.47,0.55,0.63,0.72,0.80,0.88,0.94,0.09,0.17,0.26,0.34,0.43,0.51,0.60,0.68,0.76,0.85,0.92,0.98,0.11];
+const B_TRUE=x=>Math.sin(2*Math.PI*x);
+const B_NOISE=[0.19,-0.21,0.08,-0.14,0.24,-0.09,0.17,-0.26,0.05,0.21,-0.18,0.10,-0.23,0.13,0.06,-0.11,0.20,-0.07,0.15,-0.19,0.09,0.23,-0.12,0.04,-0.16];
+const B_M=8, B_ALPHA=2.0, B_BETA=25.0;
+const bPhi=x=>{const o=[1];for(let j=1;j<B_M;j++){const mu=(j-1)/(B_M-2);o.push(Math.exp(-Math.pow(x-mu,2)/(2*0.09)));}return o;};
+function drawBayes(){
+  const svg=document.getElementById('bsvg'); if(!svg) return;
+  const W=560,H=300,ML=42,MR=16,MT=16,MB=38;
+  const X=x=>ML+(W-ML-MR)*x, Y=t=>MT+(H-MT-MB)*(1.9-t)/3.8;
+  const xs=B_ALL_X.slice(0,BN), ts=xs.map((x,i)=>B_TRUE(x)+B_NOISE[i]);
+  const PH=xs.map(bPhi);
+  let A=Array.from({length:B_M},(_,i)=>Array.from({length:B_M},(_,j)=>
+      (BMODE==='mle'?0:B_ALPHA)*(i===j?1:0) + B_BETA*PH.reduce((s,p)=>s+p[i]*p[j],0)));
+  if(BMODE==='mle') for(let i=0;i<B_M;i++) A[i][i]+=1e-6;      /* keep it invertible */
+  const SN=inv(A);
+  const rhs=Array.from({length:B_M},(_,i)=>B_BETA*PH.reduce((s,p,n)=>s+p[i]*ts[n],0));
+  const mN=matvec(SN,rhs);
+  let s='';
+  for(let t=-1.5;t<=1.51;t+=0.75){ s+='<line class="gridline" x1="'+ML+'" y1="'+Y(t)+'" x2="'+(W-MR)+'" y2="'+Y(t)+'"/>'
+    + '<text class="tick" x="'+(ML-8)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+t.toFixed(1)+'</text>'; }
+  s+='<line class="axis" x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'"/>';
+  const grid=lin(0,1,120);
+  /* the truth, for reference */
+  s+='<path d="'+pathOf(grid.map(x=>[X(x),Y(B_TRUE(x))]))+'" fill="none" stroke="var(--ink-soft)" stroke-width="1.8" stroke-dasharray="5 4" opacity=".75"/>';
+  if(BMODE==='post'){
+    const up=[],dn=[];
+    grid.forEach(x=>{ const p=bPhi(x), m=dot(mN,p);
+      const v=1/B_BETA + dot(p,matvec(SN,p)), sd=Math.sqrt(v);
+      up.push([X(x),Y(m+2*sd)]); dn.push([X(x),Y(m-2*sd)]); });
+    s+='<path d="'+pathOf(up)+' L'+dn.slice().reverse().map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')+' Z" fill="var(--accent)" opacity=".15"/>';
+  }
+  s+='<path d="'+pathOf(grid.map(x=>[X(x),Y(dot(mN,bPhi(x)))]))+'" fill="none" stroke="var(--accent)" stroke-width="2.6"/>';
+  xs.forEach((x,i)=>{ s+='<circle class="datapt" cx="'+X(x)+'" cy="'+Y(ts[i])+'" r="4.6"/>'; });
+  s+='<g transform="translate('+(W-172)+','+(MT+4)+')">'
+   + '<line x1="0" y1="0" x2="22" y2="0" stroke="var(--ink-soft)" stroke-width="1.8" stroke-dasharray="5 4"/>'
+   + '<text class="legend" x="29" y="4">truth</text></g>';
+  svg.innerHTML=s;
+  document.querySelectorAll('[data-b]').forEach(b=>b.classList.toggle('sel',b.dataset.b===BMODE));
+  const wn=document.getElementById('bwarn');
+  if(BMODE==='mle') wn.innerHTML='No prior. With few points the curve does whatever it likes between them &#8212; and says nothing about how sure it is.';
+  else if(BMODE==='map') wn.innerHTML='The prior pulls the weights toward zero, so the curve is calmer. Still a single line: <strong>no error bars</strong>.';
+  else wn.innerHTML='The full posterior. The band is &#177;2 standard deviations &#8212; note it <strong>widens where there is no data</strong>, which is what MAP threw away.';
+}
+
+/* ---------------------------------------------------------------- base rates */
+function drawMed(){
+  const g=document.getElementById('medfig'); if(!g) return;
+  /* 10,000 people at 100 per dot: 100 dots. 1 ill in 100 -> 1 dot ill. Too coarse.
+     Use 1 dot = 50 people: 200 dots, 2 ill. Still coarse. So: one dot = 25 people,
+     400 dots, 4 ill — enough to see the two positive groups are the same size. */
+  const COLS=25, ROWS=16, N=COLS*ROWS, PER=10000/N;
+  const nIll=Math.round(100/PER);                  /* 1% are ill */
+  const cell=17.5, x0=14, y0=16;
+  let s='';
+  for(let i=0;i<N;i++){
+    const cx=x0+(i%COLS)*cell+cell/2, cy=y0+Math.floor(i/COLS)*cell+cell/2;
+    const ill = i<nIll;
+    /* positives: 99% of the ill, and 1% of the well */
+    const posIll  = ill && i<Math.round(nIll*0.99);
+    const posWell = !ill && (i-nIll) < Math.round((N-nIll)*0.01);
+    const pos = posIll||posWell;
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(pos?5.4:4)+'"'
+     + ' fill="'+(ill?'var(--accent2)':'var(--rule)')+'"'
+     + (pos?' stroke="var(--accent)" stroke-width="2"':'')+'/>';
+  }
+  const yl=y0+ROWS*cell+22;
+  s+='<circle cx="22" cy="'+(yl-4)+'" r="5" fill="var(--accent2)"/>'
+   + '<text class="legend" x="33" y="'+yl+'">ill (1%)</text>'
+   + '<circle cx="120" cy="'+(yl-4)+'" r="5.4" fill="var(--rule)" stroke="var(--accent)" stroke-width="2"/>'
+   + '<text class="legend" x="132" y="'+yl+'">well, but tested positive</text>'
+   + '<circle cx="330" cy="'+(yl-4)+'" r="5.4" fill="var(--accent2)" stroke="var(--accent)" stroke-width="2"/>'
+   + '<text class="legend" x="342" y="'+yl+'">ill and positive</text>';
+  g.innerHTML=s;
+}
+
+/* ---------------------------------------------------------------- averaging over weights
+   The integral in the posterior predictive is hard to picture, so make it finite: draw K
+   weight vectors from the posterior, plot each one's line, then average. K=1 is a point
+   estimate; K large approaches the integral. This is also, literally, an ensemble. */
+let ENS_K=1, ENS_SHOW=false;
+function ensSamples(K){
+  /* fixed seed: the same K lines every time, so the slider reads as "add more members"
+     rather than "reroll everything" */
+  const r=lcg(31337);
+  const xs=B_ALL_X.slice(0,9), ts=xs.map((x,i)=>B_TRUE(x)+B_NOISE[i]);
+  const PH=xs.map(bPhi);
+  const A=Array.from({length:B_M},(_,i)=>Array.from({length:B_M},(_,j)=>
+      B_ALPHA*(i===j?1:0) + B_BETA*PH.reduce((s,p)=>s+p[i]*p[j],0)));
+  const SN=inv(A);
+  const rhs=Array.from({length:B_M},(_,i)=>B_BETA*PH.reduce((s,p,n)=>s+p[i]*ts[n],0));
+  const mN=matvec(SN,rhs);
+  /* Draw properly: w = m + L z with L L^T = S_N. Perturbing each weight independently
+     by its own standard deviation ignores the correlations between weights — and those
+     correlations are exactly what keeps the sampled curves tight where the data is. Done
+     the naive way the fan is the same width everywhere, which is the opposite of the
+     point of this slide. */
+  const L=chol(SN);
+  const out=[];
+  for(let k=0;k<K;k++){
+    const z=Array.from({length:B_M},()=>gauss(r));
+    out.push(mN.map((m,i)=>m+L[i].reduce((a,l,j)=>a+l*z[j],0)));
+  }
+  return {xs,ts,mN,SN,ws:out};
+}
+function drawEns(){
+  const svg=document.getElementById('esvg'); if(!svg) return;
+  const W=560,H=300,ML=42,MR=16,MT=16,MB=38;
+  const X=x=>ML+(W-ML-MR)*x, Y=t=>MT+(H-MT-MB)*(1.9-t)/3.8;
+  const {xs,ts,mN,SN,ws}=ensSamples(ENS_K);
+  const grid=lin(0,1,110);
+  let s='';
+  for(let t=-1.5;t<=1.51;t+=0.75){ s+='<line class="gridline" x1="'+ML+'" y1="'+Y(t)+'" x2="'+(W-MR)+'" y2="'+Y(t)+'"/>'
+    + '<text class="tick" x="'+(ML-8)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+t.toFixed(1)+'</text>'; }
+  s+='<line class="axis" x1="'+ML+'" y1="'+(H-MB)+'" x2="'+(W-MR)+'" y2="'+(H-MB)+'"/>';
+  /* each sampled weight vector is one line: one "ensemble member" */
+  ws.forEach(w=>{ s+='<path d="'+pathOf(grid.map(x=>[X(x),Y(dot(w,bPhi(x)))]))+'"'
+    + ' fill="none" stroke="var(--accent2)" stroke-width="1.4" opacity="'+(0.15+0.5/Math.sqrt(ENS_K))+'"/>'; });
+  if(ENS_SHOW){
+    const up=[],dn=[];
+    grid.forEach(x=>{ const p=bPhi(x);
+      const vals=ws.map(w=>dot(w,p));
+      const m=vals.reduce((a,b)=>a+b,0)/vals.length;
+      const sd=Math.sqrt(vals.reduce((a,v)=>a+(v-m)*(v-m),0)/Math.max(1,vals.length-1) + 1/B_BETA);
+      up.push([X(x),Y(m+2*sd)]); dn.push([X(x),Y(m-2*sd)]); });
+    s+='<path d="'+pathOf(up)+' L'+dn.slice().reverse().map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')+' Z"'
+     + ' fill="var(--accent)" opacity=".14"/>';
+    s+='<path d="'+pathOf(grid.map(x=>[X(x),Y(dot(mN,bPhi(x)))]))+'" fill="none" stroke="var(--accent)" stroke-width="2.6"/>';
+  }
+  xs.forEach((x,i)=>{ s+='<circle class="datapt" cx="'+X(x)+'" cy="'+Y(ts[i])+'" r="4.6"/>'; });
+  svg.innerHTML=s;
+  const wn=document.getElementById('ewarn');
+  if(ENS_K===1) wn.innerHTML='One weight vector, one line &#8212; this is a point estimate. It commits everywhere, including where there is no data.';
+  else if(ENS_K<=6) wn.innerHTML='<strong>'+ENS_K+'</strong> weight vectors. Near the data they agree; away from it they fan out. The disagreement <em>is</em> the epistemic uncertainty.';
+  else wn.innerHTML='<strong>'+ENS_K+'</strong> of them. The integral is this, taken to the limit &#8212; and a finite set of models voting is exactly what an <strong>ensemble</strong> does.';
+  const b=document.getElementById('eband'); if(b) b.classList.toggle('sel',ENS_SHOW);
+}
+
+const DRAW={car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns};
+document.getElementById('likmu')?.addEventListener('input',e=>{LIK_MU=+e.target.value;drawLik();});
+document.getElementById('ek')?.addEventListener('input',e=>{ENS_K=+e.target.value;document.getElementById('ekv').textContent=ENS_K;drawEns();});
+document.addEventListener('click',e=>{ if(e.target&&e.target.id==='eband'){ENS_SHOW=!ENS_SHOW;drawEns();} });
+document.getElementById('gmu')?.addEventListener('input',e=>{G_MU=+e.target.value;document.getElementById('gmuv').textContent=G_MU.toFixed(1);drawGauss();});
+document.getElementById('gs2')?.addEventListener('input',e=>{G_S2=+e.target.value;document.getElementById('gs2v').textContent=G_S2.toFixed(1);drawGauss();});
+document.getElementById('bn')?.addEventListener('input',e=>{BN=+e.target.value;document.getElementById('bnv').textContent=BN;drawBayes();});
+document.addEventListener('click',e=>{ const t=e.target; if(!t) return;
+  const n=t.closest&&t.closest('[data-noise]'); if(n){ NOISE=n.dataset.noise; drawNoise(); }
+  const b=t.closest&&t.closest('[data-b]');     if(b){ BMODE=b.dataset.b;     drawBayes(); }
+  if(t.id==='cflipH') coinFlip(true);
+  if(t.id==='cflipT') coinFlip(false);
+  if(t.id==='creset'){ CPOST=[0.25,0.25,0.25,0.25]; CH=0; CT=0; drawCoin(); }
+});
+
+/* Click-to-advance, but never from a control. We remember where the pointer went DOWN:
+   dragging a slider and releasing over the slide would otherwise fire a click on the
+   slide and skip a page. */
+const CONTROLS='input,button,a,select,textarea,label,.demo,.demo-ctrl,.bbtn,.basisbtns,video,iframe,svg';
+let downInControl=false;
+canvas.addEventListener('pointerdown',e=>{ downInControl=!!(e.target.closest&&e.target.closest(CONTROLS)); });
+canvas.addEventListener('click',e=>{
+  if(document.body.classList.contains('inking')) return;
+  if(downInControl){ downInControl=false; return; }
+  if(e.target.closest&&e.target.closest(CONTROLS)) return;
+  next(); });
+
+/* ============================================================
+   ANNOTATION LAYER
+   Draw over the slide with a mouse, trackpad or pen tablet. Pen pressure is
+   used for stroke width when the device reports it. Ink is kept per slide.
+   D toggles · C clears the current slide · strokes survive navigation.
+   ============================================================ */
+const ink=document.getElementById('ink'), ictx=ink.getContext('2d');
+let inkColor='#9B2C2C', inkWidth=2.2, drawing=false, inkStore={};
+function sizeInk(){
+  const r=devicePixelRatio||1, w=innerWidth, h=innerHeight;
+  const keep=ink.width?ictx.getImageData(0,0,ink.width,ink.height):null;
+  ink.width=w*r; ink.height=h*r; ink.style.width=w+'px'; ink.style.height=h+'px';
+  ictx.setTransform(r,0,0,r,0,0); ictx.lineCap='round'; ictx.lineJoin='round';
+  if(keep) try{ictx.putImageData(keep,0,0);}catch(_){}
+}
+addEventListener('resize',sizeInk); sizeInk();
+function toggleInk(){
+  document.body.classList.toggle('inking');
+  document.querySelectorAll('.ib-sw').forEach(sw=>sw.classList.toggle('sel',sw.dataset.c===inkColor));
+}
+function clearInk(){ ictx.clearRect(0,0,ink.width,ink.height); delete inkStore[idx]; }
+function saveInk(){ try{ inkStore[idx]=ink.toDataURL(); }catch(_){} }
+function loadInk(i){
+  ictx.clearRect(0,0,ink.width,ink.height);
+  const d=inkStore[i]; if(!d) return;
+  const im=new Image(); im.onload=()=>ictx.drawImage(im,0,0,ink.width/(devicePixelRatio||1),ink.height/(devicePixelRatio||1)); im.src=d;
+}
+ink.addEventListener('pointerdown',e=>{ drawing=true; ink.setPointerCapture(e.pointerId);
+  ictx.strokeStyle=inkColor; ictx.beginPath(); ictx.moveTo(e.clientX,e.clientY); });
+ink.addEventListener('pointermove',e=>{ if(!drawing) return;
+  /* pen pressure scales the chosen nib; a mouse just uses the nib width */
+  ictx.lineWidth = (e.pressure>0 && e.pressure<1) ? inkWidth*(0.45+1.3*e.pressure) : inkWidth;
+  ictx.lineTo(e.clientX,e.clientY); ictx.stroke(); });
+['pointerup','pointercancel','pointerleave'].forEach(t=>ink.addEventListener(t,()=>{ if(drawing){drawing=false; saveInk();} }));
+document.querySelectorAll('.ib-sw').forEach(sw=>sw.onclick=()=>{ inkColor=sw.dataset.c;
+  document.querySelectorAll('.ib-sw').forEach(o=>o.classList.toggle('sel',o===sw)); });
+document.querySelectorAll('.ib-sz').forEach(b=>b.onclick=()=>{ inkWidth=+b.dataset.w;
+  document.querySelectorAll('.ib-sz').forEach(o=>o.classList.toggle('sel',o===b)); });
+document.getElementById('ib-clear').onclick=clearInk;
+document.getElementById('ib-off').onclick=toggleInk;
+
+/* A centred paragraph should span its container. The global p{max-width:62ch} keeps
+   body copy readable, but on a centred line it leaves the text in a narrow box pinned
+   to the left, which reads as mis-centred. Runs once over every slide paragraph. */
+/* Scale each site preview so a 1440px-wide render fits the box exactly. */
+function fitSiteFrames(){
+  document.querySelectorAll('.siteframe').forEach(function(f){
+    const ifr=f.querySelector('iframe'); if(!ifr) return;
+    const w=f.clientWidth; if(!w) return;
+    ifr.style.transform='scale('+(w/1440)+')';
+  });
+}
+addEventListener('resize',fitSiteFrames);
+
+function spreadCentredText(){
+  document.querySelectorAll('.slide p, .slide .figcap, .slide .lede').forEach(function(p){
+    /* max-width only: an auto inline margin would make a flex item shrink-wrap
+       instead of stretching, which is the very problem we are fixing. */
+    if(getComputedStyle(p).textAlign === 'center') p.style.maxWidth='none';
+  });
+}
+
+/* ---- presenter clock ---- P starts/stops. Shows elapsed time and how far
+   ahead or behind the planned cumulative time you are at this slide. ---- */
+let t0=null, tick=null;
+function fmt(ms){const s=Math.max(0,Math.round(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function updClock(){
+  if(t0===null) return;
+  const el=(performance.now()-t0)/60000;               // minutes elapsed
+  document.getElementById('cl-el').textContent=fmt(performance.now()-t0);
+  const plan=cumMin(idx), d=el-plan;
+  const dl=document.getElementById('cl-dl');
+  dl.textContent=(d>=0?'+':'&#8722;').replace('&#8722;','-')+Math.abs(d).toFixed(1)+'m vs plan ('+plan.toFixed(0)+'m / '+EST_TOTAL.toFixed(0)+'m)';
+  dl.className='dl '+(d>0.5?'behind':(d<-0.5?'ahead':''));
+}
+function toggleClock(){
+  document.body.classList.toggle('timing');
+  if(document.body.classList.contains('timing')){ t0=performance.now(); tick=setInterval(updClock,1000); updClock(); }
+  else { clearInterval(tick); t0=null; }
+}
+
+setTheme('paper');
+spreadCentredText();
+renderTeX();
+fitSiteFrames();
+highlight();
+
+/* ---- YouTube facade -------------------------------------------------------------
+   `button` and `iframe` are already in CONTROLS, so neither the play button nor the player
+   advances the slide on click.
+
+   YouTube's player refuses an opaque origin: opened straight from Finder this page is
+   file://, and the embed dies with "Error 153 - video player configuration error". There is
+   no embed parameter that fixes it. So served over http(s) we play inline, and off the disk
+   we hand off to youtube.com in a new tab. */
+const CAN_EMBED = location.protocol === 'http:' || location.protocol === 'https:';
+function closeYT(w){
+  const f=w.querySelector('iframe'); if(f) f.remove();
+  const b=w.querySelector('.ytfacade'); if(b) b.style.display='';
+  w.classList.remove('live');
+}
+document.querySelectorAll('.ytwrap').forEach(w=>{
+  const btn=w.querySelector('.ytfacade');
+  if(!CAN_EMBED){
+    const b=w.querySelector('.vidbadge'); if(b) b.textContent='Video \u2192 YouTube';
+    btn.title='Opens on YouTube \u2014 inline playback needs the deck served over http, not opened from disk';
+  }
+  btn.addEventListener('click',()=>{
+    if(!CAN_EMBED){ window.open('https://www.youtube.com/watch?v='+w.dataset.yt,'_blank','noopener'); return; }
+    if(w.classList.contains('live')) return;
+    const f=document.createElement('iframe');
+    f.src='https://www.youtube-nocookie.com/embed/'+w.dataset.yt+'?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+    f.title=w.dataset.title||'Video';
+    f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
+    f.allowFullscreen=true;
+    btn.style.display='none';
+    w.appendChild(f);
+    w.classList.add('live');
+  });
+});
+
+paint();
+</script>
+</body>
+</html>
