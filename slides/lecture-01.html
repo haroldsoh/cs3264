@@ -2179,17 +2179,27 @@ function drawFit(){
   const trE=rmse(XS.map(x=>evalPoly(w,x)),TS), teE=rmse(XT.map(x=>evalPoly(w,x)),TT);
   document.getElementById('trerr').textContent=trE.toFixed(3);
   document.getElementById('teerr').textContent=teE>99?'≫':teE.toFixed(3);
-  const warn=document.getElementById('warn'), gap=teE/Math.max(trE,1e-6);
+  const warn=document.getElementById('warn');
+  /* The message has to follow the numbers on screen. A fixed ratio threshold fired
+     "overfitting" at order 6, where test error still improves on the way to its
+     minimum at 7 — so find the actual minimum over orders at this lambda and only
+     call overfitting once test error is past it and meaningfully above it. */
+  let besto=1, bestte=Infinity;
+  for(let o=1;o<=12;o++){ const ww=fitPoly(o,lambda);
+    const te=rmse(XT.map(x=>evalPoly(ww,x)),TT);
+    if(te<bestte){ bestte=te; besto=o; } }
   if(trE<0.02&&teE>0.6)
     warn.textContent='Training error is essentially zero — and yet the fit is wrong. We have fitted the noise. This is overfitting.';
-  else if(gap>3&&teE>0.6)
-    warn.textContent='Test error is pulling away from training error. This is overfitting.';
+  else if(order>besto&&teE>bestte*1.15)
+    warn.textContent='Test error bottomed out at order '+besto+' and is now climbing while training error still falls. This is overfitting.';
   else if(trE>0.42&&sl>0)
     warn.textContent='Too much regularisation: the weights are crushed and the model can no longer bend. This is underfitting.';
   else if(trE>0.42)
     warn.textContent='Both errors are high and close together — the model is too rigid to represent the pattern. This is underfitting.';
   else if(sl>0&&order>=7&&teE<0.6)
     warn.textContent='Regularisation tames the weights: a flexible model that still generalises.';
+  else if(order===besto&&sl===0)
+    warn.textContent='This is where test error bottoms out on this data.';
   else warn.textContent='';
 
   const W=560,H=340,ml=44,mr=14,mt=14,mb=34;
