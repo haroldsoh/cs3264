@@ -309,6 +309,7 @@ body.inking #inkbar{display:flex}
 .ib-sz.sel::after{background:var(--ink)}
 .ib-btn{font-size:11.5px;color:var(--ink-soft);cursor:pointer;padding:3px 8px;border-radius:12px}
 .ib-btn:hover{background:var(--rule);color:var(--ink)}
+.ib-btn.sel{background:var(--ink);color:var(--bg)}
 /* Multi-column, not grid: multicol flows top-to-bottom then across, which is the
    reading order for a slide sorter. A grid would fill left-to-right first. */
 #overview{position:fixed;inset:0;background:var(--bg);z-index:80;overflow-y:auto;padding:30px;
@@ -504,6 +505,7 @@ pre.code.sm{font-size:12.4px;line-height:1.55}
   <span class="ib-sz" data-w="1.1" style="--d:4px"></span>
   <span class="ib-sz sel" data-w="2.2" style="--d:7px"></span>
   <span class="ib-sz" data-w="4.5" style="--d:11px"></span>
+  <span class="ib-btn" id="ib-eraser">eraser (E)</span>
   <span class="ib-btn" id="ib-clear">clear</span>
   <span class="ib-btn" id="ib-off">done (D)</span>
 </div>
@@ -2106,6 +2108,7 @@ addEventListener('keydown',e=>{
   else if(k==='d'){e.preventDefault();toggleInk();}
   else if(k==='p'){e.preventDefault();toggleClock();}
   else if(k==='c'&&document.body.classList.contains('inking'))clearInk();
+  else if(k==='e'&&document.body.classList.contains('inking'))setEraser(!erasing);
   else if(k==='f')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
   else if(e.key==='Escape')ov.classList.remove('on');
 });
@@ -2843,10 +2846,10 @@ canvas.addEventListener('click',e=>{
    ANNOTATION LAYER
    Draw over the slide with a mouse, trackpad or pen tablet. Pen pressure is
    used for stroke width when the device reports it. Ink is kept per slide.
-   D toggles · C clears the current slide · strokes survive navigation.
+   D toggles · E eraser · C clears the current slide · strokes survive navigation.
    ============================================================ */
 const ink=document.getElementById('ink'), ictx=ink.getContext('2d');
-let inkColor='#9B2C2C', inkWidth=2.2, drawing=false, inkStore={};
+let inkColor='#9B2C2C', inkWidth=2.2, drawing=false, erasing=false, inkStore={};
 function sizeInk(){
   const r=devicePixelRatio||1, w=innerWidth, h=innerHeight;
   const keep=ink.width?ictx.getImageData(0,0,ink.width,ink.height):null;
@@ -2864,17 +2867,22 @@ function saveInk(){ try{ inkStore[idx]=ink.toDataURL(); }catch(_){} }
 function loadInk(i){
   ictx.clearRect(0,0,ink.width,ink.height);
   const d=inkStore[i]; if(!d) return;
-  const im=new Image(); im.onload=()=>ictx.drawImage(im,0,0,ink.width/(devicePixelRatio||1),ink.height/(devicePixelRatio||1)); im.src=d;
+  const im=new Image(); im.onload=()=>{ ictx.globalCompositeOperation='source-over'; ictx.drawImage(im,0,0,ink.width/(devicePixelRatio||1),ink.height/(devicePixelRatio||1)); }; im.src=d;
 }
 ink.addEventListener('pointerdown',e=>{ drawing=true; ink.setPointerCapture(e.pointerId);
+  ictx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
   ictx.strokeStyle=inkColor; ictx.beginPath(); ictx.moveTo(e.clientX,e.clientY); });
 ink.addEventListener('pointermove',e=>{ if(!drawing) return;
   /* pen pressure scales the chosen nib; a mouse just uses the nib width */
-  ictx.lineWidth = (e.pressure>0 && e.pressure<1) ? inkWidth*(0.45+1.3*e.pressure) : inkWidth;
+  const nib = erasing ? inkWidth*8 : inkWidth;
+  ictx.lineWidth = (e.pressure>0 && e.pressure<1) ? nib*(0.45+1.3*e.pressure) : nib;
   ictx.lineTo(e.clientX,e.clientY); ictx.stroke(); });
 ['pointerup','pointercancel','pointerleave'].forEach(t=>ink.addEventListener(t,()=>{ if(drawing){drawing=false; saveInk();} }));
-document.querySelectorAll('.ib-sw').forEach(sw=>sw.onclick=()=>{ inkColor=sw.dataset.c;
+document.querySelectorAll('.ib-sw').forEach(sw=>sw.onclick=()=>{ inkColor=sw.dataset.c; setEraser(false);
   document.querySelectorAll('.ib-sw').forEach(o=>o.classList.toggle('sel',o===sw)); });
+function setEraser(on){ erasing=on;
+  document.getElementById('ib-eraser').classList.toggle('sel',on); }
+document.getElementById('ib-eraser').onclick=()=>setEraser(!erasing);
 document.querySelectorAll('.ib-sz').forEach(b=>b.onclick=()=>{ inkWidth=+b.dataset.w;
   document.querySelectorAll('.ib-sz').forEach(o=>o.classList.toggle('sel',o===b)); });
 document.getElementById('ib-clear').onclick=clearInk;
