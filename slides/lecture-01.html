@@ -1371,12 +1371,12 @@ def fitPoly(xs, ts, order):
 
 {s:"Part II", t:"Who do you hire?", draw:"hire", html:`
   <div class="eyebrow">Why this happens &#8212; concretely</div>
-  <h2 style="margin-bottom:8px">Candidates sit for a test. You hire the top scorer.</h2>
+  <h2 style="margin-bottom:8px">Candidates sit for an exam. You hire the top scorer.</h2>
   <div class="demo">
     <div class="demo-plot"><svg id="hiresvg" viewBox="0 0 560 330" width="100%"></svg></div>
     <div class="demo-ctrl">
       <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="bbtn" id="hirego" type="button">Run the test</button>
+        <button class="bbtn" id="hirego" type="button">Run the exam</button>
         <button class="bbtn" id="hirereset" type="button">Reset</button>
       </div>
       <div class="ctrl-row"><label>Candidates <span class="val" id="hirenv">12</span></label>
@@ -1387,11 +1387,11 @@ def fitPoly(xs, ts, order):
         <div class="stat train"><div class="k">hired the best?</div><div class="v" id="hirehit">&#8212;</div></div>
         <div class="stat test"><div class="k">winner flattered by</div><div class="v" id="hiregap">&#8212;</div></div>
       </div>
-      <div class="warn" id="hirewarn">Nobody has taken the test yet. Grey ticks are true ability &#8212; which you never get to see.</div>
+      <div class="warn" id="hirewarn">Nobody has taken the exam yet. Grey ticks are true ability &#8212; which you never get to see.</div>
     </div>
   </div>
   <p class="figcap frag" data-f="0" style="margin-top:10px;text-align:center">
-    Each candidate is a function your model could have chosen; the test is your
+    Each candidate is a function your model could have chosen; the exam is your
     <strong>training set</strong>. Fitting <em>is</em> hiring the top scorer &#8212;
     and you inherit <em class="hl">their luck along with their ability</em>.</p>`},
 
@@ -2719,7 +2719,7 @@ document.getElementById('wigo')?.addEventListener('input',drawWig);
 
 
 /* ============================================================
-   DEMO 10 — the hiring test.  The optimiser's curse made concrete before it is made
+   DEMO 10 — the hiring exam.  The optimiser's curse made concrete before it is made
    algebraic: every score is ability + luck, we keep the maximum, and the winner is
    systematically the luckiest rather than the best. Raising "candidates" is the
    same knob as raising model capacity — more draws, more chances to get lucky.
@@ -2735,7 +2735,7 @@ function lcg(seed){ let x=seed>>>0; return function(){ x=(x*1664525+1013904223)>
 function gauss(r){ let u=0,v=0; while(u===0)u=r(); while(v===0)v=r();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
 /* One fixed pool of candidates, sliced to n. Two reasons: the truth must not move
-   when you re-run the test (only the luck may), and raising "candidates" must mean
+   when you re-run the exam (only the luck may), and raising "candidates" must mean
    ADDING people to the same pool — otherwise the comparison across n is between two
    different cohorts and the trend reads as noise. */
 /* Seed chosen so that BOTH long-run numbers move monotonically as candidates are added
@@ -2792,7 +2792,7 @@ function drawHire(){
   for(let k=0;k<R;k++){ const e=hLuck(n,HIRE_SD,1000+k*7919), sc=A.map((a,i)=>a+e[i]);
     const h=argmax(sc); if(h===best) win++; over+=sc[h]-A[h]; }
   const pct=Math.round(100*win/R), avg=(over/R).toFixed(1);
-  if(HIRE_SD===0) wn.innerHTML='With no luck in the score, the test is perfect — the top scorer <em>is</em> the best. Add some.';
+  if(HIRE_SD===0) wn.innerHTML='With no luck in the score, the exam is perfect — the top scorer <em>is</em> the best. Add some.';
   else wn.innerHTML='Over 400 runs the top scorer is genuinely the best <strong>'+pct+'%</strong> of the time, '
     + 'and their score flatters them by <strong>+'+avg+'</strong> on average. '
     + (pct<50?'Push the number of candidates up and watch it get worse.':'');
@@ -2811,7 +2811,7 @@ document.addEventListener('click',e=>{ if(!e.target) return;
   if(e.target.id==='hirego') hireRun();
   if(e.target.id==='hirereset'){ if(HIRE_ANIM) cancelAnimationFrame(HIRE_ANIM); HIRE_ANIM=null;
     HIRE_T=0; drawHire();
-    document.getElementById('hirewarn').textContent='Nobody has taken the test yet. Grey ticks are true ability — which you never get to see.'; }
+    document.getElementById('hirewarn').textContent='Nobody has taken the exam yet. Grey ticks are true ability — which you never get to see.'; }
 });
 (function(){
   const nEl=document.getElementById('hiren'), sdEl=document.getElementById('hiresd');
