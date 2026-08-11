@@ -37,7 +37,7 @@
      outright in nocturne, so anything that *encodes* data -- one class against
      another, one series against another -- needs colours that do not move when the
      theme does. Overridden for the dark theme only to keep them legible on #0E0E11. */
-  --s1:#2E6DA4;--s2:#B03A31;--s3:#B8862B;--s4:#3F7F62;
+  --s1:#2E6DA4;--s2:#B03A31;--s3:#B8862B;--s4:#3F7F62;--s5:#7B3FA0;
 }
 [data-theme="paper"]{
   --bg:#FBF7EF;--bg-alt:#F4EDE0;--ink:#1E1A17;--ink-soft:#6B6157;--rule:#DCD2C0;
@@ -56,7 +56,7 @@
   --font-display:var(--font-sans);--font-body:var(--font-sans);
 }
 [data-theme="nocturne"]{
-  --s1:#6FA8DC;--s2:#E8776C;--s3:#E0B457;--s4:#6FBF95;
+  --s1:#6FA8DC;--s2:#E8776C;--s3:#E0B457;--s4:#6FBF95;--s5:#B18AE0;
   --bg:#0E0E11;--bg-alt:#191920;--ink:#ECEAE6;--ink-soft:#9A968E;--rule:#2C2C36;
   --accent:#7FB3FF;--accent-soft:#4E7FC4;--accent2:#D6A15E;--grid:#20202A;
   --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 40px rgba(0,0,0,.5);
@@ -1007,9 +1007,9 @@ const SLIDES = [
     <div class="demo-plot"><svg id="picksvg" viewBox="0 0 560 320" width="100%"></svg></div>
     <div class="demo-ctrl">
       <div class="basisbtns" style="margin-bottom:14px">
-        <span class="bbtn sel" data-p="A" style="--k:var(--accent2)">A</span>
-        <span class="bbtn" data-p="B" style="--k:var(--accent-soft)">B</span>
-        <span class="bbtn" data-p="C" style="--k:var(--accent)">C</span>
+        <span class="bbtn sel" data-p="A" style="--k:var(--s4)">A</span>
+        <span class="bbtn" data-p="B" style="--k:var(--s5)">B</span>
+        <span class="bbtn" data-p="C" style="--k:var(--s2)">C</span>
         <span class="bbtn" data-p="all">all three</span>
       </div>
       <p class="caption" style="margin-bottom:12px">You already have an intuition. The job now is to
@@ -2646,7 +2646,7 @@ function drawPick(){
   const W=560,H=320,A=axes(W,H,0,1,0,4,0.25,1);
   let g=A.s;
   /* each candidate keeps its own colour so it stays identifiable in "all three" */
-  const COLS={A:'var(--accent2)',B:'var(--accent-soft)',C:'var(--accent)'};
+  const COLS={A:'var(--s4)',B:'var(--s5)',C:'var(--s2)'};
   const show=k=>{
     const w=CAND[k], on=(PICK===k), c=COLS[k];
     if(PICK_SHOW&&on) LX.forEach((x,i)=>{
