@@ -2616,7 +2616,9 @@ function drawDrag(){
    DEMO 7 — "which line is best?"  Notion before notation: students judge by eye,
    then we put a number on the judgement and discover it is the loss.
    ============================================================ */
-const CAND = {A:[1.25,1.95], B:[-0.15,3.95], C:null};   /* C is filled with the least-squares fit */
+const CAND = {A:[1.25,1.95], B:[2.9,-2.2], C:null};   /* C is filled with the least-squares fit.
+   B slopes the wrong way on purpose: one candidate the eye rejects instantly, so the
+   interesting comparison is A against C — which is the one that needs a number. */
 let PICK='A', PICK_SHOW=false;
 function sse(w){ return LX.reduce((a,x,i)=>a+Math.pow(w[0]+w[1]*x-LT[i],2),0); }
 function drawPick(){
