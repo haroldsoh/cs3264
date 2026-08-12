@@ -1036,6 +1036,27 @@ const SLIDES = [
     <strong>independent and identically distributed</strong> &#8212; <em class="hl">i.i.d.</em></p>
   </div>`},
 
+{s:"Part III", t:"Sampling a Gaussian", draw:"gsamp", html:`
+  <div class="eyebrow">Live demo &#183; the generative direction</div>
+  <h2 style="margin-bottom:10px">Where the numbers come from</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="gssvg" viewBox="0 0 560 300"></svg></div>
+    <div class="demo-ctrl">
+      <div class="eq" style="margin:0 0 12px;font-size:21px"><span class="texd" data-tex="t_n \\sim \\mathcal{N}(\\mu, \\sigma^2)"></span></div>
+      <div class="ctrl-row"><label>&#956; <span class="val" id="gsmuv">2.0</span></label>
+        <input type="range" id="gsmu" min="-1" max="5" step="0.1" value="2"></div>
+      <div class="ctrl-row"><label>&#963; <span class="val" id="gssv">1.0</span></label>
+        <input type="range" id="gss" min="0.3" max="2.2" step="0.1" value="1"></div>
+      <div style="display:flex;gap:8px;margin:10px 0 8px;flex-wrap:wrap">
+        <button class="bbtn" id="gs1" type="button">draw 1</button>
+        <button class="bbtn" id="gs10" type="button">draw 10</button>
+        <button class="bbtn" id="gsr" type="button">reset</button>
+      </div>
+      <div class="stat" style="margin-bottom:8px"><span class="k">drawn</span><span class="v" id="gsn">0</span></div>
+      <div class="warn" id="gswarn"></div>
+    </div>
+  </div>`},
+
 {s:"Part III", t:"Gaussian MLE — the likelihood", html:`
   <div class="eyebrow">Step 1 &#8212; write the probability of the data</div>
   <h2 style="margin-bottom:12px">The likelihood</h2>
@@ -1216,6 +1237,30 @@ const SLIDES = [
       <hr class="rule">
       <p style="font-size:20.5px;max-width:none">Every point in the dataset now has a probability,
       and that is what we are about to maximise.</p>
+    </div>
+  </div>`},
+
+{s:"Part IV", t:"How a dataset is generated", draw:"lgen", html:`
+  <div class="eyebrow">Live demo &#183; draw targets yourself</div>
+  <h2 style="margin-bottom:10px">The equation, as a picture</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="lgsvg" viewBox="0 0 560 330"></svg></div>
+    <div class="demo-ctrl">
+      <div class="eq" style="margin:0 0 10px;font-size:20px"><span class="texd" data-tex="t_n = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n) + \\varepsilon_n, \\quad \\varepsilon_n \\sim \\mathcal{N}(0,\\sigma^2)"></span></div>
+      <div class="ctrl-row"><label>input x <span class="val" id="lgxv">0.55</span></label>
+        <input type="range" id="lgx" min="0.05" max="0.95" step="0.01" value="0.55"></div>
+      <div class="ctrl-row"><label>noise &#963; <span class="val" id="lgsv">0.28</span></label>
+        <input type="range" id="lgs" min="0.05" max="0.6" step="0.01" value="0.28"></div>
+      <div style="display:flex;gap:8px;margin:10px 0 8px;flex-wrap:wrap">
+        <button class="bbtn" id="lg1" type="button">draw t at this x</button>
+        <button class="bbtn" id="lgsp" type="button">a whole dataset</button>
+        <button class="bbtn" id="lgb" type="button">&#177;2&#963; band</button>
+        <button class="bbtn" id="lgr" type="button">reset</button>
+      </div>
+      <div class="stat" style="margin-bottom:8px"><span class="k">targets drawn</span><span class="v" id="lgn">0</span></div>
+      <div class="warn" id="lgwarn"></div>
+      <p class="caption" style="margin-top:8px">Press <em>draw t at this x</em> twice without moving
+      the slider &#8212; the sketch every textbook draws, and the reason <span class="tex" data-tex="\\varepsilon_n"></span> carries an index.</p>
     </div>
   </div>`},
 
@@ -1474,6 +1519,24 @@ const SLIDES = [
   </div>
   <p class="caption frag" data-f="3" style="margin-top:9px;text-align:center">Solving as before:
     <span class="tex" data-tex="\\mathbf{w}_{\\mathrm{MAP}} = (\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi} + \\tfrac{\\alpha}{\\beta}\\mathbf{I})^{-1}\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span></p>`},
+
+{s:"Part V", t:"Seeing the ratio", draw:"lamviz", html:`
+  <div class="eyebrow">Live demo &#183; two beliefs, one number</div>
+  <h2 style="margin-bottom:10px"><span class="tex" data-tex="\\lambda"></span> is a ratio of two spreads</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="lvsvg" viewBox="0 0 560 250"></svg></div>
+    <div class="demo-ctrl">
+      <div class="ctrl-row"><label>noise &#963;&#949; <span class="val" id="lvse">0.30</span></label>
+        <input type="range" id="lvsea" min="0.1" max="1.6" step="0.05" value="0.3"></div>
+      <div class="ctrl-row"><label>prior &#963;w <span class="val" id="lvsw">1.20</span></label>
+        <input type="range" id="lvswa" min="0.1" max="2.4" step="0.05" value="1.2"></div>
+      <div class="card accent" style="margin:12px 0 10px;padding:12px 16px;text-align:center">
+        <div class="eyebrow" style="margin-bottom:6px;color:var(--accent)">the &#955; they imply</div>
+        <div class="v" id="lvlam" style="font-size:30px">0.063</div>
+      </div>
+      <div class="warn" id="lvwarn"></div>
+    </div>
+  </div>`},
 
 {s:"Part V", t:"Part V in one slide", html:`
   <div class="eyebrow">Before we move on</div>
@@ -1752,7 +1815,7 @@ const SLIDES = [
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[1.0, 1.8, 0.4, 2.0, 2.6, 2.4, 2.2, 3.0, 0.4, 2.8, 1.4, 1.2, 1.5, 0.4, 2.2, 3.0, 2.6, 1.8, 1.6, 2.6, 2.2, 2.0, 2.6, 3.4, 1.4, 2.0, 0.4, 2.2, 3.4, 4.0, 3.0, 2.4, 3.0, 1.2, 2.0, 0.4, 3.0, 1.6, 2.0, 4.2, 3.4, 2.2, 2.4, 1.4, 2.0, 0.4, 2.4, 3.6, 3.0, 2.6, 4.2, 3.0, 1.4, 2.0, 0.4, 3.2, 3.0, 3.0, 2.4, 3.6, 2.4, 2.6, 2.4, 1.6, 1.6, 1.0, 0.5];
+const EST=[1.0, 1.8, 0.4, 2.0, 2.6, 2.4, 2.2, 3.0, 0.4, 2.8, 1.4, 1.2, 1.5, 0.4, 2.2, 3.0, 2.6, 1.8, 1.6, 2.6, 2.2, 2.0, 2.6, 3.4, 1.4, 2.0, 0.4, 2.2, 2.6, 3.4, 4.0, 3.0, 2.4, 3.0, 1.2, 2.0, 0.4, 3.0, 1.6, 2.0, 3.4, 4.2, 3.4, 2.2, 2.4, 1.4, 2.0, 0.4, 2.4, 3.6, 3.0, 2.6, 4.2, 3.0, 2.8, 1.4, 2.0, 0.4, 3.2, 3.0, 3.0, 2.4, 3.6, 2.4, 2.6, 2.4, 1.6, 1.6, 1.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2320,8 +2383,187 @@ function drawEns(){
   const b=document.getElementById('eband'); if(b) b.classList.toggle('sel',ENS_SHOW);
 }
 
-const DRAW={car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns};
+/* ---------------------------------------------------------------- axes helper (L2)
+   Lecture 1's axes() lives in its own demo block and is not carried across. */
+function ax2(W,H,xlo,xhi,ylo,yhi,xstep,ystep,ml){
+  ml=ml||46; const mr=14,mt=14,mb=34;
+  const X=x=>ml+(x-xlo)/(xhi-xlo)*(W-ml-mr), Y=y=>mt+(yhi-y)/(yhi-ylo)*(H-mt-mb);
+  let s='';
+  for(let g=ylo;g<=yhi+1e-9;g+=ystep){ const py=Y(g);
+    s+='<line class="gridline" x1="'+ml+'" y1="'+py+'" x2="'+(W-mr)+'" y2="'+py+'"/>'
+     + '<text class="tick" x="'+(ml-8)+'" y="'+(py+4)+'" text-anchor="end">'+(+g.toFixed(2))+'</text>'; }
+  for(let g=xlo;g<=xhi+1e-9;g+=xstep){ const px=X(g);
+    s+='<line class="gridline" x1="'+px+'" y1="'+mt+'" x2="'+px+'" y2="'+(H-mb)+'"/>'
+     + '<text class="tick" x="'+px+'" y="'+(H-mb+17)+'" text-anchor="middle">'+(+g.toFixed(2))+'</text>'; }
+  s+='<line class="axis" x1="'+ml+'" y1="'+(H-mb)+'" x2="'+(W-mr)+'" y2="'+(H-mb)+'"/>'
+   + '<line class="axis" x1="'+ml+'" y1="'+mt+'" x2="'+ml+'" y2="'+(H-mb)+'"/>';
+  return {s:s,X:X,Y:Y,ml:ml,mr:mr,mt:mt,mb:mb};
+}
+const pOf=pts=>'M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
+
+/* ---------------------------------------------------------------- DEMO A — sampling a Gaussian
+   The generative direction, before any fitting: fix mu and sigma, and watch numbers
+   fall out of the density. Part III's data arrives this way. */
+let GS_MU=2.0, GS_S=1.0, GS_PTS=[], GS_SEED=4242;
+function gsDraw(n){
+  const r=lcg(GS_SEED); GS_SEED=(GS_SEED*1103515245+12345)>>>0;
+  for(let i=0;i<n;i++) GS_PTS.push(GS_MU+GS_S*gauss(r));
+  drawGsamp();
+}
+function gsReset(){ GS_PTS=[]; drawGsamp(); }
+function drawGsamp(){
+  const svg=document.getElementById('gssvg'); if(!svg) return;
+  const W=560,H=300, A=ax2(W,H,-3,7,0,0.62,2,0.2);
+  let g=A.s;
+  /* the density we are sampling FROM */
+  g+='<path d="'+pOf(lin(-3,7,240).map(x=>[A.X(x),A.Y(NPDF(x,GS_MU,GS_S*GS_S))]))+'" fill="none" '
+   + 'stroke="var(--accent2)" stroke-width="2.8"/>';
+  g+='<line x1="'+A.X(GS_MU)+'" y1="'+A.Y(0)+'" x2="'+A.X(GS_MU)+'" y2="'+A.Y(NPDF(GS_MU,GS_MU,GS_S*GS_S))
+   + '" stroke="var(--accent2)" stroke-width="1.4" stroke-dasharray="4 4"/>'
+   + '<text class="legend" x="'+A.X(GS_MU)+'" y="'+(A.mt+10)+'" text-anchor="middle">&#956;</text>';
+  /* +-sigma bar, so the width has a visible meaning */
+  const yb=A.Y(0.585);
+  g+='<line x1="'+A.X(GS_MU-GS_S)+'" y1="'+yb+'" x2="'+A.X(GS_MU+GS_S)+'" y2="'+yb+'" stroke="var(--accent2)" stroke-width="1.6"/>'
+   + '<text class="legend" x="'+A.X(GS_MU+GS_S)+'" y="'+(yb-7)+'" text-anchor="start">&#177;&#963;</text>';
+  /* the samples: a rug on the axis, and a stacked dot-histogram above it */
+  const bins={}, bw=0.25;
+  GS_PTS.forEach(v=>{ const b=Math.round(v/bw); bins[b]=(bins[b]||0)+1;
+    g+='<line x1="'+A.X(v)+'" y1="'+(A.Y(0))+'" x2="'+A.X(v)+'" y2="'+(A.Y(0)+9)+'" stroke="var(--s1)" stroke-width="1.6" opacity=".75"/>'; });
+  Object.keys(bins).forEach(b=>{ const c=bins[b], x=A.X(+b*bw);
+    for(let k=0;k<c;k++) g+='<circle cx="'+x+'" cy="'+(A.Y(0)-6-k*7.4)+'" r="3.1" fill="var(--s1)" opacity=".9"/>'; });
+  svg.innerHTML=g;
+  const v=document.getElementById('gsmuv'), w=document.getElementById('gssv'), n=document.getElementById('gsn');
+  if(v) v.textContent=GS_MU.toFixed(1);
+  if(w) w.textContent=GS_S.toFixed(1);
+  if(n) n.textContent=GS_PTS.length;
+  const wn=document.getElementById('gswarn');
+  if(wn) wn.innerHTML = GS_PTS.length===0
+    ? 'Nothing drawn yet. The curve is the <strong>model</strong>; the dots will be the <strong>data</strong>.'
+    : 'Each dot is one draw from the curve above it. Most land near &#956;, few in the tails &#8212; '
+      + 'that pattern <em>is</em> the density. Fitting reverses this arrow: given the dots, recover &#956; and &#963;.';
+}
+
+/* ---------------------------------------------------------------- DEMO B — the generative picture
+   Harold's sketch: the line y(x), a conditional Gaussian standing on its side at the
+   chosen x, and targets drawn from it -- including two draws at the SAME x, which is
+   the point that makes the noise model concrete. */
+let LG_X=0.55, LG_S=0.28, LG_PTS=[], LG_SEED=99, LG_SHOWBAND=false;
+const LG_W=[0.35,2.1];                       /* y(x) = w0 + w1 x, a straight line */
+const lgY=x=>LG_W[0]+LG_W[1]*x;
+function lgDraw(n){
+  const r=lcg(LG_SEED); LG_SEED=(LG_SEED*1103515245+12345)>>>0;
+  for(let i=0;i<n;i++) LG_PTS.push([LG_X, lgY(LG_X)+LG_S*gauss(r)]);
+  drawLgen();
+}
+function lgSpread(){
+  /* one draw at each of a spread of inputs: this is how a whole dataset appears */
+  const r=lcg(LG_SEED); LG_SEED=(LG_SEED*1103515245+12345)>>>0;
+  [0.08,0.2,0.32,0.44,0.56,0.68,0.8,0.92].forEach(x=>LG_PTS.push([x, lgY(x)+LG_S*gauss(r)]));
+  drawLgen();
+}
+function lgReset(){ LG_PTS=[]; drawLgen(); }
+function drawLgen(){
+  const svg=document.getElementById('lgsvg'); if(!svg) return;
+  const W=560,H=330, A=ax2(W,H,0,1,0,3,0.25,1);
+  let g=A.s;
+  g+='<text class="legend" x="'+((A.ml+W-A.mr)/2)+'" y="'+(H-3)+'" text-anchor="middle">x</text>'
+   + '<text class="legend" x="'+(-(A.mt+H-A.mb)/2)+'" y="12" text-anchor="middle" transform="rotate(-90)">t</text>';
+  /* the +-2 sigma band: the region the model says targets live in */
+  if(LG_SHOWBAND){
+    const up=lin(0,1,60).map(x=>[A.X(x),A.Y(lgY(x)+2*LG_S)]);
+    const dn=lin(0,1,60).map(x=>[A.X(x),A.Y(lgY(x)-2*LG_S)]).reverse();
+    g+='<path d="'+pOf(up)+' L'+dn.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L')
+     + ' Z" fill="var(--accent2)" opacity=".10"/>';
+  }
+  /* the deterministic part */
+  g+='<line x1="'+A.X(0)+'" y1="'+A.Y(lgY(0))+'" x2="'+A.X(1)+'" y2="'+A.Y(lgY(1))
+   + '" stroke="var(--accent2)" stroke-width="2.6" stroke-dasharray="7 5"/>'
+   + '<text class="matn" x="'+(A.X(0.93))+'" y="'+(A.Y(lgY(0.93))-10)+'" fill="var(--accent2)">y(x) = w&#7488;&#966;(x)</text>';
+  /* the conditional density at LG_X, drawn on its side */
+  const mu=lgY(LG_X), amp=0.17;
+  const dens=lin(mu-4*LG_S,mu+4*LG_S,90).map(t=>[A.X(LG_X+amp*NPDF(t,mu,LG_S*LG_S)*LG_S*Math.sqrt(2*Math.PI)), A.Y(t)]);
+  g+='<line x1="'+A.X(LG_X)+'" y1="'+A.Y(mu-4*LG_S)+'" x2="'+A.X(LG_X)+'" y2="'+A.Y(mu+4*LG_S)
+   + '" stroke="var(--ink-soft)" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>';
+  g+='<path d="'+pOf(dens)+'" fill="none" stroke="var(--s1)" stroke-width="2.6"/>';
+  g+='<circle cx="'+A.X(LG_X)+'" cy="'+A.Y(mu)+'" r="4" fill="var(--accent2)"/>';
+  g+='<text class="matn" x="'+(A.X(LG_X)+amp*140)+'" y="'+(A.Y(mu)-6)+'">p(t | x, w)</text>';
+  /* the samples */
+  LG_PTS.forEach(([x,t],i)=>{
+    const atX=Math.abs(x-LG_X)<1e-9;
+    g+='<circle cx="'+A.X(x)+'" cy="'+A.Y(t)+'" r="4.3" fill="var(--s2)" opacity="'+(atX?0.95:0.7)+'"/>';
+    if(atX) g+='<line x1="'+A.X(x)+'" y1="'+A.Y(lgY(x))+'" x2="'+A.X(x)+'" y2="'+A.Y(t)
+      + '" stroke="var(--s2)" stroke-width="1.3" stroke-dasharray="2 3" opacity=".8"/>';
+  });
+  g+='<text class="legend" x="'+A.X(LG_X)+'" y="'+(H-A.mb+30)+'" text-anchor="middle">x</text>';
+  svg.innerHTML=g;
+  const xs=document.getElementById('lgxv'), ss=document.getElementById('lgsv'), nn=document.getElementById('lgn');
+  if(xs) xs.textContent=LG_X.toFixed(2);
+  if(ss) ss.textContent=LG_S.toFixed(2);
+  if(nn) nn.textContent=LG_PTS.length;
+  const same=LG_PTS.filter(p=>Math.abs(p[0]-LG_X)<1e-9).length;
+  const wn=document.getElementById('lgwarn');
+  if(wn) wn.innerHTML = same>=2
+    ? '<strong>' + same + ' targets at the same x</strong>, and they differ. Same input, same '
+      + 'y(x) &#8212; different draw of &#949;. That is what <em>t = y(x) + &#949;</em> asserts.'
+    : (LG_PTS.length ? 'Each dot is y(x) plus one draw of &#949;. Draw again at this same x.'
+                     : 'The dashed line is y(x); the sideways curve is the noise distribution around it at this x.');
+}
+
+/* ---------------------------------------------------------------- DEMO C — what lambda is a ratio of
+   Two densities side by side -- the noise on the targets, the prior on the weights --
+   and the lambda they imply, with the fit that results. */
+let LV_SE=0.30, LV_SW=1.20;
+function drawLamviz(){
+  const svg=document.getElementById('lvsvg'); if(!svg) return;
+  const W=560,H=250, half=(W-60)/2;
+  let g='';
+  const panel=(x0,sd,col,lab,sub)=>{
+    const A={ml:x0,mt:16,mb:40};
+    const R=2.6, X=v=>x0+half*(v+R)/(2*R), Y=p=>H-40-(H-56)*p/1.45;
+    let s='<line class="axis" x1="'+x0+'" y1="'+(H-40)+'" x2="'+(x0+half)+'" y2="'+(H-40)+'"/>';
+    s+='<path d="'+pOf(lin(-R,R,160).map(v=>[X(v),Y(NPDF(v,0,sd*sd))]))+'" fill="none" stroke="'+col+'" stroke-width="2.8"/>';
+    s+='<line x1="'+X(-sd)+'" y1="'+(H-40)+'" x2="'+X(-sd)+'" y2="'+Y(NPDF(-sd,0,sd*sd))+'" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="3 3"/>'
+     + '<line x1="'+X(sd)+'" y1="'+(H-40)+'" x2="'+X(sd)+'" y2="'+Y(NPDF(sd,0,sd*sd))+'" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="3 3"/>';
+    s+='<text class="legend" x="'+(x0+half/2)+'" y="14" text-anchor="middle">'+lab+'</text>';
+    s+='<text class="tick" x="'+(x0+half/2)+'" y="'+(H-22)+'" text-anchor="middle">'+sub+'</text>';
+    return s;
+  };
+  g+=panel(46,LV_SE,'var(--s2)','noise on the targets &#8212; how far t sits from y(x)','&#963;&#949; = '+LV_SE.toFixed(2));
+  g+=panel(46+half+28,LV_SW,'var(--s1)','prior on each weight &#8212; how large w may be','&#963;w = '+LV_SW.toFixed(2));
+  svg.innerHTML=g;
+  const lam=(LV_SE*LV_SE)/(LV_SW*LV_SW);
+  const a=document.getElementById('lvse'), b=document.getElementById('lvsw'), c=document.getElementById('lvlam');
+  if(a) a.textContent=LV_SE.toFixed(2);
+  if(b) b.textContent=LV_SW.toFixed(2);
+  if(c) c.textContent=lam<0.01?lam.toExponential(1):lam.toFixed(3);
+  const wn=document.getElementById('lvwarn');
+  if(wn){
+    if(lam>1.2) wn.innerHTML='<strong>Wide noise, narrow prior.</strong> You are saying the data is '
+      + 'unreliable and the weights should be small &#8212; so &#955; is large and the fit is pulled hard towards zero.';
+    else if(lam<0.05) wn.innerHTML='<strong>Tight noise, loose prior.</strong> You trust the data and '
+      + 'have little opinion about the weights &#8212; &#955; is nearly zero, which is plain least squares.';
+    else wn.innerHTML='Neither belief dominates. Note what did <em>not</em> appear anywhere: a validation curve. '
+      + '&#955; here is a statement about the world, not a number that was tuned.';
+  }
+}
+
+const DRAW={car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns,gsamp:drawGsamp,lgen:drawLgen,lamviz:drawLamviz};
 document.getElementById('likmu')?.addEventListener('input',e=>{LIK_MU=+e.target.value;drawLik();});
+document.getElementById('gsmu')?.addEventListener('input',e=>{GS_MU=+e.target.value;drawGsamp();});
+document.getElementById('gss')?.addEventListener('input',e=>{GS_S=+e.target.value;drawGsamp();});
+document.getElementById('lgx')?.addEventListener('input',e=>{LG_X=+e.target.value;drawLgen();});
+document.getElementById('lgs')?.addEventListener('input',e=>{LG_S=+e.target.value;drawLgen();});
+document.getElementById('lvsea')?.addEventListener('input',e=>{LV_SE=+e.target.value;drawLamviz();});
+document.getElementById('lvswa')?.addEventListener('input',e=>{LV_SW=+e.target.value;drawLamviz();});
+document.addEventListener('click',e=>{ const t=e.target; if(!t) return;
+  if(t.id==='gs1')  gsDraw(1);
+  if(t.id==='gs10') gsDraw(10);
+  if(t.id==='gsr')  gsReset();
+  if(t.id==='lg1')  lgDraw(1);
+  if(t.id==='lgsp') lgSpread();
+  if(t.id==='lgb'){ LG_SHOWBAND=!LG_SHOWBAND; drawLgen(); }
+  if(t.id==='lgr')  lgReset();
+});
 document.getElementById('ek')?.addEventListener('input',e=>{ENS_K=+e.target.value;document.getElementById('ekv').textContent=ENS_K;drawEns();});
 document.addEventListener('click',e=>{ if(e.target&&e.target.id==='eband'){ENS_SHOW=!ENS_SHOW;drawEns();} });
 document.getElementById('gmu')?.addEventListener('input',e=>{G_MU=+e.target.value;document.getElementById('gmuv').textContent=G_MU.toFixed(1);drawGauss();});
