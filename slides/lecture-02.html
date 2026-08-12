@@ -618,6 +618,65 @@ const SLIDES = [
     </div>
   </div>`},
 
+{s:"Recap", t:"Same structure, new model", html:`
+  <div class="eyebrow">What changes today, and what does not</div>
+  <h2 style="margin-bottom:14px">The structure is unchanged</h2>
+  <div class="row top stretch" style="gap:20px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">Data</div>
+      <p style="font-size:20px;max-width:none">Unchanged. The same pairs <span class="tex" data-tex="\\{(\\mathbf{x}_n, t_n)\\}"></span>.</p>
+    </div>
+    <div class="col card accent">
+      <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">Model &#8212; this is the change</div>
+      <p style="font-size:20px;max-width:none">No longer a function returning a number. A
+      <strong>probability distribution</strong> over what the target could be.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">Loss</div>
+      <p style="font-size:20px;max-width:none">We stop writing it down. It is
+      <strong>derived</strong> from the model &#8212; the negative log of what we just assumed.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:16px;text-align:center">
+    Three ingredients still. We are moving the effort out of the loss and into the model.</p>`},
+
+{s:"Recap", t:"What it buys and what it costs", html:`
+  <div class="eyebrow">Worth being honest about, before we start</div>
+  <h2 style="margin-bottom:14px">What this buys &#8212; and what it costs</h2>
+  <div class="row top stretch" style="gap:26px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:9px">What you gain</div>
+      <p style="font-size:19.5px;max-width:none"><strong>The loss stops being arbitrary.</strong>
+      Every term traces back to an assumption you can state, argue with, and change.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>Predictions come with a spread</strong>, not
+      just a number &#8212; which is what the used-car question needed.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>The knobs acquire meanings.</strong> By the
+      end of today <span class="tex" data-tex="\\lambda"></span> is a ratio of two variances rather than a number you tuned.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>It transfers.</strong> Change the
+      distribution and the recipe hands you the right loss &#8212; that is next week&#8217;s lecture.</p>
+    </div>
+    <div class="col card accent">
+      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">What it costs</div>
+      <p style="font-size:19.5px;max-width:none"><strong>You must commit to a distribution</strong>,
+      and it can be wrong. Assume Gaussian noise when the data has outliers and the loss you derive
+      will chase them.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>Not every useful loss is a negative
+      log-likelihood.</strong> The SVM&#8217;s hinge loss in Week 10 is not, and works well.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
+      that are only tractable in special cases &#8212; ours today is one of them, deliberately.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>More machinery for a familiar answer.</strong>
+      The first thing we will derive is squared error, which we already had.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:14px;text-align:center">
+    The assumptions were always there. The difference is that now they are written down.</p>`},
+
 {s:"Part I", t:"Part I", div:true, html:`
   <div class="divider">
     <div class="part">Part I</div>
@@ -1693,7 +1752,7 @@ const SLIDES = [
    ============================================================ */
 /* Per-slide delivery estimate in minutes (see the timing note in the README).
    Used for the overview cumulative marks and the presenter clock. */
-const EST=[1.0, 1.8, 0.4, 2.0, 2.6, 2.4, 0.4, 2.8, 1.4, 1.2, 1.5, 0.4, 2.2, 3.0, 2.6, 1.8, 1.6, 2.6, 2.2, 2.0, 2.6, 3.4, 1.4, 2.0, 0.4, 2.2, 3.4, 4.0, 3.0, 2.4, 3.0, 1.2, 2.0, 0.4, 3.0, 1.6, 2.0, 4.2, 3.4, 2.2, 2.4, 1.4, 2.0, 0.4, 2.4, 3.6, 3.0, 2.6, 4.2, 3.0, 1.4, 2.0, 0.4, 3.2, 3.0, 3.0, 2.4, 3.6, 2.4, 2.6, 2.4, 1.6, 1.6, 1.0, 0.5];
+const EST=[1.0, 1.8, 0.4, 2.0, 2.6, 2.4, 2.2, 3.0, 0.4, 2.8, 1.4, 1.2, 1.5, 0.4, 2.2, 3.0, 2.6, 1.8, 1.6, 2.6, 2.2, 2.0, 2.6, 3.4, 1.4, 2.0, 0.4, 2.2, 3.4, 4.0, 3.0, 2.4, 3.0, 1.2, 2.0, 0.4, 3.0, 1.6, 2.0, 4.2, 3.4, 2.2, 2.4, 1.4, 2.0, 0.4, 2.4, 3.6, 3.0, 2.6, 4.2, 3.0, 1.4, 2.0, 0.4, 3.2, 3.0, 3.0, 2.4, 3.6, 2.4, 2.6, 2.4, 1.6, 1.6, 1.0, 0.5];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
