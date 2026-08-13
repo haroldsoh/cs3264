@@ -2051,9 +2051,13 @@ def fitPoly(xs, ts, order):
 /* ============================================================
    ENGINE
    ============================================================ */
-/* Per-slide delivery estimate in minutes (see the timing note in the README).
-   Used for the overview cumulative marks and the presenter clock. */
-const EST=[0.6, 0.7, 1.8, 0.4, 1.3, 2.5, 2.5, 1.7, 0.4, 2.3, 1.6, 3.5, 2.1, 0.4, 0.9, 1.9, 1.8, 4.0, 2.4, 7.9, 2.6, 5.3, 4.0, 4.3, 1.7, 3.0, 4.3, 4.9, 4.0, 3.8, 5.5, 2.9, 3.2, 2.0, 2.4, 4.5, 6.7, 4.0, 4.3, 2.5, 2.8, 2.4, 3.3, 3.0, 0.4, 1.4, 2.8, 1.7, 1.5, 2.2, 1.8, 1.6, 0.9, 1.3, 1.3, 1.9, 1.6, 1.4, 3.0, 0.5];
+/* Per-slide delivery estimate in minutes. Used for the overview cumulative marks
+   and the presenter clock's "vs plan" readout.
+   CALIBRATED 11 Aug 2026: the first delivery of this deck planned at 153 min and
+   ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
+   slide, write what you actually expect to spend -- these numbers are now real
+   minutes, not the optimistic ones. */
+const EST=[0.4, 0.4, 1.1, 0.2, 0.8, 1.6, 1.6, 1.1, 0.2, 1.4, 1.0, 2.2, 1.3, 0.2, 0.6, 1.2, 1.1, 2.5, 1.5, 4.9, 1.6, 3.3, 2.5, 2.7, 1.1, 1.9, 2.7, 3.0, 2.5, 2.4, 3.4, 1.8, 2.0, 1.2, 1.5, 2.8, 4.2, 2.5, 2.7, 1.6, 1.7, 1.5, 2.0, 1.9, 0.2, 0.9, 1.7, 1.1, 0.9, 1.4, 1.1, 1.0, 0.6, 0.8, 0.8, 1.2, 1.0, 0.9, 1.9, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 

@@ -1813,9 +1813,13 @@ const SLIDES = [
 /* ============================================================
    ENGINE
    ============================================================ */
-/* Per-slide delivery estimate in minutes (see the timing note in the README).
-   Used for the overview cumulative marks and the presenter clock. */
-const EST=[1.0, 1.8, 0.4, 2.0, 2.6, 2.4, 2.2, 3.0, 0.4, 2.8, 1.4, 1.2, 1.5, 0.4, 2.2, 3.0, 2.6, 1.8, 1.6, 2.6, 2.2, 2.0, 2.6, 3.4, 1.4, 2.0, 0.4, 2.2, 2.6, 3.4, 4.0, 3.0, 2.4, 3.0, 1.2, 2.0, 0.4, 3.0, 1.6, 2.0, 3.4, 4.2, 3.4, 2.2, 2.4, 1.4, 2.0, 0.4, 2.4, 3.6, 3.0, 2.6, 4.2, 3.0, 2.8, 1.4, 2.0, 0.4, 3.2, 3.0, 3.0, 2.4, 3.6, 2.4, 2.6, 2.4, 1.6, 1.6, 1.0, 0.5];
+/* Per-slide delivery estimate in minutes. Used for the overview cumulative marks
+   and the presenter clock's "vs plan" readout.
+   CALIBRATED 11 Aug 2026: the first delivery of this deck planned at 153 min and
+   ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
+   slide, write what you actually expect to spend -- these numbers are now real
+   minutes, not the optimistic ones. */
+const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.9, 0.2, 1.7, 0.9, 0.7, 0.9, 0.2, 1.4, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.2, 1.6, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 1.5, 1.0, 1.0, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2538,12 +2542,15 @@ function drawLamviz(){
   if(c) c.textContent=lam<0.01?lam.toExponential(1):lam.toFixed(3);
   const wn=document.getElementById('lvwarn');
   if(wn){
-    if(lam>1.2) wn.innerHTML='<strong>Wide noise, narrow prior.</strong> You are saying the data is '
-      + 'unreliable and the weights should be small &#8212; so &#955; is large and the fit is pulled hard towards zero.';
-    else if(lam<0.05) wn.innerHTML='<strong>Tight noise, loose prior.</strong> You trust the data and '
-      + 'have little opinion about the weights &#8212; &#955; is nearly zero, which is plain least squares.';
-    else wn.innerHTML='Neither belief dominates. Note what did <em>not</em> appear anywhere: a validation curve. '
-      + '&#955; here is a statement about the world, not a number that was tuned.';
+    /* bands chosen so each sentence is true across its whole range: lambda near 1
+       means the two terms are comparable, which 0.063 is not. */
+    if(lam>=2) wn.innerHTML='<strong>Wide noise, narrow prior.</strong> Residuals of this size are '
+      + 'unsurprising, weights of this size are not &#8212; the penalty outweighs the error term and '
+      + 'the fitted weights shrink.';
+    else if(lam>=0.5) wn.innerHTML='&#963;&#949; and &#963;w are comparable, so &#955; is near 1: '
+      + 'the penalty and the error term carry similar weight in the objective.';
+    else wn.innerHTML='The prior is loose relative to the noise, so &#955; is small and the objective '
+      + 'is close to plain least squares.';
   }
 }
 
