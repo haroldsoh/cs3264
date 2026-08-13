@@ -593,7 +593,7 @@ const SLIDES = [
 
 {s:"Recap", t:"Two unexplained choices", html:`
   <div class="eyebrow">The gap in the story</div>
-  <h2 style="margin-bottom:18px">We never justified either formula</h2>
+  <h2 style="margin-bottom:18px">Both were chosen by intuition, not derived</h2>
   <div class="row top" style="gap:34px">
     <div class="col">
       <div class="card" style="padding:18px 22px">
@@ -633,57 +633,12 @@ const SLIDES = [
     </div>
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:8px">Loss</div>
-      <p style="font-size:20px;max-width:none">We stop writing it down. It is
+      <p style="font-size:20px;max-width:none">The loss is
       <strong>derived</strong> &#8212; the negative log of the probability the model assigns to the data.</p>
     </div>
   </div>
   <p class="figcap frag" data-f="0" style="margin-top:16px;text-align:center">
     Three ingredients still. We are moving the effort out of the loss and into the model.</p>`},
-
-{s:"Recap", t:"What it buys and what it costs", html:`
-  <div class="eyebrow">Worth being honest about, before we start</div>
-  <h2 style="margin-bottom:14px">What this buys &#8212; and what it costs</h2>
-  <div class="row top stretch" style="gap:26px">
-    <div class="col card">
-      <div class="eyebrow" style="margin-bottom:9px">What you gain</div>
-      <p style="font-size:19.5px;max-width:none"><strong>The loss stops being arbitrary.</strong>
-      Every term traces back to an assumption you can state, argue with, and change.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>Predictions come with a spread</strong>, not
-      just a number &#8212; which is what the used-car question needed.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>The knobs acquire meanings.</strong> By the
-      end of today <span class="tex" data-tex="\\lambda"></span> is a ratio of two variances rather than a number you tuned.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>It transfers.</strong> Change the
-      distribution and the recipe hands you the right loss &#8212; that is next week&#8217;s lecture.</p>
-    </div>
-    <div class="col card accent">
-      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">What it costs</div>
-      <p style="font-size:19.5px;max-width:none"><strong>You must commit to a distribution</strong>,
-      and it can be wrong. Assume Gaussian noise when the data has outliers and the loss you derive
-      will chase them.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>Not every useful loss is a negative
-      log-likelihood.</strong> The SVM&#8217;s hinge loss in Week 10 is not, and works well.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
-      with closed forms only in special cases &#8212; ours today is one of them, deliberately.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>More machinery for a familiar answer.</strong>
-      The first thing we will derive is squared error, which we already had.</p>
-    </div>
-  </div>
-  <p class="figcap frag" data-f="0" style="margin-top:14px;text-align:center">
-    The assumptions were always there. The difference is that now they are written down.</p>`},
-
-{s:"Part I", t:"Part I", div:true, html:`
-  <div class="divider">
-    <div class="part">Part I</div>
-    <h1>Why a point is not enough</h1>
-    <div class="bar"></div>
-    <div class="sub">A number with no error bar is a number you cannot act on.</div>
-  </div>`},
 
 {s:"Part I", t:"The used-car problem", draw:"car", html:`
   <div class="eyebrow">A problem our current model cannot answer</div>
@@ -708,6 +663,43 @@ const SLIDES = [
       <p class="cred">Same prediction of $14,200 in both. Only the spread differs.</p>
     </div>
   </div>`},
+
+{s:"Part I", t:"What it buys and what it costs", html:`
+  <div class="eyebrow">Worth being honest about, before we start</div>
+  <h2 style="margin-bottom:14px">What this buys &#8212; and what it costs</h2>
+  <div class="row top stretch" style="gap:26px">
+    <div class="col card frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:9px">What you gain</div>
+      <p style="font-size:19.5px;max-width:none"><strong>The loss stops being arbitrary.</strong>
+      Every term traces back to an assumption you can state, argue with, and change.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>Predictions come with a spread</strong>, not
+      just a number &#8212; which is what the used-car question needed.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>The knobs acquire meanings.</strong> By the
+      end of today <span class="tex" data-tex="\\lambda"></span> is a ratio of two variances rather than a number you tuned.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>It transfers.</strong> Change the
+      distribution and the recipe hands you the right loss &#8212; that is next week&#8217;s lecture.</p>
+    </div>
+    <div class="col card accent frag" data-f="1">
+      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">What it costs</div>
+      <p style="font-size:19.5px;max-width:none"><strong>You must commit to a distribution</strong>,
+      and it can be wrong. Assume Gaussian noise when the data has outliers and the loss you derive
+      will chase them.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>Not every useful loss is a negative
+      log-likelihood.</strong> The SVM&#8217;s hinge loss in Week 10 is not, and works well.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
+      with closed forms only in special cases &#8212; ours today is one of them, deliberately.</p>
+      <hr class="rule">
+      <p style="font-size:19.5px;max-width:none"><strong>More machinery for a familiar answer.</strong>
+      The first thing we will derive is squared error, which we already had.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="2" style="margin-top:14px;text-align:center">
+    The assumptions were always there. The difference is that now they are written down.</p>`},
 
 {s:"Part I", t:"Learning objectives", html:`
   <div class="eyebrow">Where we are going</div>
@@ -735,15 +727,6 @@ const SLIDES = [
   <p class="figcap frag" data-f="0" style="margin-top:16px;text-align:center">
     By the end, both terms of the regularised loss will have a probabilistic name.</p>`},
 
-{s:"Part I", t:"Part I in one slide", html:`
-  <div class="eyebrow">Before we move on</div>
-  <h2 style="margin-bottom:16px">Part I in one slide</h2>
-  <div class="row top stretch" style="gap:22px">
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The problem</div><p style="font-size:20px;max-width:none">A point prediction cannot support a decision. $14,200 against an asking price of $15,000 means nothing until you know the spread.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">What is missing</div><p style="font-size:20px;max-width:none">A model that returns a <strong>distribution</strong>, not a number.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">How we get there</div><p style="font-size:20px;max-width:none">Write down how the data was generated, then ask which parameters make it most probable.</p></div>
-  </div>`},
-
 {s:"Part I", t:"Questions (Part I)", div:true, html:`
   <div class="divider" style="align-items:center;text-align:center">
     <h1 style="font-size:60px">Questions?</h1>
@@ -760,7 +743,7 @@ const SLIDES = [
     <div class="sub">The sum and product rules, Bayes rule, and the Gaussian.</div>
   </div>`},
 
-{s:"Part II", t:"Two rules", html:`
+{s:"Part II", t:"Two rules", draw:"rules", html:`
   <div class="eyebrow">We will use these constantly today</div>
   <h2 style="margin-bottom:18px">Two useful rules in probability</h2>
   <div class="row top" style="gap:34px">
@@ -779,10 +762,11 @@ const SLIDES = [
       summing &#8212; or integrating &#8212; it away.</p>
     </div>
   </div>
-  <div class="card accent frag" data-f="1" style="margin-top:20px;text-align:center">
-    <p style="font-size:22px;max-width:none">Applied together, these two give <strong>Bayes&#8217;
-    rule</strong>, which we use in the second half of the lecture.</p>
-  </div>`},
+  <div class="fig frag" data-f="1" style="background:transparent;box-shadow:none;margin-top:14px">
+    <svg viewBox="0 0 900 190"><g id="rulefig"></g></svg>
+  </div>
+  <p class="caption frag" data-f="2" style="margin-top:6px;text-align:center">Applied together, these
+  two give <strong>Bayes&#8217; rule</strong>, which we use in the second half of the lecture.</p>`},
 
 {s:"Part II", t:"Deriving Bayes rule", html:`
   <div class="eyebrow">Built from the two rules above</div>
@@ -920,22 +904,24 @@ const SLIDES = [
     When a condition is rare, most positives are false ones &#8212; and test accuracy alone can
     never tell you that.</p>`},
 
-{s:"Part II", t:"Independence", html:`
-  <div class="eyebrow">An assumption we make all lecture</div>
-  <h2 style="margin-bottom:16px">Independence</h2>
+{s:"Part II", t:"Independence", draw:"indep", html:`
+  <div class="eyebrow">A common assumption &#8212; and ours today</div>
+  <h2 style="margin-bottom:14px">Independence</h2>
   <p style="font-size:22px;margin-bottom:10px">Two random variables <span class="tex" data-tex="x"></span> and <span class="tex" data-tex="y"></span> are
   <strong>independent</strong> if and only if</p>
   <div class="eq" style="margin:10px 0 6px;font-size:33px"><span class="texd" data-tex="p(x,y) = p(x)\\,p(y)"></span></div>
-  <div class="row top frag" data-f="0" style="gap:26px;margin-top:20px">
-    <div class="col card">
-      <div class="eyebrow" style="margin-bottom:9px">Independent</div>
-      <p style="font-size:20px;max-width:none">Two rolls of a die. Knowing the first came up 6 tells
-      you nothing about the second.</p>
+  <div class="row top frag" data-f="0" style="gap:26px;margin-top:12px">
+    <div class="col">
+      <div class="fig" style="background:transparent;box-shadow:none">
+        <svg viewBox="0 0 430 200"><g id="indfigL"></g></svg></div>
+      <p class="caption" style="text-align:center;margin-top:2px"><strong>Independent</strong> &#8212;
+      two rolls of a die. Every vertical slice of <span class="tex" data-tex="p(x,y)"></span> has the same shape.</p>
     </div>
-    <div class="col card">
-      <div class="eyebrow" style="margin-bottom:9px">Not independent</div>
-      <p style="font-size:20px;max-width:none">Today&#8217;s temperature and tomorrow&#8217;s.
-      Knowing one tells you a good deal about the other.</p>
+    <div class="col">
+      <div class="fig" style="background:transparent;box-shadow:none">
+        <svg viewBox="0 0 430 200"><g id="indfigR"></g></svg></div>
+      <p class="caption" style="text-align:center;margin-top:2px"><strong>Not independent</strong> &#8212;
+      today&#8217;s temperature and tomorrow&#8217;s. The slice shifts as <span class="tex" data-tex="x"></span> changes.</p>
     </div>
   </div>
   <div class="card accent frag" data-f="1" style="margin-top:16px">
@@ -1134,8 +1120,9 @@ const SLIDES = [
       <div class="d" style="font-size:18.5px;margin-top:8px">Its sampling distribution becomes
       Gaussian around the true value, so error bars are computable.</div></div>
     <div class="appcard frag" data-f="2" style="padding:20px"><div class="t" style="font-size:23.5px">Asymptotic efficiency</div>
-      <div class="d" style="font-size:18.5px;margin-top:8px">No unbiased estimator does better in
-      the limit. You are not leaving accuracy on the table.</div></div>
+      <div class="d" style="font-size:18.5px;margin-top:8px">Any unbiased estimator obeys the
+      <strong>Cram&#233;r&#8211;Rao bound</strong><span class="texd" data-tex="\\operatorname{Var}(\\hat{\\theta}) \\ge \\frac{1}{N\\,I(\\theta)}"></span> where <span class="tex" data-tex="I(\\theta)"></span> is the Fisher information &#8212; how
+      sharply the log-likelihood peaks. MLE attains it as <span class="tex" data-tex="N \\to \\infty"></span>.</div></div>
   </div>
   <div class="card accent frag" data-f="3" style="margin-top:22px">
     <p style="font-size:20.5px;max-width:none">All three are <strong>asymptotic</strong> &#8212; they
@@ -1246,7 +1233,7 @@ const SLIDES = [
   <div class="demo">
     <div class="demo-plot"><svg id="lgsvg" viewBox="0 0 560 330"></svg></div>
     <div class="demo-ctrl">
-      <div class="eq" style="margin:0 0 10px;font-size:20px"><span class="texd" data-tex="t_n = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n) + \\varepsilon_n, \\quad \\varepsilon_n \\sim \\mathcal{N}(0,\\sigma^2)"></span></div>
+      <div class="eq" style="margin:0 0 16px;font-size:18px"><span class="texd" data-tex="t_n = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n) + \\varepsilon_n, \\quad \\varepsilon_n \\sim \\mathcal{N}(0,\\sigma^2)"></span></div>
       <div class="ctrl-row"><label>input x <span class="val" id="lgxv">0.55</span></label>
         <input type="range" id="lgx" min="0.05" max="0.95" step="0.01" value="0.55"></div>
       <div class="ctrl-row"><label>noise &#963; <span class="val" id="lgsv">0.28</span></label>
@@ -1522,16 +1509,18 @@ const SLIDES = [
 
 {s:"Part V", t:"Seeing the ratio", draw:"lamviz", html:`
   <div class="eyebrow">Live demo &#183; two beliefs, one number</div>
-  <h2 style="margin-bottom:10px">The two spreads behind <span class="tex" data-tex="\\lambda"></span></h2>
+  <h2 style="margin-bottom:18px">The two spreads behind <span class="tex" data-tex="\\lambda"></span></h2>
   <div class="demo">
     <div class="demo-plot"><svg id="lvsvg" viewBox="0 0 560 250"></svg></div>
     <div class="demo-ctrl">
-      <div class="ctrl-row"><label>noise &#963;&#949; <span class="val" id="lvse">0.30</span></label>
+      <p class="caption" style="margin:0 0 12px;max-width:none">Each slider sets one spread; the
+      card below computes the &#955; the pair implies.</p>
+      <div class="ctrl-row"><label>noise <span style="text-transform:none">&#963;<sub>&#949;</sub></span> <span class="val" id="lvse">0.30</span></label>
         <input type="range" id="lvsea" min="0.1" max="1.6" step="0.05" value="0.3"></div>
-      <div class="ctrl-row"><label>prior &#963;w <span class="val" id="lvsw">1.20</span></label>
+      <div class="ctrl-row"><label>prior <span style="text-transform:none">&#963;<sub>w</sub></span> <span class="val" id="lvsw">1.20</span></label>
         <input type="range" id="lvswa" min="0.1" max="2.4" step="0.05" value="1.2"></div>
       <div class="card accent" style="margin:12px 0 10px;padding:12px 16px;text-align:center">
-        <div class="eyebrow" style="margin-bottom:6px;color:var(--accent)">the &#955; they imply</div>
+        <div class="eyebrow" style="margin-bottom:6px;color:var(--accent)">the <span style="text-transform:none">&#955;</span> they imply</div>
         <div class="eq" style="margin:0 0 4px;font-size:19px"><span class="texd" data-tex="\\lambda = \\sigma_\\varepsilon^2 / \\sigma_w^2"></span></div>
         <div class="v" id="lvlam" style="font-size:30px">0.063</div>
       </div>
@@ -1820,7 +1809,7 @@ const SLIDES = [
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.9, 0.2, 1.7, 0.9, 0.7, 0.9, 0.2, 1.4, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.2, 1.6, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 1.5, 1.0, 1.0, 0.6, 0.3];
+const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.6, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.5, 1.6, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 1.5, 1.0, 1.0, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2483,7 +2472,7 @@ function drawLgen(){
   /* the deterministic part */
   g+='<line x1="'+A.X(0)+'" y1="'+A.Y(lgY(0))+'" x2="'+A.X(1)+'" y2="'+A.Y(lgY(1))
    + '" stroke="var(--accent2)" stroke-width="2.6" stroke-dasharray="7 5"/>'
-   + '<text class="matn" x="'+(A.X(0.93))+'" y="'+(A.Y(lgY(0.93))-10)+'" fill="var(--accent2)">y(x) = w&#7488;&#966;(x)</text>';
+   + '<text class="matn" x="'+A.X(0.07)+'" y="'+(A.Y(lgY(0.07))-12)+'" fill="var(--accent2)">y(x) = w&#7488;&#966;(x)</text>';
   /* the conditional density at LG_X, drawn on its side */
   const mu=lgY(LG_X), amp=0.17;
   const dens=lin(mu-4*LG_S,mu+4*LG_S,90).map(t=>[A.X(LG_X+amp*NPDF(t,mu,LG_S*LG_S)*LG_S*Math.sqrt(2*Math.PI)), A.Y(t)]);
@@ -2533,8 +2522,9 @@ function drawLamviz(){
     s+='<text class="tick" x="'+(x0+half/2)+'" y="'+(H-22)+'" text-anchor="middle">'+sub+'</text>';
     return s;
   };
-  g+=panel(46,LV_SE,'var(--s2)','noise on the targets &#8212; how far t sits from y(x)','&#963;&#949; = '+LV_SE.toFixed(2));
-  g+=panel(46+half+28,LV_SW,'var(--s1)','prior on each weight &#8212; how large w may be','&#963;w = '+LV_SW.toFixed(2));
+  const sub=t=>'&#963;<tspan dy="4" style="font-size:11px">'+t+'</tspan><tspan dy="-4"> = </tspan>';
+  g+=panel(46,LV_SE,'var(--s2)','noise on the targets',sub('&#949;')+LV_SE.toFixed(2));
+  g+=panel(46+half+28,LV_SW,'var(--s1)','prior on each weight',sub('w')+LV_SW.toFixed(2));
   svg.innerHTML=g;
   const lam=(LV_SE*LV_SE)/(LV_SW*LV_SW);
   const a=document.getElementById('lvse'), b=document.getElementById('lvsw'), c=document.getElementById('lvlam');
@@ -2555,7 +2545,96 @@ function drawLamviz(){
   }
 }
 
-const DRAW={car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns,gsamp:drawGsamp,lgen:drawLgen,lamviz:drawLamviz};
+/* ---------------------------------------------------------------- two rules, drawn
+   Left: a discrete joint as a grid of cells; summing a column gives one bar of the
+   marginal, and one cell is the column total times the share within the column --
+   both rules in one picture. Right: the continuous version, a joint density whose
+   projection onto the x-axis is the integral over y. */
+function drawRules(){
+  const g=document.getElementById('rulefig'); if(!g) return;
+  /* an un-normalised joint with visible structure */
+  const J=[[3,1,1],[4,3,1],[2,5,2],[1,3,4]];   /* 4 columns x 3 rows */
+  const tot=J.flat().reduce((a,b)=>a+b,0);
+  let sfx='';
+  const x0=50,y0=26,cw=42,ch=36;
+  for(let c=0;c<4;c++) for(let r=0;r<3;r++){
+    const v=J[c][r]/tot;
+    sfx+='<rect x="'+(x0+c*cw)+'" y="'+(y0+r*ch)+'" width="'+(cw-4)+'" height="'+(ch-4)+'" rx="3"'
+      + ' fill="var(--s1)" opacity="'+(0.14+v*4.2)+'"/>'
+      + (c===2?'':'');
+  }
+  /* highlight column x=2: the sum rule collapses it into one marginal bar */
+  sfx+='<rect x="'+(x0+2*cw-3)+'" y="'+(y0-3)+'" width="'+(cw+2)+'" height="'+(3*ch+2)+'" rx="4"'
+    + ' fill="none" stroke="var(--accent)" stroke-width="2"/>';
+  const colsum=c=>J[c].reduce((a,b)=>a+b,0)/tot;
+  for(let c=0;c<4;c++){
+    const h=colsum(c)*150;
+    sfx+='<rect x="'+(x0+c*cw)+'" y="'+(y0+3*ch+30-h)+'" width="'+(cw-4)+'" height="'+h+'" rx="3"'
+      + ' fill="var(--s3)" opacity="'+(c===2?0.95:0.55)+'"/>';
+  }
+  sfx+='<text class="legend" x="'+(x0-10)+'" y="'+(y0+3*ch+22)+'" text-anchor="end">p(x)</text>'
+   + '<text class="legend" x="'+(x0-10)+'" y="'+(y0+1.5*ch)+'" text-anchor="end">y</text>'
+   + '<text class="legend" x="'+(x0+2*cw)+'" y="'+(y0-10)+'" text-anchor="middle">sum the column &#8595;</text>'
+   + '<text class="legend" x="'+(x0+4*cw+16)+'" y="'+(y0+1.5*ch-8)+'">one cell:</text>'
+   + '<text class="matn" x="'+(x0+4*cw+16)+'" y="'+(y0+1.5*ch+14)+'">p(x,y) = p(x)&#183;p(y|x)</text>'
+   + '<text class="legend" x="'+(x0+4*cw+16)+'" y="'+(y0+1.5*ch+34)+'">the column total, times</text>'
+   + '<text class="legend" x="'+(x0+4*cw+16)+'" y="'+(y0+1.5*ch+50)+'">the share inside the column</text>';
+  sfx+='<text class="tick" x="'+(x0+2*cw-2)+'" y="184" text-anchor="middle">discrete</text>';
+  /* right: continuous joint + its x-projection */
+  const cx=640,cy=78,rx=95;
+  let cont='';
+  [[1,0.55],[0.72,0.38],[0.45,0.22]].forEach(([k,op],i)=>{
+    cont+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(rx*k)+'" ry="'+(52*k)+'" fill="none"'
+      + ' stroke="var(--s1)" stroke-width="2" opacity="'+op+'" transform="rotate(-14 '+cx+' '+cy+')"/>'; });
+  /* projection: integrate over y -> a 1-D density under the blob */
+  let d='';
+  for(let x=-130;x<=130;x+=4){
+    const v=Math.exp(-x*x/(2*68*68));
+    d+=(d?'L':'M')+(cx+x)+','+(178-v*38)+' ';
+  }
+  cont+='<path d="'+d+'" fill="none" stroke="var(--s3)" stroke-width="2.6"/>'
+   + '<line x1="'+(cx-130)+'" y1="178" x2="'+(cx+130)+'" y2="178" class="axis"/>'
+   + '<line x1="'+cx+'" y1="'+(cy+42)+'" x2="'+cx+'" y2="136" stroke="var(--ink-soft)" stroke-width="1.4" stroke-dasharray="4 3"/>'
+   + '<text class="legend" x="'+(cx+8)+'" y="130">&#8747; p(x,y) dy</text>'
+   + '<text class="legend" x="'+cx+'" y="'+(cy-64)+'" text-anchor="middle">p(x,y)</text>'
+   + '<text class="matn" x="'+(cx+118)+'" y="172">p(x)</text>'
+   + '<text class="tick" x="'+cx+'" y="188" text-anchor="middle">continuous</text>';
+  g.innerHTML=sfx+cont;
+}
+
+/* ---------------------------------------------------------------- independence, drawn
+   Contours of a joint. Axis-aligned: every vertical slice is the same density, moved
+   nowhere. Correlated: the slice's centre moves with x. The two dashed slices and
+   their side-curves make "knowing x tells you about y" literal. */
+function drawIndep(){
+  const L=document.getElementById('indfigL'), R=document.getElementById('indfigR');
+  if(!L||!R) return;
+  const panel=(rot,corr)=>{
+    const cx=215,cy=96;
+    let s='';
+    [[1,0.55],[0.7,0.4],[0.42,0.25]].forEach(([k,op])=>{
+      s+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+(120*k)+'" ry="'+(56*k)+'" fill="none"'
+        + ' stroke="var(--s1)" stroke-width="2.2" opacity="'+op+'"'
+        + (rot?' transform="rotate(-22 '+cx+' '+cy+')"':'')+'/>'; });
+    /* two slices, and where the conditional mean sits on each */
+    [[-62,'var(--accent)'],[62,'var(--accent2)']].forEach(([dx,col])=>{
+      const my = corr ? cy - dx*0.42 : cy;   /* the conditional mean under the tilt */
+      s+='<line x1="'+(cx+dx)+'" y1="18" x2="'+(cx+dx)+'" y2="176" stroke="'+col+'" stroke-width="1.6" stroke-dasharray="5 4"/>'
+       + '<circle cx="'+(cx+dx)+'" cy="'+my+'" r="4.4" fill="'+col+'"/>';
+    });
+    s+='<line x1="30" y1="176" x2="400" y2="176" class="axis"/>'
+     + '<line x1="30" y1="176" x2="30" y2="14" class="axis"/>'
+     + '<text class="legend" x="396" y="192" text-anchor="end">x</text>'
+     + '<text class="legend" x="16" y="20">y</text>';
+    return s;
+  };
+  L.innerHTML=panel(false,false)
+    + '<text class="legend" x="215" y="14" text-anchor="middle">the dots &#8212; the centre of each slice &#8212; do not move</text>';
+  R.innerHTML=panel(true,true)
+    + '<text class="legend" x="215" y="14" text-anchor="middle">the centre moves with x: x carries information about y</text>';
+}
+
+const DRAW={car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns,gsamp:drawGsamp,lgen:drawLgen,lamviz:drawLamviz,rules:drawRules,indep:drawIndep};
 document.getElementById('likmu')?.addEventListener('input',e=>{LIK_MU=+e.target.value;drawLik();});
 document.getElementById('gsmu')?.addEventListener('input',e=>{GS_MU=+e.target.value;drawGsamp();});
 document.getElementById('gss')?.addEventListener('input',e=>{GS_S=+e.target.value;drawGsamp();});
