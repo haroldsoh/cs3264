@@ -745,7 +745,10 @@ const SLIDES = [
 
 {s:"Part II", t:"Discrete and continuous", draw:"dist", html:`
   <div class="eyebrow">Two kinds of distribution, before we use either</div>
-  <h2 style="margin-bottom:10px">A bar is a probability. A height is not.</h2>
+  <h2 style="margin-bottom:6px">Discrete probabilities, continuous densities</h2>
+  <p style="font-size:20px;margin-bottom:10px">Discrete: the <strong>height</strong> of a bar is a
+  probability. Continuous: the height is a <em>density</em> &#8212; the <strong>area</strong> is the
+  probability.</p>
   <div class="demo">
     <div class="demo-plot"><svg id="dsvg" viewBox="0 0 560 290"></svg></div>
     <div class="demo-ctrl">
@@ -2620,16 +2623,18 @@ function drawDist(){
   if(!wn) return;
   if(DIST_MODE==='pmf'){
     const tot=PMF.reduce((a,b)=>a+b,0);
-    wn.innerHTML='Each bar <em>is</em> a probability. They are all at most 1, and they add to '
-      + '<strong>'+tot.toFixed(2)+'</strong>. Written <strong>P(X = k)</strong> &#8212; a '
+    wn.innerHTML='Read a bar\'s <strong>height</strong> straight off the axis and you have a '
+      + 'probability: P(X = 3) = '+PMF[3].toFixed(2)+'. Every bar is at most 1, and the '+PMF.length
+      + ' of them add to <strong>'+tot.toFixed(2)+'</strong>. This is a '
       + '<strong>probability mass function</strong>.';
   }else{
     const pk=Math.exp(0)/(DIST_S*Math.sqrt(2*Math.PI));
-    wn.innerHTML='The shaded region is a probability: <strong>P(&#8722;1 &lt; X &lt; 1)</strong>, the '
-      + '<em>area</em>. The <em>height</em> is a <strong>density</strong> &#8212; peak '
-      + '<strong>'+pk.toFixed(2)+'</strong>'
-      + (pk>1 ? ', which is <strong>above 1</strong>, and perfectly legal: only the total area must be 1.'
-              : '. Narrow &#963; and it will pass 1 &#8212; densities may.');
+    wn.innerHTML='Now the <strong>height</strong> buys you nothing on its own &#8212; it is a '
+      + '<strong>density</strong>, currently <strong>'+pk.toFixed(2)+'</strong> at the peak'
+      + (pk>1 ? ', which is <strong>above 1</strong>. A probability could never be. Only the total '
+              + 'area has to equal 1.'
+              : '. Narrow &#963; and it will pass 1, which a probability could never do.')
+      + ' The probability is the <em>shaded area</em>: P(&#8722;1 &lt; X &lt; 1).';
   }
 }
 
