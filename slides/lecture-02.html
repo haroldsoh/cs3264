@@ -757,7 +757,7 @@ const SLIDES = [
         <button class="bbtn" data-dist="pdf" type="button">continuous &#183; pdf</button>
       </div>
       <div class="ctrl-row" id="distsrow" style="display:none"><label>spread <span style="text-transform:none">&#963;</span> <span class="val" id="distsv">1.00</span></label>
-        <input type="range" id="dists" min="0.15" max="1.6" step="0.05" value="1"></div>
+        <input type="range" id="dists" min="0.25" max="1.6" step="0.05" value="1"></div>
       <div class="warn" id="distwarn"></div>
       <hr class="rule">
       <div class="dgrid" style="grid-template-columns:auto auto;gap:8px 14px">
@@ -2245,10 +2245,10 @@ function drawCoin(){
   const mle = n? (CH/n).toFixed(2) : '—';
   document.getElementById('cmle').textContent = mle;
   const wn=document.getElementById('cwarn');
-  if(n===0) wn.innerHTML='Flip a few times. Watch what maximum likelihood says after the very first flip.';
-  else if(n===1) wn.innerHTML='MLE already commits to <strong>'+mle+'</strong> on one observation. The posterior still keeps every possibility open &#8212; that is the prior doing its job.';
+  if(n===0) wn.innerHTML='Flip a few times, and compare the MLE with the posterior after the first flip.';
+  else if(n===1) wn.innerHTML='MLE already commits to <strong>'+mle+'</strong> on one observation. The posterior keeps every candidate that has non-zero prior weight.';
   else if(CH===n) wn.innerHTML='All heads so far. MLE says &#952; = 1.00; the posterior still gives &#952; = 0.8 real weight, because it has only seen '+n+' flips.';
-  else if(CT===n) wn.innerHTML='All tails. Same story in reverse.';
+  else if(CT===n) wn.innerHTML='All tails. The same result with the labels exchanged.';
   else wn.innerHTML='With both outcomes seen, &#952; = 0 and &#952; = 1 are ruled out entirely &#8212; their likelihood is exactly zero, so no amount of prior can revive them.';
 }
 function coinFlip(head){
@@ -2300,8 +2300,8 @@ function drawBayes(){
   svg.innerHTML=s;
   document.querySelectorAll('[data-b]').forEach(b=>b.classList.toggle('sel',b.dataset.b===BMODE));
   const wn=document.getElementById('bwarn');
-  if(BMODE==='mle') wn.innerHTML='No prior. With few points the curve does whatever it likes between them &#8212; and says nothing about how sure it is.';
-  else if(BMODE==='map') wn.innerHTML='The prior pulls the weights toward zero, so the curve is calmer. Still a single line: <strong>no error bars</strong>.';
+  if(BMODE==='mle') wn.innerHTML='No prior. With few points the fit is unconstrained between them, and reports no uncertainty.';
+  else if(BMODE==='map') wn.innerHTML='The prior shrinks the weights toward zero, reducing the curvature between points. Still a single line: <strong>no uncertainty</strong>.';
   else wn.innerHTML='The full posterior. The band is &#177;2 standard deviations &#8212; note it <strong>widens where there is no data</strong>, which is what MAP threw away.';
 }
 
@@ -2393,8 +2393,8 @@ function drawEns(){
   svg.innerHTML=s;
   const wn=document.getElementById('ewarn');
   if(ENS_K===1) wn.innerHTML='One weight vector, one line &#8212; this is a point estimate. It commits everywhere, including where there is no data.';
-  else if(ENS_K<=6) wn.innerHTML='<strong>'+ENS_K+'</strong> weight vectors. Near the data they agree; away from it they fan out. The disagreement <em>is</em> the epistemic uncertainty.';
-  else wn.innerHTML='<strong>'+ENS_K+'</strong> of them. The integral is this, taken to the limit &#8212; and a finite set of models voting is exactly what an <strong>ensemble</strong> does.';
+  else if(ENS_K<=6) wn.innerHTML='<strong>'+ENS_K+'</strong> weight vectors. Near the data they agree; away from it they fan out. Their spread at each x is the epistemic term.';
+  else wn.innerHTML='<strong>'+ENS_K+'</strong> of them. The integral is the limit of this average; a finite average of models is an <strong>ensemble</strong>.';
   const b=document.getElementById('eband'); if(b) b.classList.toggle('sel',ENS_SHOW);
 }
 
@@ -2454,8 +2454,8 @@ function drawGsamp(){
   const wn=document.getElementById('gswarn');
   if(wn) wn.innerHTML = GS_PTS.length===0
     ? 'Nothing drawn yet. The curve is the <strong>model</strong>; the dots will be the <strong>data</strong>.'
-    : 'Each dot is one draw from the curve above it. Most land near &#956;, few in the tails &#8212; '
-      + 'that pattern <em>is</em> the density. Fitting reverses this arrow: given the dots, recover &#956; and &#963;.';
+    : 'Each dot is one draw from the curve above it: more land where the density is high. '
+      + 'Fitting reverses this arrow &#8212; given the dots, recover &#956; and &#963;.';
 }
 
 /* ---------------------------------------------------------------- DEMO B — the generative picture
@@ -2607,11 +2607,11 @@ function drawDist(){
     for(let v=-1;v<=1.0001;v+=0.02) area+=' L'+X(v)+','+Y(pdf(v));
     area+=' L'+X(1)+','+(mt+plotH)+' Z';
     g+='<path d="'+area+'" fill="var(--s1)" opacity=".22"/>';
-    g+='<path d="'+pOf(lin(-R,R,220).map(v=>[X(v),Y(Math.min(pdf(v),1.78))]))+'" fill="none" stroke="var(--s1)" stroke-width="2.8"/>';
+    g+='<path d="'+pOf(lin(-R,R,220).map(v=>[X(v),Y(pdf(v))]))+'" fill="none" stroke="var(--s1)" stroke-width="2.8"/>';
     [-1,1].forEach(v=>g+='<line x1="'+X(v)+'" y1="'+(mt+plotH)+'" x2="'+X(v)+'" y2="'+Y(pdf(v))+'" stroke="var(--s1)" stroke-width="1.3" stroke-dasharray="3 3"/>');
     const pk=pdf(0);
-    g+='<circle cx="'+X(0)+'" cy="'+Y(Math.min(pk,1.78))+'" r="4" fill="var(--s1)"/>'
-     + '<text class="legend" x="'+(X(0)+10)+'" y="'+(Y(Math.min(pk,1.78))-8)+'">peak '+pk.toFixed(2)+'</text>';
+    g+='<circle cx="'+X(0)+'" cy="'+Y(pk)+'" r="4" fill="var(--s1)"/>'
+     + '<text class="legend" x="'+(X(0)+10)+'" y="'+(Y(pk)-8)+'">peak '+pk.toFixed(2)+'</text>';
     [-3,-2,-1,0,1,2,3].forEach(v=>g+='<text class="tick" x="'+X(v)+'" y="'+(mt+plotH+18)+'" text-anchor="middle">'+v+'</text>');
     g+='<text class="legend" x="'+(ml+plotW/2)+'" y="'+(H-8)+'" text-anchor="middle">a continuous measurement</text>';
   }
@@ -2623,18 +2623,21 @@ function drawDist(){
   if(!wn) return;
   if(DIST_MODE==='pmf'){
     const tot=PMF.reduce((a,b)=>a+b,0);
-    wn.innerHTML='Read a bar\'s <strong>height</strong> straight off the axis and you have a '
-      + 'probability: P(X = 3) = '+PMF[3].toFixed(2)+'. Every bar is at most 1, and the '+PMF.length
-      + ' of them add to <strong>'+tot.toFixed(2)+'</strong>. This is a '
-      + '<strong>probability mass function</strong>.';
+    wn.innerHTML='Each bar is a probability: P(X = 3) = '+PMF[3].toFixed(2)+'. All '+PMF.length
+      + ' sum to '+tot.toFixed(2)+'. This is a <strong>probability mass function</strong>.';
   }else{
-    const pk=Math.exp(0)/(DIST_S*Math.sqrt(2*Math.PI));
-    wn.innerHTML='Now the <strong>height</strong> buys you nothing on its own &#8212; it is a '
-      + '<strong>density</strong>, currently <strong>'+pk.toFixed(2)+'</strong> at the peak'
-      + (pk>1 ? ', which is <strong>above 1</strong>. A probability could never be. Only the total '
-              + 'area has to equal 1.'
-              : '. Narrow &#963; and it will pass 1, which a probability could never do.')
-      + ' The probability is the <em>shaded area</em>: P(&#8722;1 &lt; X &lt; 1).';
+    const pk=1/(DIST_S*Math.sqrt(2*Math.PI));
+    /* Abramowitz-Stegun 7.1.26 erf, good to ~1e-7 -- enough to quote three decimals */
+    const erf=z=>{ const t=1/(1+0.3275911*Math.abs(z));
+      const y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-z*z);
+      return z<0?-y:y; };
+    const area=erf(1/(DIST_S*Math.SQRT2));
+    wn.innerHTML='The curve is a <strong>density</strong> p(x). Its peak is '+pk.toFixed(2)
+      + (pk>1 ? ' &#8212; above 1, which a probability cannot be. Only the total area is constrained: '
+              : ' &#8212; below 1 here, but reduce &#963; and it exceeds 1. Only the total area is constrained: '
+              )
+      + '&#8747;p(x)dx = 1.<br>The shaded area is a probability: P(&#8722;1 &lt; X &lt; 1) = <strong>'
+      + area.toFixed(3)+'</strong>.';
   }
 }
 
