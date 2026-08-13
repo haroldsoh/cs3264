@@ -634,7 +634,7 @@ const SLIDES = [
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:8px">Loss</div>
       <p style="font-size:20px;max-width:none">We stop writing it down. It is
-      <strong>derived</strong> from the model &#8212; the negative log of what we just assumed.</p>
+      <strong>derived</strong> &#8212; the negative log of the probability the model assigns to the data.</p>
     </div>
   </div>
   <p class="figcap frag" data-f="0" style="margin-top:16px;text-align:center">
@@ -668,7 +668,7 @@ const SLIDES = [
       log-likelihood.</strong> The SVM&#8217;s hinge loss in Week 10 is not, and works well.</p>
       <hr class="rule">
       <p style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
-      that are only tractable in special cases &#8212; ours today is one of them, deliberately.</p>
+      with closed forms only in special cases &#8212; ours today is one of them, deliberately.</p>
       <hr class="rule">
       <p style="font-size:19.5px;max-width:none"><strong>More machinery for a familiar answer.</strong>
       The first thing we will derive is squared error, which we already had.</p>
@@ -1260,7 +1260,7 @@ const SLIDES = [
       <div class="stat" style="margin-bottom:8px"><span class="k">targets drawn</span><span class="v" id="lgn">0</span></div>
       <div class="warn" id="lgwarn"></div>
       <p class="caption" style="margin-top:8px">Press <em>draw t at this x</em> twice without moving
-      the slider &#8212; the sketch every textbook draws, and the reason <span class="tex" data-tex="\\varepsilon_n"></span> carries an index.</p>
+      the slider &#8212; two targets from one input, and the reason <span class="tex" data-tex="\\varepsilon_n"></span> carries an index.</p>
     </div>
   </div>`},
 
@@ -1522,7 +1522,7 @@ const SLIDES = [
 
 {s:"Part V", t:"Seeing the ratio", draw:"lamviz", html:`
   <div class="eyebrow">Live demo &#183; two beliefs, one number</div>
-  <h2 style="margin-bottom:10px"><span class="tex" data-tex="\\lambda"></span> is a ratio of two spreads</h2>
+  <h2 style="margin-bottom:10px">The two spreads behind <span class="tex" data-tex="\\lambda"></span></h2>
   <div class="demo">
     <div class="demo-plot"><svg id="lvsvg" viewBox="0 0 560 250"></svg></div>
     <div class="demo-ctrl">
@@ -1532,6 +1532,7 @@ const SLIDES = [
         <input type="range" id="lvswa" min="0.1" max="2.4" step="0.05" value="1.2"></div>
       <div class="card accent" style="margin:12px 0 10px;padding:12px 16px;text-align:center">
         <div class="eyebrow" style="margin-bottom:6px;color:var(--accent)">the &#955; they imply</div>
+        <div class="eq" style="margin:0 0 4px;font-size:19px"><span class="texd" data-tex="\\lambda = \\sigma_\\varepsilon^2 / \\sigma_w^2"></span></div>
         <div class="v" id="lvlam" style="font-size:30px">0.063</div>
       </div>
       <div class="warn" id="lvwarn"></div>
