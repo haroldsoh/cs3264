@@ -795,9 +795,10 @@ const SLIDES = [
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:10px">1 &#183; Sum rule</div>
       <div class="eq" style="margin:0;font-size:23px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y)"></span></div>
+      <div class="eq" style="margin:6px 0 0;font-size:18.5px"><span class="texd" data-tex="= \\textstyle\\int p(x,y)\\,dy \\;\\;\\text{(continuous)}"></span></div>
       <hr class="rule">
       <p style="font-size:19px;max-width:none">A variable you do not care about is
-      <strong>summed away</strong>.</p>
+      <strong>summed &#8212; or integrated &#8212; away</strong>.</p>
     </div>
     <div class="col card frag" data-f="0">
       <div class="eyebrow" style="margin-bottom:10px">2 &#183; Product (chain) rule</div>
@@ -991,6 +992,7 @@ const SLIDES = [
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:10px">Sum</div>
       <div class="eq" style="margin:0;font-size:22px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y)"></span></div>
+      <div class="eq" style="margin:6px 0 0;font-size:18px"><span class="texd" data-tex="= \\textstyle\\int p(x,y)\\,dy \\;\\;\\text{(continuous)}"></span></div>
       <hr class="rule">
       <p style="font-size:19px;max-width:none">Add along a row. Used every time we integrate a
       nuisance variable away &#8212; including the posterior predictive at the end of today.</p>
@@ -1642,15 +1644,22 @@ const SLIDES = [
 
 {s:"Part VI", t:"The full posterior", html:`
   <div class="eyebrow">PRML &#167;3.3</div>
-  <h2 style="margin-bottom:14px">Do not collapse to a point</h2>
+  <h2 style="margin-bottom:12px">Do not collapse to a point</h2>
   <div class="row top" style="gap:30px">
-    <div class="col">
-      <p style="font-size:21px;margin-bottom:10px">With a Gaussian likelihood and a Gaussian prior,
-      the posterior can be written down exactly &#8212; and it is Gaussian too:</p>
-      <div class="eq" style="margin:12px 0 14px;font-size:24px"><span class="texd" data-tex="p(\\mathbf{w}\\mid\\mathcal{D}) = \\mathcal{N}(\\mathbf{w}\\mid\\mathbf{m}_N, \\mathbf{S}_N)"></span></div>
-      <div class="eq frag" data-f="0" style="margin:0 0 12px;font-size:21px"><span class="texd" data-tex="\\mathbf{S}_N^{-1} = \\alpha\\mathbf{I} + \\beta\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi}, \\qquad \\mathbf{m}_N = \\beta\\mathbf{S}_N\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span></div>
+    <div class="col" style="flex:1.2">
+      <div class="dgrid" style="grid-template-columns:auto auto minmax(0,230px);gap:9px 14px">
+        <div style="font-size:19.5px">Likelihood</div><div class="eq" style="margin:0;font-size:19px"><span class="tex" data-tex="p(\\mathbf{t}\\mid\\mathbf{X},\\mathbf{w}) = \\prod_{n=1}^{N}\\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n),\\ \\beta^{-1}\\bigr)"></span></div>
+        <div class="dnote">the model from Part IV</div>
+        <div style="font-size:19.5px">Prior</div><div class="eq" style="margin:0;font-size:19px"><span class="tex" data-tex="p(\\mathbf{w}) = \\mathcal{N}\\bigl(\\mathbf{w} \\mid \\mathbf{0},\\ \\alpha^{-1}\\mathbf{I}\\bigr)"></span></div>
+        <div class="dnote">the belief from Part V</div>
+      </div>
+      <p class="frag" data-f="0" style="font-size:20px;margin:12px 0 4px">Bayes&#8217; rule multiplies
+      them &#8212; and because both are Gaussian, the posterior comes out <strong>exactly</strong>,
+      and Gaussian too:</p>
+      <div class="eq frag" data-f="0" style="margin:6px 0 8px;font-size:23px"><span class="texd" data-tex="p(\\mathbf{w}\\mid\\mathcal{D}) \\propto p(\\mathbf{t}\\mid\\mathbf{X},\\mathbf{w})\\,p(\\mathbf{w}) = \\mathcal{N}(\\mathbf{w}\\mid\\mathbf{m}_N, \\mathbf{S}_N)"></span></div>
+      <div class="eq frag" data-f="1" style="margin:0;font-size:20px"><span class="texd" data-tex="\\mathbf{S}_N^{-1} = \\alpha\\mathbf{I} + \\beta\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi}, \\qquad \\mathbf{m}_N = \\beta\\mathbf{S}_N\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span></div>
     </div>
-    <div class="col card frag" data-f="1" style="flex:.85">
+    <div class="col card frag" data-f="2" style="flex:.78">
       <div class="eyebrow" style="margin-bottom:10px">What MAP was keeping</div>
       <p style="font-size:20px;max-width:none">The MAP estimate is exactly <span class="tex" data-tex="\\mathbf{m}_N"></span> &#8212; the mean of
       this distribution.</p>
@@ -2852,11 +2861,7 @@ function jtGrid(id, mode, hiX){
   }
   s+='<text class="legend" x="'+(x0-12)+'" y="'+byy+'" text-anchor="end">p(x)</text>';
   /* the rule being illustrated, drawn on the picture */
-  if(mode==='sum'){
-    for(let r=0;r<NR;r++)
-      s+='<line x1="'+(x0-2)+'" y1="'+(y0+r*chh+(chh-8)/2)+'" x2="'+(bx-22)+'" y2="'+(y0+r*chh+(chh-8)/2)+'"'
-       + ' stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 4" opacity=".75"/>';
-  } else if(hiX!==undefined){
+  if(mode==='prod'&&hiX!==undefined){
     s+='<rect x="'+(x0+hiX*cw-5)+'" y="'+(y0-6)+'" width="'+(cw-8+10)+'" height="'+(NR*chh+2)+'" rx="4"'
      + ' fill="none" stroke="var(--accent)" stroke-width="2.4"/>';
   }
