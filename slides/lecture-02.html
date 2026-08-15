@@ -1646,12 +1646,12 @@ const SLIDES = [
   <div class="eyebrow">PRML &#167;3.3</div>
   <h2 style="margin-bottom:12px">Do not collapse to a point</h2>
   <div class="row top" style="gap:30px">
-    <div class="col" style="flex:1.2">
-      <div class="dgrid" style="grid-template-columns:auto auto minmax(0,230px);gap:9px 14px">
-        <div style="font-size:19.5px">Likelihood</div><div class="eq" style="margin:0;font-size:19px"><span class="tex" data-tex="p(\\mathbf{t}\\mid\\mathbf{X},\\mathbf{w}) = \\prod_{n=1}^{N}\\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n),\\ \\beta^{-1}\\bigr)"></span></div>
-        <div class="dnote">the model from Part IV</div>
-        <div style="font-size:19.5px">Prior</div><div class="eq" style="margin:0;font-size:19px"><span class="tex" data-tex="p(\\mathbf{w}) = \\mathcal{N}\\bigl(\\mathbf{w} \\mid \\mathbf{0},\\ \\alpha^{-1}\\mathbf{I}\\bigr)"></span></div>
-        <div class="dnote">the belief from Part V</div>
+    <div class="col" style="flex:1.3">
+      <div class="dgrid" style="grid-template-columns:max-content minmax(0,1fr);gap:10px 18px">
+        <div style="font-size:19.5px">Likelihood<br><span class="dnote" style="padding-left:0;font-size:16.5px">the model from Part IV</span></div>
+        <div class="eq" style="margin:0;font-size:19px;white-space:nowrap"><span class="tex" data-tex="p(\\mathbf{t}\\mid\\mathbf{X},\\mathbf{w}) = \\prod_{n=1}^{N}\\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n),\\ \\beta^{-1}\\bigr)"></span></div>
+        <div style="font-size:19.5px">Prior<br><span class="dnote" style="padding-left:0;font-size:16.5px">the belief from Part V</span></div>
+        <div class="eq" style="margin:0;font-size:19px;white-space:nowrap"><span class="tex" data-tex="p(\\mathbf{w}) = \\mathcal{N}\\bigl(\\mathbf{w} \\mid \\mathbf{0},\\ \\alpha^{-1}\\mathbf{I}\\bigr)"></span></div>
       </div>
       <p class="frag" data-f="0" style="font-size:20px;margin:12px 0 4px">Bayes&#8217; rule multiplies
       them &#8212; and because both are Gaussian, the posterior comes out <strong>exactly</strong>,
@@ -1659,7 +1659,7 @@ const SLIDES = [
       <div class="eq frag" data-f="0" style="margin:6px 0 8px;font-size:23px"><span class="texd" data-tex="p(\\mathbf{w}\\mid\\mathcal{D}) \\propto p(\\mathbf{t}\\mid\\mathbf{X},\\mathbf{w})\\,p(\\mathbf{w}) = \\mathcal{N}(\\mathbf{w}\\mid\\mathbf{m}_N, \\mathbf{S}_N)"></span></div>
       <div class="eq frag" data-f="1" style="margin:0;font-size:20px"><span class="texd" data-tex="\\mathbf{S}_N^{-1} = \\alpha\\mathbf{I} + \\beta\\boldsymbol{\\Phi}^\\top\\boldsymbol{\\Phi}, \\qquad \\mathbf{m}_N = \\beta\\mathbf{S}_N\\boldsymbol{\\Phi}^\\top\\mathbf{t}"></span></div>
     </div>
-    <div class="col card frag" data-f="2" style="flex:.78">
+    <div class="col card frag" data-f="2" style="flex:.72">
       <div class="eyebrow" style="margin-bottom:10px">What MAP was keeping</div>
       <p style="font-size:20px;max-width:none">The MAP estimate is exactly <span class="tex" data-tex="\\mathbf{m}_N"></span> &#8212; the mean of
       this distribution.</p>
