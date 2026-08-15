@@ -525,6 +525,10 @@ const SLIDES = [
       <p style="font-size:21px">First tutorial is <strong>Wednesday 26 August</strong>, Week 3,
       BIZ2-0302. Attendance is taken and counts for 10%.</p>
       <hr class="rule">
+      <p style="font-size:20px"><strong>The Tutorial 1 sheet is out.</strong> Download it from the
+      course website &#8212; <strong>haroldsoh.com/cs3264</strong>, Week 3 row of the schedule &#8212;
+      and work through it before Wednesday.</p>
+      <hr class="rule">
       <p class="small"><strong>T03 (12&#8211;1pm) is closed.</strong> Five slots run:
       T06, T01, T02, T04, T05.</p>
     </div>
@@ -705,7 +709,7 @@ const SLIDES = [
   <div class="row top" style="gap:30px">
     <div class="col">
       <ul>
-        <li style="margin-bottom:10px"><strong>Probability preliminaries</strong> &#8212; two rules,
+        <li style="margin-bottom:10px"><strong>Probability preliminaries</strong> &#8212; the three rules,
           independence, the Gaussian.</li>
         <li style="margin-bottom:10px"><strong>Maximum likelihood</strong> &#8212; fit a Gaussian;
           then fit a regression.</li>
@@ -817,7 +821,7 @@ const SLIDES = [
 {s:"Part II", t:"Sum rule", draw:"sumrule", html:`
   <div class="eyebrow">Rule 1, on a table you can count</div>
   <h2 style="margin-bottom:8px">Sum rule &#8212; add along a row</h2>
-  <p style="font-size:20px;margin-bottom:6px">Two dice-like variables, <span class="tex" data-tex="x"></span> and <span class="tex" data-tex="y"></span>. Each cell is a
+  <p style="font-size:20px;margin-bottom:6px">Two discrete variables, <span class="tex" data-tex="x"></span> and <span class="tex" data-tex="y"></span>. Each cell is a
   joint probability <span class="tex" data-tex="p(x,y)"></span>; every cell&#8217;s <strong>area and shade</strong> is its share of the mass.</p>
   <div class="fig h-330" style="background:transparent;box-shadow:none;margin-top:2px">
     <svg viewBox="0 0 620 250"><g id="sumfig"></g></svg>
@@ -1007,7 +1011,7 @@ const SLIDES = [
     </div>
   </div>
   <p class="figcap frag" data-f="0" style="margin-top:18px;text-align:center">
-    Three rules. Every derivation from here to the end of the course is some application of them.</p>`},
+    Three rules &#8212; every probabilistic step in today&#8217;s derivations is one of them applied.</p>`},
 
 {s:"Part II", t:"Independence", draw:"indep", html:`
   <div class="eyebrow">Live demo &#183; move the slice</div>
@@ -1055,7 +1059,7 @@ const SLIDES = [
   <div class="eyebrow">Before we move on</div>
   <h2 style="margin-bottom:16px">Part II in one slide</h2>
   <div class="row top stretch" style="gap:22px">
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Two rules</div><p style="font-size:20px;max-width:none">The product rule factorises a joint; the sum rule integrates a variable away. Bayes rule follows from just these two.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Sum and product</div><p style="font-size:20px;max-width:none">The product rule factorises a joint; the sum rule integrates a variable away. Bayes rule follows from just these two.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Bayes&#8217; rule</div><p style="font-size:20px;max-width:none">Follows from them in three lines. Turns <span class="tex" data-tex="p(B \\mid A)"></span>, which you can measure, into <span class="tex" data-tex="p(A \\mid B)"></span>, which you want.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Likelihood</div><p style="font-size:20px;max-width:none">The same density read with the <em>data fixed</em> and the parameter varying. A score, not a distribution.</p></div>
   </div>
@@ -2881,10 +2885,12 @@ function drawProdRule(){
   }
   const v=document.getElementById('prxv'); if(v) v.textContent=PR_X;
   const wn=document.getElementById('prodwarn');
-  if(wn) wn.innerHTML='The cell is <strong>'+pct(jtP(PR_X,0))+'</strong>; the column totals '
-    + '<strong>'+pct(jtPx(PR_X))+'</strong>; and '+pct(jtP(PR_X,0))+' &#247; '+pct(jtPx(PR_X))
-    + ' = <strong>'+pct(jtP(PR_X,0)/jtPx(PR_X))+'</strong>, which is p(y = 0 | x = '+PR_X+'). '
-    + 'Conditioning is <strong>taking a slice and rescaling it</strong>.';
+  /* exact counts, so the arithmetic on screen is literally true — rounded
+     percentages (5% / 24% = 22%) do not divide cleanly and sharp students notice */
+  const cnt=JT[PR_X][0], col=JT[PR_X].reduce((x,y)=>x+y,0);
+  if(wn) wn.innerHTML='The cell holds <strong>'+cnt+'</strong> of the '+JT_TOT+' counts; its column holds '
+    + '<strong>'+col+'</strong>. So p(y = 0 | x = '+PR_X+') = '+cnt+'/'+col+' = '
+    + '<strong>'+pct(cnt/col)+'</strong>. Conditioning is <strong>taking a slice and rescaling it</strong>.';
 }
 
 const DRAW={sumrule:drawSumRule,prodrule:drawProdRule,car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns,gsamp:drawGsamp,lgen:drawLgen,lamviz:drawLamviz,rules:drawRules,indep:drawIndep,dist:drawDist};
