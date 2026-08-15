@@ -668,38 +668,36 @@ const SLIDES = [
   <div class="eyebrow">Worth being honest about, before we start</div>
   <h2 style="margin-bottom:14px">What this buys &#8212; and what it costs</h2>
   <div class="row top stretch" style="gap:26px">
-    <div class="col card frag" data-f="0">
+    <div class="col card">
       <div class="eyebrow" style="margin-bottom:9px">What you gain</div>
-      <p style="font-size:19.5px;max-width:none"><strong>The loss stops being arbitrary.</strong>
+      <p class="frag" data-f="0" style="font-size:19.5px;max-width:none"><strong>The loss stops being arbitrary.</strong>
       Every term traces back to an assumption you can state, argue with, and change.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>Predictions come with a spread</strong>, not
+      <hr class="rule frag" data-f="1">
+      <p class="frag" data-f="1" style="font-size:19.5px;max-width:none"><strong>Predictions come with a spread</strong>, not
       just a number &#8212; which is what the used-car question needed.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>The knobs acquire meanings.</strong> By the
+      <hr class="rule frag" data-f="2">
+      <p class="frag" data-f="2" style="font-size:19.5px;max-width:none"><strong>The knobs acquire meanings.</strong> By the
       end of today <span class="tex" data-tex="\\lambda"></span> is a ratio of two variances rather than a number you tuned.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>It transfers.</strong> Change the
+      <hr class="rule frag" data-f="3">
+      <p class="frag" data-f="3" style="font-size:19.5px;max-width:none"><strong>It transfers.</strong> Change the
       distribution and the recipe hands you the right loss &#8212; that is next week&#8217;s lecture.</p>
     </div>
-    <div class="col card accent frag" data-f="1">
+    <div class="col card accent">
       <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">What it costs</div>
-      <p style="font-size:19.5px;max-width:none"><strong>You must commit to a distribution</strong>,
+      <p class="frag" data-f="4" style="font-size:19.5px;max-width:none"><strong>You must commit to a distribution</strong>,
       and it can be wrong. Assume Gaussian noise when the data has outliers and the loss you derive
       will chase them.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>Not every useful loss is a negative
+      <hr class="rule frag" data-f="5">
+      <p class="frag" data-f="5" style="font-size:19.5px;max-width:none"><strong>Not every useful loss is a negative
       log-likelihood.</strong> The SVM&#8217;s hinge loss in Week 10 is not, and works well.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
+      <hr class="rule frag" data-f="6">
+      <p class="frag" data-f="6" style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
       with closed forms only in special cases &#8212; ours today is one of them, deliberately.</p>
-      <hr class="rule">
-      <p style="font-size:19.5px;max-width:none"><strong>More machinery for a familiar answer.</strong>
+      <hr class="rule frag" data-f="7">
+      <p class="frag" data-f="7" style="font-size:19.5px;max-width:none"><strong>More machinery for a familiar answer.</strong>
       The first thing we will derive is squared error, which we already had.</p>
     </div>
-  </div>
-  <p class="figcap frag" data-f="2" style="margin-top:14px;text-align:center">
-    The assumptions were always there. The difference is that now they are written down.</p>`},
+  </div>`},
 
 {s:"Part I", t:"Learning objectives", html:`
   <div class="eyebrow">Where we are going</div>
@@ -786,30 +784,65 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part II", t:"Two rules", draw:"rules", html:`
-  <div class="eyebrow">We will use these constantly today</div>
-  <h2 style="margin-bottom:18px">Two useful rules in probability</h2>
-  <div class="row top" style="gap:34px">
+{s:"Part II", t:"Three rules", html:`
+  <div class="eyebrow">Everything today is built from these</div>
+  <h2 style="margin-bottom:16px">Three rules</h2>
+  <div class="row top stretch" style="gap:20px">
     <div class="col card">
-      <div class="eyebrow" style="margin-bottom:12px">Product (chain) rule</div>
-      <div class="eq" style="margin:0;font-size:28.5px"><span class="texd" data-tex="p(x,y) = p(x \\mid y)\\,p(y) = p(y \\mid x)\\,p(x)"></span></div>
+      <div class="eyebrow" style="margin-bottom:10px">1 &#183; Sum rule</div>
+      <div class="eq" style="margin:0;font-size:23px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y)"></span></div>
       <hr class="rule">
-      <p style="font-size:19.5px;max-width:none">A joint distribution can always be built one
-      variable at a time.</p>
+      <p style="font-size:19px;max-width:none">A variable you do not care about is
+      <strong>summed away</strong>.</p>
     </div>
     <div class="col card frag" data-f="0">
-      <div class="eyebrow" style="margin-bottom:12px">Sum rule (marginalisation)</div>
-      <div class="eq" style="margin:0;font-size:28.5px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y) \\quad\\text{or}\\quad \\int p(x,y)\\,dy"></span></div>
+      <div class="eyebrow" style="margin-bottom:10px">2 &#183; Product (chain) rule</div>
+      <div class="eq" style="margin:0;font-size:23px"><span class="texd" data-tex="p(x,y) = p(y \\mid x)\\,p(x)"></span></div>
       <hr class="rule">
-      <p style="font-size:19.5px;max-width:none">A variable you do not care about is removed by
-      summing &#8212; or integrating &#8212; it away.</p>
+      <p style="font-size:19px;max-width:none">A joint is built <strong>one variable at a
+      time</strong>.</p>
+    </div>
+    <div class="col card frag" data-f="1">
+      <div class="eyebrow" style="margin-bottom:10px">3 &#183; Bayes&#8217; rule</div>
+      <div class="eq" style="margin:0;font-size:23px"><span class="texd" data-tex="p(y \\mid x) = \\frac{p(x \\mid y)\\,p(y)}{p(x)}"></span></div>
+      <hr class="rule">
+      <p style="font-size:19px;max-width:none">Turns what you can <strong>measure</strong> into what
+      you <strong>want to know</strong>.</p>
     </div>
   </div>
-  <div class="fig frag" data-f="1" style="background:transparent;box-shadow:none;margin-top:14px">
-    <svg viewBox="0 0 900 226"><g id="rulefig"></g></svg>
+  <p class="figcap frag" data-f="2" style="margin-top:18px;text-align:center">
+    The third is not really a third: it follows from the first two, as we will see. One slide each,
+    with an example, then we put them to work.</p>`},
+
+{s:"Part II", t:"Sum rule", draw:"sumrule", html:`
+  <div class="eyebrow">Rule 1, on a table you can count</div>
+  <h2 style="margin-bottom:8px">Sum rule &#8212; add along a row</h2>
+  <p style="font-size:20px;margin-bottom:6px">Two dice-like variables, <span class="tex" data-tex="x"></span> and <span class="tex" data-tex="y"></span>. Each cell is a
+  joint probability <span class="tex" data-tex="p(x,y)"></span>; every cell&#8217;s <strong>area and shade</strong> is its share of the mass.</p>
+  <div class="fig h-330" style="background:transparent;box-shadow:none;margin-top:2px">
+    <svg viewBox="0 0 620 250"><g id="sumfig"></g></svg>
   </div>
-  <p class="caption frag" data-f="2" style="margin-top:6px;text-align:center">Applied together, these
-  two give <strong>Bayes&#8217; rule</strong>, which we use in the second half of the lecture.</p>`},
+  <div class="card accent frag" data-f="0" style="margin-top:6px;padding:12px 20px">
+    <p style="font-size:20px;max-width:none">Add a whole row and <span class="tex" data-tex="x"></span> disappears, leaving <span class="tex" data-tex="p(y)"></span> in the
+    margin &#8212; which is where the word <em>marginal</em> comes from. The 15 cells collapse to 3
+    numbers, and nothing about <span class="tex" data-tex="x"></span> is left.</p>
+  </div>`},
+
+{s:"Part II", t:"Product rule", draw:"prodrule", html:`
+  <div class="eyebrow">Rule 2, on the same table</div>
+  <h2 style="margin-bottom:8px">Product rule &#8212; take a slice, then rescale</h2>
+  <div class="demo">
+    <div class="demo-plot">
+      <svg viewBox="0 0 620 250"><g id="prodfig"></g></svg>
+    </div>
+    <div class="demo-ctrl">
+      <div class="eq" style="margin:0 0 10px;font-size:20px"><span class="texd" data-tex="\\underbrace{p(x,y)}_{\\text{one cell}} = \\underbrace{p(x)}_{\\text{the column}}\\;\\underbrace{p(y \\mid x)}_{\\text{its share}}"></span></div>
+      <div class="ctrl-row"><label>slice at x = <span class="val" id="prxv">2</span></label>
+        <input type="range" id="prx" min="0" max="4" step="1" value="2"></div>
+      <svg viewBox="0 0 440 148" style="width:100%;display:block"><g id="prodbars"></g></svg>
+      <div class="warn" id="prodwarn"></div>
+    </div>
+  </div>`},
 
 {s:"Part II", t:"Deriving Bayes rule", html:`
   <div class="eyebrow">Built from the two rules above</div>
@@ -946,6 +979,35 @@ const SLIDES = [
   <p class="figcap frag" data-f="1" style="margin-top:12px;text-align:center">
     When a condition is rare, most positives are false ones &#8212; and test accuracy alone can
     never tell you that.</p>`},
+
+{s:"Part II", t:"The three rules again", html:`
+  <div class="eyebrow">Before we move on</div>
+  <h2 style="margin-bottom:16px">The three rules, once more</h2>
+  <div class="row top stretch" style="gap:20px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Sum</div>
+      <div class="eq" style="margin:0;font-size:22px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y)"></span></div>
+      <hr class="rule">
+      <p style="font-size:19px;max-width:none">Add along a row. Used every time we integrate a
+      nuisance variable away &#8212; including the posterior predictive at the end of today.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Product</div>
+      <div class="eq" style="margin:0;font-size:22px"><span class="texd" data-tex="p(x,y) = p(y \\mid x)\\,p(x)"></span></div>
+      <hr class="rule">
+      <p style="font-size:19px;max-width:none">Take a slice and rescale. Used every time a joint over
+      N points is split into a product of per-point terms.</p>
+    </div>
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:10px">Bayes</div>
+      <div class="eq" style="margin:0;font-size:22px"><span class="texd" data-tex="p(y \\mid x) = \\frac{p(x \\mid y)\\,p(y)}{p(x)}"></span></div>
+      <hr class="rule">
+      <p style="font-size:19px;max-width:none">The two together. Used every time data updates a
+      belief &#8212; which is the whole second half of the lecture.</p>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="0" style="margin-top:18px;text-align:center">
+    Three rules. Every derivation from here to the end of the course is some application of them.</p>`},
 
 {s:"Part II", t:"Independence", draw:"indep", html:`
   <div class="eyebrow">Live demo &#183; move the slice</div>
@@ -1813,7 +1875,7 @@ const SLIDES = [
     <h1 style="font-size:60px">Tutorials start next week</h1>
     <div class="bar" style="margin:26px auto 0"></div>
     <div class="sub" style="max-width:38ch;margin-left:auto;margin-right:auto">
-      Wednesday 26 August, BIZ2-0302. Bring questions.
+      Wednesday 26 August, BIZ2-0302.
     </div>
     <p class="small" style="margin-top:30px">Next lecture: <strong>Classification I</strong> &#8212;
     what changes when the target is a label. Reading: PRML &#167;4.1.3, &#167;4.3.2, &#167;4.3.4</p>
@@ -1830,7 +1892,7 @@ const SLIDES = [
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.6, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 1.5, 1.0, 1.0, 0.6, 0.3];
+const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.5, 1.6, 2.1, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.1, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 1.5, 1.0, 1.0, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2706,8 +2768,10 @@ function drawIndep(){
      + ' stroke-width="2.2" opacity="'+op+'" transform="rotate('+ang+' '+cx+' '+cy+')"/>'; });
   g+='<line x1="'+X1(IND_X)+'" y1="'+mt+'" x2="'+X1(IND_X)+'" y2="'+(mt+ph)+'" stroke="var(--accent)" stroke-width="2.2"/>'
    + '<text class="legend" x="'+X1(IND_X)+'" y="'+(mt-5)+'" text-anchor="middle" fill="var(--accent)">x = '+IND_X.toFixed(1)+'</text>';
-  g+='<text class="legend" x="'+(ml+half/2)+'" y="'+(H-8)+'" text-anchor="middle">p(x, y)</text>'
-   + '<text class="legend" x="'+(ml-30)+'" y="'+(mt+ph/2)+'" text-anchor="middle">y</text>';
+  /* the axis carries x; the joint names itself inside the plot, beside its contours */
+  g+='<text class="legend" x="'+(ml+half/2)+'" y="'+(H-8)+'" text-anchor="middle">x</text>'
+   + '<text class="legend" x="'+(ml-30)+'" y="'+(mt+ph/2)+'" text-anchor="middle">y</text>'
+   + '<text class="matn" x="'+(ml+half-8)+'" y="'+(mt+ph-10)+'" text-anchor="end" style="font-size:18px">p(x, y)</text>';
   /* --- right: the conditional against the marginal --- */
   const x2=ml+half+gap+18, X2=p=>x2+half*p/0.62, Y2=v=>mt+ph*(R-v)/(2*R);
   g+='<line class="axis" x1="'+x2+'" y1="'+(mt+ph)+'" x2="'+x2+'" y2="'+mt+'"/>';
@@ -2734,13 +2798,103 @@ function drawIndep(){
       + 'Knowing x tells you nothing about y, and p(x, y) = p(x)&#8201;p(y).';
 }
 
-const DRAW={car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns,gsamp:drawGsamp,lgen:drawLgen,lamviz:drawLamviz,rules:drawRules,indep:drawIndep,dist:drawDist};
+/* ---------------------------------------------------------------- the joint table
+   One 5x3 table of counts, shared by the sum-rule and product-rule slides so the
+   two rules are read off the SAME picture. Cell area and tint both carry the
+   probability mass, and the margins are printed where they are formed. */
+const JT=[[3,1,1],[4,3,1],[2,5,2],[1,3,4],[2,2,3]];      /* JT[x][y] */
+const JT_TOT=JT.flat().reduce((a,b)=>a+b,0);
+const jtPx=x=>JT[x].reduce((a,b)=>a+b,0)/JT_TOT;
+const jtPy=y=>JT.reduce((a,col)=>a+col[y],0)/JT_TOT;
+const jtP =(x,y)=>JT[x][y]/JT_TOT;
+const pct=v=>(v*100).toFixed(0)+'%';
+
+/* Draw the table. opts: hi = {x} column to highlight, mode = 'sum' | 'prod'. */
+function jtGrid(id, mode, hiX){
+  const g=document.getElementById(id); if(!g) return;
+  const NC=JT.length, NR=3, cw=64, chh=44, x0=118, y0=30;
+  const mx=Math.max.apply(null, JT.flat())/JT_TOT;
+  let s='';
+  for(let c=0;c<NC;c++) for(let r=0;r<NR;r++){
+    const v=jtP(c,r), k=Math.sqrt(v/mx);           /* area ∝ mass, so side ∝ sqrt */
+    const w=(cw-8)*k, h=(chh-8)*k;
+    const cxx=x0+c*cw+(cw-8)/2, cyy=y0+r*chh+(chh-8)/2;
+    const on=(hiX===undefined)||(c===hiX);
+    s+='<rect x="'+(cxx-w/2)+'" y="'+(cyy-h/2)+'" width="'+w+'" height="'+h+'" rx="3" fill="var(--s1)"'
+     + ' opacity="'+(on?(0.30+0.55*v/mx).toFixed(2):0.16)+'"/>'
+     + '<text class="tick" x="'+cxx+'" y="'+(cyy+4)+'" text-anchor="middle" opacity="'+(on?1:.35)+'">'
+     + pct(v)+'</text>';
+  }
+  /* row and column labels */
+  for(let c=0;c<NC;c++)
+    s+='<text class="tick" x="'+(x0+c*cw+(cw-8)/2)+'" y="'+(y0+NR*chh+16)+'" text-anchor="middle">'+c+'</text>';
+  for(let r=0;r<NR;r++)
+    s+='<text class="tick" x="'+(x0-12)+'" y="'+(y0+r*chh+(chh-8)/2+4)+'" text-anchor="end">'+r+'</text>';
+  s+='<text class="legend" x="'+(x0+NC*cw/2-4)+'" y="'+(y0+NR*chh+36)+'" text-anchor="middle">x</text>'
+   + '<text class="legend" x="'+(x0-40)+'" y="'+(y0+NR*chh/2)+'" text-anchor="middle">y</text>';
+  /* margins, printed on the sides they are formed on */
+  const bx=x0+NC*cw+16;
+  for(let r=0;r<NR;r++){
+    const v=jtPy(r);
+    s+='<text class="matn" x="'+bx+'" y="'+(y0+r*chh+(chh-8)/2+5)+'" style="font-size:16px"'
+     + ' fill="'+(mode==='sum'?'var(--accent)':'var(--ink-soft)')+'">'+pct(v)+'</text>';
+  }
+  s+='<text class="legend" x="'+(bx-4)+'" y="'+(y0-10)+'" fill="'+(mode==='sum'?'var(--accent)':'var(--ink-soft)')+'">p(y)</text>';
+  const byy=y0+NR*chh+52;
+  for(let c=0;c<NC;c++){
+    const v=jtPx(c), on=(hiX===undefined)||(c===hiX);
+    s+='<text class="matn" x="'+(x0+c*cw+(cw-8)/2)+'" y="'+byy+'" text-anchor="middle" style="font-size:16px"'
+     + ' fill="'+(mode==='prod'&&on?'var(--accent)':'var(--ink-soft)')+'" opacity="'+(on?1:.4)+'">'+pct(v)+'</text>';
+  }
+  s+='<text class="legend" x="'+(x0-12)+'" y="'+byy+'" text-anchor="end">p(x)</text>';
+  /* the rule being illustrated, drawn on the picture */
+  if(mode==='sum'){
+    for(let r=0;r<NR;r++)
+      s+='<line x1="'+(x0-2)+'" y1="'+(y0+r*chh+(chh-8)/2)+'" x2="'+(bx-22)+'" y2="'+(y0+r*chh+(chh-8)/2)+'"'
+       + ' stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 4" opacity=".75"/>';
+  } else if(hiX!==undefined){
+    s+='<rect x="'+(x0+hiX*cw-5)+'" y="'+(y0-6)+'" width="'+(cw-8+10)+'" height="'+(NR*chh+2)+'" rx="4"'
+     + ' fill="none" stroke="var(--accent)" stroke-width="2.4"/>';
+  }
+  g.innerHTML=s;
+}
+
+/* sum rule: every row is added across, and x is gone */
+function drawSumRule(){ jtGrid('sumfig','sum'); }
+
+/* product rule: take the column at x, then read its shares -- p(x,y) = p(x)p(y|x) */
+let PR_X=2;
+function drawProdRule(){
+  jtGrid('prodfig','prod',PR_X);
+  const bars=document.getElementById('prodbars');
+  if(bars){
+    const px=jtPx(PR_X);
+    let s='', y0=16, bh=34, bw=210, x0=96;
+    for(let r=0;r<3;r++){
+      const cond=jtP(PR_X,r)/px;
+      s+='<text class="tick" x="'+(x0-10)+'" y="'+(y0+r*bh+19)+'" text-anchor="end">y = '+r+'</text>'
+       + '<rect x="'+x0+'" y="'+(y0+r*bh)+'" width="'+(bw*cond)+'" height="24" rx="3" fill="var(--accent)" opacity=".8"/>'
+       + '<text class="matn" x="'+(x0+bw*cond+8)+'" y="'+(y0+r*bh+18)+'" style="font-size:15px">'+pct(cond)+'</text>';
+    }
+    s+='<text class="legend" x="'+x0+'" y="'+(y0+3*bh+16)+'">p(y | x = '+PR_X+') &#8212; the column, rescaled to sum to 100%</text>';
+    bars.innerHTML=s;
+  }
+  const v=document.getElementById('prxv'); if(v) v.textContent=PR_X;
+  const wn=document.getElementById('prodwarn');
+  if(wn) wn.innerHTML='The cell is <strong>'+pct(jtP(PR_X,0))+'</strong>; the column totals '
+    + '<strong>'+pct(jtPx(PR_X))+'</strong>; and '+pct(jtP(PR_X,0))+' &#247; '+pct(jtPx(PR_X))
+    + ' = <strong>'+pct(jtP(PR_X,0)/jtPx(PR_X))+'</strong>, which is p(y = 0 | x = '+PR_X+'). '
+    + 'Conditioning is <strong>taking a slice and rescaling it</strong>.';
+}
+
+const DRAW={sumrule:drawSumRule,prodrule:drawProdRule,car:drawCar,gauss:drawGauss,lik:drawLik,cov:drawCov,gen:drawGen,noise:drawNoise,coin:drawCoin,bayes:drawBayes,med:drawMed,ens:drawEns,gsamp:drawGsamp,lgen:drawLgen,lamviz:drawLamviz,rules:drawRules,indep:drawIndep,dist:drawDist};
 document.getElementById('dists')?.addEventListener('input',e=>{DIST_S=+e.target.value;drawDist();});
 document.getElementById('indx')?.addEventListener('input',e=>{IND_X=+e.target.value;drawIndep();});
 document.addEventListener('click',e=>{ const t=e.target; if(!t) return;
   const dd=t.closest&&t.closest('[data-dist]'); if(dd){ DIST_MODE=dd.dataset.dist; drawDist(); }
   const ii=t.closest&&t.closest('[data-ind]');  if(ii){ IND_DEP=(ii.dataset.ind==='dep'); drawIndep(); }
 });
+document.getElementById('prx')?.addEventListener('input',e=>{PR_X=+e.target.value;drawProdRule();});
 document.getElementById('likmu')?.addEventListener('input',e=>{LIK_MU=+e.target.value;drawLik();});
 document.getElementById('gsmu')?.addEventListener('input',e=>{GS_MU=+e.target.value;drawGsamp();});
 document.getElementById('gss')?.addEventListener('input',e=>{GS_S=+e.target.value;drawGsamp();});
