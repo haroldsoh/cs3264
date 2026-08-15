@@ -1800,6 +1800,14 @@ const SLIDES = [
     </div>
   </div>`},
 
+{s:"Summary", t:"Summary", div:true, html:`
+  <div class="divider">
+    <div class="part">Summary</div>
+    <h1>Where today leaves us</h1>
+    <div class="bar"></div>
+    <div class="sub">The loss, the predictions, and the ideas to keep.</div>
+  </div>`},
+
 {s:"Part VI", t:"Summary", html:`
   <div class="eyebrow">Today, in one slide</div>
   <h2 style="margin-bottom:12px">Both terms, accounted for</h2>
@@ -1825,6 +1833,34 @@ const SLIDES = [
   </div>
   <p class="figcap frag" data-f="3" style="margin-top:14px;text-align:center">
     Write down how the data was generated, and the loss function follows.</p>`},
+
+{s:"Part VI", t:"Predictions and uncertainty", html:`
+  <div class="eyebrow">Today, in one slide &#183; the predictions</div>
+  <h2 style="margin-bottom:14px">Predictions arrive as distributions</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col" style="flex:1.15">
+      <div class="eq" style="margin:2px 0 6px;font-size:23px"><span class="texd" data-tex="p(t \\mid x, \\mathcal{D}) = \\int \\underbrace{p(t \\mid x, \\mathbf{w})}_{\\text{model}}\\,\\underbrace{p(\\mathbf{w} \\mid \\mathcal{D})}_{\\text{posterior}}\\,d\\mathbf{w}"></span></div>
+      <p class="caption" style="margin:0 0 14px">Every plausible <span class="tex" data-tex="\\mathbf{w}"></span> votes &#8212; the sum and
+      product rules, one last time.</p>
+      <div class="eq frag" data-f="0" style="margin:0 0 6px;font-size:23px"><span class="texd" data-tex="\\sigma^2(x) = \\underbrace{\\beta^{-1}}_{\\text{aleatoric}} + \\underbrace{\\boldsymbol{\\phi}(x)^\\top\\mathbf{S}_N\\boldsymbol{\\phi}(x)}_{\\text{epistemic}}"></span></div>
+      <p class="caption frag" data-f="0" style="margin:0">One width, two causes &#8212; and they
+      behave differently as data arrives.</p>
+    </div>
+    <div class="col" style="flex:.95">
+      <div class="card frag" data-f="1">
+        <div class="eyebrow" style="margin-bottom:8px">Aleatoric &#8212; <span class="tex" data-tex="\\beta^{-1}"></span></div>
+        <p style="font-size:19.5px;max-width:none">Noise in the world. More data does not shrink it.</p>
+      </div>
+      <div class="card accent frag" data-f="1" style="margin-top:12px">
+        <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">Epistemic &#8212; <span class="tex" data-tex="\\boldsymbol{\\phi}^\\top\\mathbf{S}_N\\boldsymbol{\\phi}"></span></div>
+        <p style="font-size:19.5px;max-width:none">Ignorance about <span class="tex" data-tex="\\mathbf{w}"></span>. Shrinks as data arrives, and is
+        largest where the basis reaches but data does not.</p>
+      </div>
+    </div>
+  </div>
+  <p class="figcap frag" data-f="2" style="margin-top:16px;text-align:center">
+    The width is what turns &#8220;push back on $15,000&#8221; and &#8220;we do not know enough to
+    say&#8221; into different answers.</p>`},
 
 {s:"Part VI", t:"Key ideas — the probability", html:`
   <div class="eyebrow">Recap &#183; 1 of 2</div>
@@ -1905,7 +1941,7 @@ const SLIDES = [
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.5, 1.6, 2.1, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.1, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 1.5, 1.0, 1.0, 0.6, 0.3];
+const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.5, 1.6, 2.1, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.1, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 0.2, 1.5, 1.2, 1.0, 1.0, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
