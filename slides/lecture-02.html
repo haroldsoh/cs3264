@@ -514,6 +514,7 @@ const SLIDES = [
     Teaching Assistants: <b>Oscar Jiang</b> &#183; <b>Sun Minghao</b> &#183; <b>Shashank Rao Marpally</b><br>
     Tuesday 4&#8211;6pm &#183; LT15 &nbsp;|&nbsp; 18 August 2026
   </div>
+  <div style="position:absolute;right:88px;bottom:74px"><div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:158px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div></div>
   <p class="cred" style="margin-top:16px;text-align:left">Slides made with the help of Claude.</p>`},
 
 {s:"", t:"Admin", html:`
@@ -692,8 +693,10 @@ const SLIDES = [
       and it can be wrong. Assume Gaussian noise when the data has outliers and the loss you derive
       will chase them.</p>
       <hr class="rule frag" data-f="5">
-      <p class="frag" data-f="5" style="font-size:19.5px;max-width:none"><strong>Not every useful loss is a negative
-      log-likelihood.</strong> The SVM&#8217;s hinge loss in Week 10 is not, and works well.</p>
+      <p class="frag" data-f="5" style="font-size:19.5px;max-width:none"><strong>Sometimes the loss is easier to state
+      than the distribution.</strong> If what you want is a margin, robustness, or a match to how you
+      will be scored, you can write the loss directly &#8212; Week 10&#8217;s hinge loss does exactly
+      this, and works well. It is simply not probabilistic in nature.</p>
       <hr class="rule frag" data-f="6">
       <p class="frag" data-f="6" style="font-size:19.5px;max-width:none"><strong>Doing it properly needs integrals</strong>
       with closed forms only in special cases &#8212; ours today is one of them, deliberately.</p>
@@ -795,7 +798,7 @@ const SLIDES = [
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:10px">1 &#183; Sum rule</div>
       <div class="eq" style="margin:0;font-size:23px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y)"></span></div>
-      <div class="eq" style="margin:6px 0 0;font-size:18.5px"><span class="texd" data-tex="= \\textstyle\\int p(x,y)\\,dy \\;\\;\\text{(continuous)}"></span></div>
+      <div class="eq" style="margin:6px 0 0;font-size:18.5px"><span class="texd" data-tex="p(x) = \\textstyle\\int p(x,y)\\,dy \\;\\;\\text{(continuous)}"></span></div>
       <hr class="rule">
       <p style="font-size:19px;max-width:none">A variable you do not care about is
       <strong>summed &#8212; or integrated &#8212; away</strong>.</p>
@@ -978,7 +981,7 @@ const SLIDES = [
     </div>
     <div class="col frag" data-f="0" style="flex:1.05">
       <div class="fig h-290"><svg viewBox="0 0 460 300"><g id="medfig"></g></svg></div>
-      <p class="cred">10,000 people. Teal: ill. Red outline: tested positive.</p>
+      <p class="cred">400 dots &#215; 25 people each = 10,000. Teal: ill. Red outline: tested positive.</p>
     </div>
   </div>
   <p class="figcap frag" data-f="1" style="margin-top:12px;text-align:center">
@@ -992,7 +995,7 @@ const SLIDES = [
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:10px">Sum</div>
       <div class="eq" style="margin:0;font-size:22px"><span class="texd" data-tex="p(x) = \\sum_y p(x,y)"></span></div>
-      <div class="eq" style="margin:6px 0 0;font-size:18px"><span class="texd" data-tex="= \\textstyle\\int p(x,y)\\,dy \\;\\;\\text{(continuous)}"></span></div>
+      <div class="eq" style="margin:6px 0 0;font-size:18px"><span class="texd" data-tex="p(x) = \\textstyle\\int p(x,y)\\,dy \\;\\;\\text{(continuous)}"></span></div>
       <hr class="rule">
       <p style="font-size:19px;max-width:none">Add along a row. Used every time we integrate a
       nuisance variable away &#8212; including the posterior predictive at the end of today.</p>
@@ -1017,7 +1020,7 @@ const SLIDES = [
 
 {s:"Part II", t:"Independence", draw:"indep", html:`
   <div class="eyebrow">Live demo &#183; move the slice</div>
-  <h2 style="margin-bottom:10px">Independence, seen</h2>
+  <h2 style="margin-bottom:10px">Independence</h2>
   <div class="demo">
     <div class="demo-plot"><svg id="indsvg" viewBox="0 0 560 300"></svg></div>
     <div class="demo-ctrl">
@@ -1208,8 +1211,9 @@ const SLIDES = [
       <div class="d" style="font-size:18.5px;margin-top:8px">Its sampling distribution becomes
       Gaussian around the true value, so error bars are computable.</div></div>
     <div class="appcard frag" data-f="2" style="padding:20px"><div class="t" style="font-size:23.5px">Asymptotic efficiency</div>
-      <div class="d" style="font-size:18.5px;margin-top:8px">Any unbiased estimator obeys the
-      <strong>Cram&#233;r&#8211;Rao bound</strong><span class="texd" data-tex="\\operatorname{Var}(\\hat{\\theta}) \\ge \\frac{1}{N\\,I(\\theta)}"></span> where <span class="tex" data-tex="I(\\theta)"></span> is the Fisher information &#8212; how
+      <div class="d" style="font-size:18.5px;margin-top:8px">An <strong>estimator</strong> <span class="tex" data-tex="\\hat{\\theta}"></span> is any
+      rule that turns data into a guess of <span class="tex" data-tex="\\theta"></span> &#8212; the sample mean is one. Every unbiased <span class="tex" data-tex="\\hat{\\theta}"></span> obeys
+      the <strong>Cram&#233;r&#8211;Rao bound</strong><span class="texd" data-tex="\\operatorname{Var}(\\hat{\\theta}) \\ge \\frac{1}{N\\,I(\\theta)}"></span> where <span class="tex" data-tex="I(\\theta)"></span> is the Fisher information &#8212; how
       sharply the log-likelihood peaks. MLE attains it as <span class="tex" data-tex="N \\to \\infty"></span>.</div></div>
   </div>
   <div class="card accent frag" data-f="3" style="margin-top:22px">
@@ -1282,6 +1286,31 @@ const SLIDES = [
     </div>
   </div>`},
 
+{s:"Part IV", t:"How a dataset is generated", draw:"lgen", html:`
+  <div class="eyebrow">Live demo &#183; draw targets yourself</div>
+  <h2 style="margin-bottom:10px">The equation, as a picture</h2>
+  <div class="demo">
+    <div class="demo-plot"><svg id="lgsvg" viewBox="0 0 560 330"></svg></div>
+    <div class="demo-ctrl">
+      <div class="eq" style="margin:0 0 10px;font-size:18px"><span class="texd" data-tex="t_n = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n) + \\varepsilon_n"></span></div>
+      <div class="eq" style="margin:0 0 16px;font-size:18px"><span class="texd" data-tex="\\varepsilon_n \\sim \\mathcal{N}(0,\\sigma^2)"></span></div>
+      <div class="ctrl-row"><label>input x <span class="val" id="lgxv">0.55</span></label>
+        <input type="range" id="lgx" min="0.05" max="0.95" step="0.01" value="0.55"></div>
+      <div class="ctrl-row"><label>noise &#963; <span class="val" id="lgsv">0.28</span></label>
+        <input type="range" id="lgs" min="0.05" max="0.6" step="0.01" value="0.28"></div>
+      <div style="display:flex;gap:8px;margin:10px 0 8px;flex-wrap:wrap">
+        <button class="bbtn" id="lg1" type="button">draw t at this x</button>
+        <button class="bbtn" id="lgsp" type="button">a whole dataset</button>
+        <button class="bbtn" id="lgb" type="button">&#177;2&#963; band</button>
+        <button class="bbtn" id="lgr" type="button">reset</button>
+      </div>
+      <div class="stat" style="margin-bottom:8px"><span class="k">targets drawn</span><span class="v" id="lgn">0</span></div>
+      <div class="warn" id="lgwarn"></div>
+      <p class="caption" style="margin-top:8px">Press <em>draw t at this x</em> twice without moving
+      the slider &#8212; two targets from one input, and the reason <span class="tex" data-tex="\\varepsilon_n"></span> carries an index.</p>
+    </div>
+  </div>`},
+
 {s:"Part IV", t:"What distribution is the target?", html:`
   <span class="actbadge">Predict first</span>
   <div class="actq" style="font-size:28px;margin:12px 0 16px">If <span class="tex" data-tex="t = y(x;\\mathbf{w}) + \\varepsilon"></span> and
@@ -1306,37 +1335,12 @@ const SLIDES = [
       <div class="eq" style="margin:12px 0 0;font-size:23px"><span class="texd" data-tex="p(t_n \\mid x_n, \\mathbf{w}) = \\mathcal{N}\\bigl(t_n \\mid \\mathbf{w}^\\top\\boldsymbol{\\phi}_n,\\ \\sigma^2\\bigr)"></span></div>
     </div>
     <div class="col card accent frag" data-f="0" style="flex:.9">
-      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">Read it out loud</div>
+      <div class="eyebrow" style="margin-bottom:9px;color:var(--accent)">Take note</div>
       <p style="font-size:20.5px;max-width:none">The model no longer predicts a number. It says: for
       this input, targets are <em class="hl">distributed around</em> <span class="tex" data-tex="\\mathbf{w}^\\top\\boldsymbol{\\phi}_n"></span> with spread <span class="tex" data-tex="\\sigma"></span>.</p>
       <hr class="rule">
       <p style="font-size:20.5px;max-width:none">Every point in the dataset now has a probability,
       and that is what we are about to maximise.</p>
-    </div>
-  </div>`},
-
-{s:"Part IV", t:"How a dataset is generated", draw:"lgen", html:`
-  <div class="eyebrow">Live demo &#183; draw targets yourself</div>
-  <h2 style="margin-bottom:10px">The equation, as a picture</h2>
-  <div class="demo">
-    <div class="demo-plot"><svg id="lgsvg" viewBox="0 0 560 330"></svg></div>
-    <div class="demo-ctrl">
-      <div class="eq" style="margin:0 0 10px;font-size:18px"><span class="texd" data-tex="t_n = \\mathbf{w}^\\top\\boldsymbol{\\phi}(x_n) + \\varepsilon_n"></span></div>
-      <div class="eq" style="margin:0 0 16px;font-size:18px"><span class="texd" data-tex="\\varepsilon_n \\sim \\mathcal{N}(0,\\sigma^2)"></span></div>
-      <div class="ctrl-row"><label>input x <span class="val" id="lgxv">0.55</span></label>
-        <input type="range" id="lgx" min="0.05" max="0.95" step="0.01" value="0.55"></div>
-      <div class="ctrl-row"><label>noise &#963; <span class="val" id="lgsv">0.28</span></label>
-        <input type="range" id="lgs" min="0.05" max="0.6" step="0.01" value="0.28"></div>
-      <div style="display:flex;gap:8px;margin:10px 0 8px;flex-wrap:wrap">
-        <button class="bbtn" id="lg1" type="button">draw t at this x</button>
-        <button class="bbtn" id="lgsp" type="button">a whole dataset</button>
-        <button class="bbtn" id="lgb" type="button">&#177;2&#963; band</button>
-        <button class="bbtn" id="lgr" type="button">reset</button>
-      </div>
-      <div class="stat" style="margin-bottom:8px"><span class="k">targets drawn</span><span class="v" id="lgn">0</span></div>
-      <div class="warn" id="lgwarn"></div>
-      <p class="caption" style="margin-top:8px">Press <em>draw t at this x</em> twice without moving
-      the slider &#8212; two targets from one input, and the reason <span class="tex" data-tex="\\varepsilon_n"></span> carries an index.</p>
     </div>
   </div>`},
 
@@ -1605,7 +1609,7 @@ const SLIDES = [
       <p class="caption" style="margin:0 0 12px;max-width:none">Each slider sets one spread; the
       card below computes the &#955; the pair implies.</p>
       <div class="ctrl-row"><label>noise <span style="text-transform:none">&#963;<sub>&#949;</sub></span> <span class="val" id="lvse">0.30</span></label>
-        <input type="range" id="lvsea" min="0.1" max="1.6" step="0.05" value="0.3"></div>
+        <input type="range" id="lvsea" min="0.1" max="2.4" step="0.05" value="0.3"></div>
       <div class="ctrl-row"><label>prior <span style="text-transform:none">&#963;<sub>w</sub></span> <span class="val" id="lvsw">1.20</span></label>
         <input type="range" id="lvswa" min="0.1" max="2.4" step="0.05" value="1.2"></div>
       <div class="card accent" style="margin:12px 0 10px;padding:12px 16px;text-align:center">
@@ -1617,32 +1621,24 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part V", t:"Part V in one slide", html:`
-  <div class="eyebrow">Before we move on</div>
-  <h2 style="margin-bottom:16px">Part V in one slide</h2>
+{s:"Part V", t:"Part V (so far) in one slide", html:`
+  <div class="eyebrow">Before we keep going</div>
+  <h2 style="margin-bottom:16px">Part V (so far) in one slide</h2>
   <div class="row top stretch" style="gap:22px">
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The new ingredient</div><p style="font-size:20px;max-width:none">A <strong>prior</strong> over the weights, <span class="tex" data-tex="p(\\mathbf{w}) = \\mathcal{N}(\\mathbf{0}, \\alpha^{-1}\\mathbf{I})"></span>: a belief, stated before seeing data, that they are probably not large.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The result</div><p style="font-size:20px;max-width:none">Maximising the posterior gives ridge regression. The regulariser is the negative log-prior.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">And <span class="tex" data-tex="\\lambda"></span></div><p style="font-size:20px;max-width:none">Is <span class="tex" data-tex="\\alpha/\\beta = \\sigma_\\varepsilon^2/\\sigma_w^2"></span> &#8212; how noisy you think the data is, against how large you think the weights should be.</p></div>
   </div>`},
 
-{s:"Part V", t:"Questions (Part V)", div:true, html:`
-  <div class="divider" style="align-items:center;text-align:center">
-    <h1 style="font-size:60px">Questions?</h1>
-    <div class="bar" style="margin:18px auto 20px"></div>
-    <p class="lede" style="font-size:20px;margin-bottom:20px;max-width:44ch">About priors, MAP, or the regulariser</p>
-    <div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:176px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div>
-  </div>`},
-
-{s:"Part VI", t:"Part VI", div:true, html:`
+{s:"Part V", t:"Part V", div:true, html:`
   <div class="divider">
-    <div class="part">Part VI</div>
+    <div class="part">Part V &#183; continued</div>
     <h1>Keeping the whole distribution</h1>
     <div class="bar"></div>
     <div class="sub">MAP threw the width away. Here is what it cost.</div>
   </div>`},
 
-{s:"Part VI", t:"The full posterior", html:`
+{s:"Part V", t:"The full posterior", html:`
   <div class="eyebrow">PRML &#167;3.3</div>
   <h2 style="margin-bottom:12px">Do not collapse to a point</h2>
   <div class="row top" style="gap:30px">
@@ -1669,7 +1665,7 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part VI", t:"Posterior predictive", html:`
+{s:"Part V", t:"Posterior predictive", html:`
   <div class="eyebrow">Built from the two rules we started with</div>
   <h2 style="margin-bottom:12px">Predicting without picking a single w</h2>
   <p style="font-size:21px;margin-bottom:8px">We want <span class="tex" data-tex="p(t \\mid x, \\mathcal{D})"></span> &#8212; a prediction at a new input, given
@@ -1687,7 +1683,7 @@ const SLIDES = [
     plausible the data says it is. No single <span class="tex" data-tex="\\mathbf{w}"></span> is ever chosen.</p>
   </div>`},
 
-{s:"Part VI", t:"Averaging over weights", draw:"ens", html:`
+{s:"Part V", t:"Averaging over weights", draw:"ens", html:`
   <div class="eyebrow">The integral, made finite</div>
   <h2 style="margin-bottom:8px">What does &#8220;average over every w&#8221; look like?</h2>
   <div class="demo">
@@ -1705,7 +1701,7 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part VI", t:"Two kinds of uncertainty", html:`
+{s:"Part V", t:"Two kinds of uncertainty", html:`
   <div class="eyebrow">What the answer is made of</div>
   <h2 style="margin-bottom:14px">The variance splits into two parts</h2>
   <p style="font-size:21px;margin-bottom:10px">Doing that integral for our model gives a Gaussian
@@ -1725,7 +1721,7 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part VI", t:"Three estimates, one picture", draw:"bayes", html:`
+{s:"Part V", t:"Three estimates, one picture", draw:"bayes", html:`
   <div class="eyebrow">Side by side</div>
   <h2 style="margin-bottom:12px">MLE, MAP, and the full posterior</h2>
   <div class="demo">
@@ -1744,7 +1740,7 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part VI", t:"Back to the car, properly", html:`
+{s:"Part V", t:"Back to the car, properly", html:`
   <div class="eyebrow">The question we opened with</div>
   <h2 style="margin-bottom:14px">Is $15,000 reasonable?</h2>
   <div class="row top" style="gap:26px">
@@ -1770,7 +1766,7 @@ const SLIDES = [
     Both terms from the earlier slide, now doing the work: <span class="tex" data-tex="\\beta^{-1}"></span> is the noise, <span class="tex" data-tex="\\boldsymbol{\\phi}^\\top\\mathbf{S}_N\\boldsymbol{\\phi}"></span> is what we have not
     yet learned.</p>`},
 
-{s:"Part VI", t:"Why this matters now", html:`
+{s:"Part V", t:"Why this matters now", html:`
   <div class="eyebrow">The same distinction, somewhere you have met it</div>
   <h2 style="margin-bottom:12px">Language models and the two uncertainties</h2>
   <div class="row top" style="gap:30px">
@@ -1794,9 +1790,11 @@ const SLIDES = [
         model answers <em class="hl">just as fluently</em> &#8212; with nothing to signal that it is
         guessing.</p>
       </div>
-      <p class="caption frag" data-f="0" style="margin-top:12px">Ensembles, calibration, retrieval and
-      teaching a model to say &#8220;I do not know&#8221; are all attempts to recover a term our
-      posterior gave us for free on a linear model. It is an open problem at scale.</p>
+      <p class="caption frag" data-f="0" style="margin-top:12px">Ensembles and calibration are attempts
+      to estimate this term. Retrieval and training a model to say &#8220;I do not know&#8221; are
+      workarounds &#8212; the first adds evidence so there is less to be uncertain about, the second
+      teaches the symptom without the measurement. A linear model&#8217;s posterior gave the term
+      exactly; at scale it is an open problem.</p>
     </div>
   </div>`},
 
@@ -1808,8 +1806,8 @@ const SLIDES = [
     <div class="sub">The loss, the predictions, and the ideas to keep.</div>
   </div>`},
 
-{s:"Part VI", t:"Summary", html:`
-  <div class="eyebrow">Today, in one slide</div>
+{s:"Part V", t:"Summary", html:`
+  <div class="eyebrow">Today &#183; the loss</div>
   <h2 style="margin-bottom:12px">Both terms, accounted for</h2>
   <div class="eq" style="margin:4px 0 16px;font-size:31px"><span class="texd" data-tex="\\mathcal{L}(\\mathbf{w}) = \\underbrace{\\tfrac12\\lVert\\mathbf{t}-\\boldsymbol{\\Phi}\\mathbf{w}\\rVert_2^2}_{\\text{likelihood}} + \\underbrace{\\tfrac{\\lambda}{2}\\lVert\\mathbf{w}\\rVert_2^2}_{\\text{prior}}"></span></div>
   <div class="row top" style="gap:26px">
@@ -1834,8 +1832,8 @@ const SLIDES = [
   <p class="figcap frag" data-f="3" style="margin-top:14px;text-align:center">
     Write down how the data was generated, and the loss function follows.</p>`},
 
-{s:"Part VI", t:"Predictions and uncertainty", html:`
-  <div class="eyebrow">Today, in one slide &#183; the predictions</div>
+{s:"Part V", t:"Predictions and uncertainty", html:`
+  <div class="eyebrow">Today &#183; the predictions</div>
   <h2 style="margin-bottom:14px">Predictions arrive as distributions</h2>
   <div class="row top" style="gap:30px">
     <div class="col" style="flex:1.15">
@@ -1862,7 +1860,7 @@ const SLIDES = [
     The width is what turns &#8220;push back on $15,000&#8221; and &#8220;we do not know enough to
     say&#8221; into different answers.</p>`},
 
-{s:"Part VI", t:"Key ideas — the probability", html:`
+{s:"Part V", t:"Key ideas — the probability", html:`
   <div class="eyebrow">Recap &#183; 1 of 2</div>
   <h2 style="margin-bottom:16px">The probability we used</h2>
   <div class="row top stretch" style="gap:22px">
@@ -1886,7 +1884,7 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part VI", t:"Key ideas — what it bought", html:`
+{s:"Part V", t:"Key ideas — what it bought", html:`
   <div class="eyebrow">Recap &#183; 2 of 2</div>
   <h2 style="margin-bottom:16px">What it bought us</h2>
   <div class="row top stretch" style="gap:22px">
@@ -1941,7 +1939,7 @@ const SLIDES = [
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.5, 1.6, 2.1, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.1, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 1.0, 1.2, 2.1, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 1.2, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 0.2, 1.5, 1.2, 1.0, 1.0, 0.6, 0.3];
+const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.5, 1.6, 2.1, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.1, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 2.1, 1.0, 1.2, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 0.2, 1.5, 1.2, 1.0, 1.0, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2851,7 +2849,9 @@ function drawIndep(){
    One 5x3 table of counts, shared by the sum-rule and product-rule slides so the
    two rules are read off the SAME picture. Cell area and tint both carry the
    probability mass, and the margins are printed where they are formed. */
-const JT=[[3,1,1],[4,3,1],[2,5,2],[1,3,4],[2,2,3]];      /* JT[x][y] */
+/* Total 50, every count even: each cell, p(x) and p(y) is then an exact whole
+   percentage, so the printed margins sum to 100 instead of drifting under rounding. */
+const JT=[[4,2,1],[6,4,1],[3,7,2],[1,4,6],[2,2,5]];      /* JT[x][y] */
 const JT_TOT=JT.flat().reduce((a,b)=>a+b,0);
 const jtPx=x=>JT[x].reduce((a,b)=>a+b,0)/JT_TOT;
 const jtPy=y=>JT.reduce((a,col)=>a+col[y],0)/JT_TOT;
@@ -2889,7 +2889,7 @@ function jtGrid(id, mode, hiX){
      + ' fill="'+(mode==='sum'?'var(--accent)':'var(--ink-soft)')+'">'+pct(v)+'</text>';
   }
   s+='<text class="legend" x="'+(bx-4)+'" y="'+(y0-10)+'" fill="'+(mode==='sum'?'var(--accent)':'var(--ink-soft)')+'">p(y)</text>';
-  const byy=y0+NR*chh+52;
+  const byy=y0+NR*chh+58;   /* clear of the x axis legend above it */
   for(let c=0;c<NC;c++){
     const v=jtPx(c), on=(hiX===undefined)||(c===hiX);
     s+='<text class="matn" x="'+(x0+c*cw+(cw-8)/2)+'" y="'+byy+'" text-anchor="middle" style="font-size:16px"'
@@ -2929,8 +2929,9 @@ function drawProdRule(){
   /* exact counts, so the arithmetic on screen is literally true — rounded
      percentages (5% / 24% = 22%) do not divide cleanly and sharp students notice */
   const cnt=JT[PR_X][0], col=JT[PR_X].reduce((x,y)=>x+y,0);
+  const eqs=(cnt*100)%col===0?'=':'&#8776;';   /* honest sign when the % is rounded */
   if(wn) wn.innerHTML='The cell holds <strong>'+cnt+'</strong> of the '+JT_TOT+' counts; its column holds '
-    + '<strong>'+col+'</strong>. So p(y = 0 | x = '+PR_X+') = '+cnt+'/'+col+' = '
+    + '<strong>'+col+'</strong>. So p(y = 0 | x = '+PR_X+') = '+cnt+'/'+col+' '+eqs+' '
     + '<strong>'+pct(cnt/col)+'</strong>. Conditioning is <strong>taking a slice and rescaling it</strong>.';
 }
 
