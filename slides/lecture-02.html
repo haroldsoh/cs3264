@@ -1492,7 +1492,7 @@ const SLIDES = [
   </div>`},
 
 {s:"Part V", t:"Coin flip", draw:"coin", html:`
-  <div class="eyebrow">The smallest possible example</div>
+  <div class="eyebrow">A small example</div>
   <h2 style="margin-bottom:10px">Four coins, and a bet on heads</h2>
   <div class="demo">
     <div class="demo-plot"><svg id="csvg" viewBox="0 0 560 300"></svg></div>
@@ -1532,7 +1532,8 @@ const SLIDES = [
     <div class="col card frag" data-f="3" style="flex:.85">
       <div class="eyebrow" style="margin-bottom:10px">Poor man&#8217;s Bayes</div>
       <p style="font-size:20px;max-width:none">MAP keeps the mode and throws the width away. You get
-      a point estimate that respects the prior, but <strong>no uncertainty</strong>.</p>
+      a point estimate that respects the prior, but <strong>no epistemic uncertainty</strong> &#8212;
+      the noise term remains, the spread over the weights is gone.</p>
       <hr class="rule">
       <p class="caption">Compared with MLE it costs one extra term. Compared with the full posterior
       it answers with a point, not a distribution.</p>
@@ -2409,8 +2410,8 @@ function drawBayes(){
   svg.innerHTML=s;
   document.querySelectorAll('[data-b]').forEach(b=>b.classList.toggle('sel',b.dataset.b===BMODE));
   const wn=document.getElementById('bwarn');
-  if(BMODE==='mle') wn.innerHTML='No prior. With few points the fit is unconstrained between them, and reports no uncertainty.';
-  else if(BMODE==='map') wn.innerHTML='The prior shrinks the weights toward zero, reducing the curvature between points. Still a single line: <strong>no uncertainty</strong>.';
+  if(BMODE==='mle') wn.innerHTML='No prior. With few points the fit is unconstrained between them. One line: the noise term &#946;&#8315;&#185; still gives every prediction a spread, but there is <strong>no epistemic uncertainty</strong> about the line itself.';
+  else if(BMODE==='map') wn.innerHTML='The prior shrinks the weights toward zero, reducing the curvature between points. Still a single line: <strong>no epistemic uncertainty</strong>.';
   else wn.innerHTML='The full posterior. The band is &#177;2 standard deviations &#8212; note it <strong>widens where there is no data</strong>, which is what MAP threw away.';
 }
 

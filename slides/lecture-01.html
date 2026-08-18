@@ -1359,7 +1359,7 @@ def fitPoly(xs, ts, order):
     <div class="row" style="gap:26px">
       <div class="col">
         <h3 style="font-size:20px">So we cannot detect it from training error alone</h3>
-        <p style="font-size:20px">The only honest signal comes from data the model has
+        <p style="font-size:20px">The signal has to come from data the model has
         <em class="hl">never seen</em> &#8212; which is exactly why we held some out.</p>
       </div>
       <div class="col frag" data-f="2">
@@ -1778,7 +1778,7 @@ def fitPoly(xs, ts, order):
         good revision material. <strong>Not permitted in either exam this year.</strong></p>
       </div>
       <p class="caption frag" data-f="2" style="margin-top:11px">
-        Readings are listed per week on the schedule, and are genuinely worth doing
+        Readings are listed per week on the schedule, and are worth doing
         <em>before</em> the lecture.</p>
     </div>
   </div>`},
@@ -2265,7 +2265,7 @@ function drawBowl(){
   document.getElementById('wrr').textContent=wRR.toFixed(2);
   const bw=document.getElementById('bwarn');
   const errML=Math.abs(wML-W_TRUE), errRR=Math.abs(wRR-W_TRUE);
-  if(sl===0) bw.textContent='λ = 0: pure least squares. Noise alone puts it '+errML.toFixed(2)+' away from the true weight.';
+  if(sl===0) bw.textContent='λ = 0: plain least squares. Noise alone puts it '+errML.toFixed(2)+' away from the true weight.';
   else if(errRR<errML*0.55) bw.textContent='Note this: a little shrinkage has moved the estimate CLOSER to the truth than least squares.';
   else if(wRR<W_TRUE*0.55) bw.textContent='Too much penalty — the weight is dragged towards zero and the model underfits.';
   else bw.textContent='The minimum of the total loss sits between the data fit and zero. That is shrinkage.';
@@ -2820,7 +2820,7 @@ function drawHire(){
   for(let k=0;k<R;k++){ const e=hLuck(n,HIRE_SD,1000+k*7919), sc=A.map((a,i)=>a+e[i]);
     const h=argmax(sc); if(h===best) win++; over+=sc[h]-A[h]; }
   const pct=Math.round(100*win/R), avg=(over/R).toFixed(1);
-  if(HIRE_SD===0) wn.innerHTML='With no luck in the score, the exam is perfect — the top scorer <em>is</em> the best. Add some.';
+  if(HIRE_SD===0) wn.innerHTML='With no luck in the score, the exam measures skill exactly — the top scorer <em>is</em> the best. Add some.';
   else wn.innerHTML='Over 400 runs the top scorer is genuinely the best <strong>'+pct+'%</strong> of the time, '
     + 'and their score flatters them by <strong>+'+avg+'</strong> on average. '
     + (pct<50?'Push the number of candidates up and watch it get worse.':'');
