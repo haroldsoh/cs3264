@@ -507,7 +507,7 @@ pre.code.sm{font-size:12.4px;line-height:1.55}
 <body data-theme="paper">
 <div id="stage"><div id="canvas"></div></div>
 <div id="progress"></div><div id="pagenum"></div>
-<div id="hint">← → navigate · O overview · T theme · F fullscreen · B blank · D draw · P timer</div>
+<div id="hint">← → navigate · O overview · T theme · F fullscreen · B blank · D draw · K timer · P print</div>
 <div id="themebar"><span class="lbl">Theme</span>
   <div class="swatch" data-t="paper" style="background:#FBF7EF"><i style="background:#9B2C2C"></i></div>
   <div class="swatch" data-t="academic" style="background:#FAFAF6"><i style="background:#1B4D8F"></i></div>
@@ -2129,6 +2129,10 @@ addEventListener('resize',fit); fit();
 
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
+  /* the browser's own shortcuts are the browser's: Cmd/Ctrl-P prints, Cmd-R reloads,
+     Cmd-T opens a tab. Without this the deck swallowed all of them -- and calling
+     preventDefault on Cmd-P is what stopped the print dialog from ever appearing. */
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
   /* arrows belong to a focused slider, not to navigation */
   const ae=document.activeElement;
   if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)){
@@ -2141,7 +2145,8 @@ addEventListener('keydown',e=>{
   else if(k==='o')toggleOv(); else if(k==='t')cycleTheme();
   else if(k==='b')document.body.classList.toggle('blank');
   else if(k==='d'){e.preventDefault();toggleInk();}
-  else if(k==='p'){e.preventDefault();toggleClock();}
+  else if(k==='p'){e.preventDefault();window.print();}
+  else if(k==='k'){e.preventDefault();toggleClock();}
   else if(k==='c'&&document.body.classList.contains('inking'))clearInk();
   else if(k==='e'&&document.body.classList.contains('inking'))setEraser(!erasing);
   else if(k==='f')document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
