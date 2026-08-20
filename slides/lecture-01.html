@@ -480,6 +480,28 @@ pre.code.sm{font-size:12.4px;line-height:1.55}
 /* a candidate button carries its line's colour via --k */
 .bbtn[style*='--k']{border-color:var(--k);color:var(--k)}
 .bbtn.sel[style*='--k']{background:var(--k);border-color:var(--k);color:var(--bg)}
+
+/* ---------- PRINT: one page per slide ----------
+   The deck is a 1280x720 design canvas that fit() scales to the window. For print we
+   drop that scale, let the slides flow one after another instead of stacking, and set
+   the page to the same 1280x720 -- 13.333in x 7.5in at 96dpi, the standard widescreen
+   slide size -- so a printed page is what the projector shows, at 1:1.
+   Chrome's "Save as PDF" destination turns this into a deck PDF. */
+@media print{
+  @page{ size:13.333in 7.5in; margin:0 }
+  html,body{height:auto;overflow:visible}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;transition:none}
+  #stage{position:static;display:block;transition:none}
+  #canvas{transform:none!important;width:1280px;height:auto;overflow:visible;
+    background:transparent;transition:none}
+  .slide{position:relative;inset:auto;width:1280px;height:720px;overflow:hidden;
+    background:var(--bg);opacity:1!important;visibility:visible!important;
+    transition:none!important;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .frag{opacity:1!important}
+  /* presenter chrome has no business on paper */
+  #progress,#pagenum,#hint,#themebar,#ink,#inkbar,#clock,#overview{display:none!important}
+}
 </style>
 </head>
 <body data-theme="paper">
@@ -2992,6 +3014,30 @@ document.querySelectorAll('.ytwrap').forEach(w=>{
 });
 
 paint();
+
+/* ---------- PRINT: every slide, every fragment, every figure ----------
+   Every slide is in the DOM, but paint() draws only the current slide's figure and
+   reveals only the fragments up to the current step -- so an unprepared print gives
+   one slide and a lot of empty boxes. Before the browser lays out the pages, reveal
+   every fragment and run every registered draw function once. A dark theme is swapped
+   to paper for the duration: black pages are not a kindness to anyone's printer.
+   ?print in the URL prepares the same way at load, which is how the PDFs are made. */
+let PRINT_THEME=null;
+function preparePrint(){
+  PRINT_THEME=document.body.dataset.theme;
+  if(PRINT_THEME==='nocturne') document.body.dataset.theme='paper';
+  document.querySelectorAll('.frag').forEach(e=>e.classList.add('on'));
+  Object.keys(DRAW).forEach(k=>{ try{ DRAW[k](); }catch(err){} });
+}
+function restorePrint(){
+  if(PRINT_THEME) document.body.dataset.theme=PRINT_THEME;
+  document.querySelectorAll('.frag').forEach(e=>e.classList.remove('on'));
+  paint();
+}
+addEventListener('beforeprint',preparePrint);
+addEventListener('afterprint',restorePrint);
+if(/[?&]print/.test(location.search)) preparePrint();
+
 </script>
 </body>
 </html>

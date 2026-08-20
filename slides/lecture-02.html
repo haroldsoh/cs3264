@@ -467,6 +467,28 @@ pre.code.sm{font-size:12.4px;line-height:1.55}
 /* a candidate button carries its line's colour via --k */
 .bbtn[style*='--k']{border-color:var(--k);color:var(--k)}
 .bbtn.sel[style*='--k']{background:var(--k);border-color:var(--k);color:var(--bg)}
+
+/* ---------- PRINT: one page per slide ----------
+   The deck is a 1280x720 design canvas that fit() scales to the window. For print we
+   drop that scale, let the slides flow one after another instead of stacking, and set
+   the page to the same 1280x720 -- 13.333in x 7.5in at 96dpi, the standard widescreen
+   slide size -- so a printed page is what the projector shows, at 1:1.
+   Chrome's "Save as PDF" destination turns this into a deck PDF. */
+@media print{
+  @page{ size:13.333in 7.5in; margin:0 }
+  html,body{height:auto;overflow:visible}
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;transition:none}
+  #stage{position:static;display:block;transition:none}
+  #canvas{transform:none!important;width:1280px;height:auto;overflow:visible;
+    background:transparent;transition:none}
+  .slide{position:relative;inset:auto;width:1280px;height:720px;overflow:hidden;
+    background:var(--bg);opacity:1!important;visibility:visible!important;
+    transition:none!important;break-after:page;page-break-after:always}
+  .slide:last-child{break-after:auto;page-break-after:auto}
+  .frag{opacity:1!important}
+  /* presenter chrome has no business on paper */
+  #progress,#pagenum,#hint,#themebar,#ink,#inkbar,#clock,#overview{display:none!important}
+}
 </style>
 </head>
 <body data-theme="paper">
@@ -1940,7 +1962,7 @@ const SLIDES = [
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 1.1, 0.2, 1.2, 1.6, 1.5, 1.4, 1.7, 1.9, 0.9, 0.9, 0.2, 1.9, 1.6, 1.5, 1.6, 2.1, 1.9, 1.6, 1.1, 1.0, 1.6, 1.4, 1.1, 1.7, 2.1, 0.9, 1.2, 0.2, 1.4, 1.6, 2.1, 2.5, 1.9, 1.5, 1.9, 0.7, 1.2, 0.2, 1.9, 2.1, 1.0, 1.2, 2.6, 2.1, 1.4, 1.5, 0.9, 1.2, 0.2, 1.5, 2.2, 1.9, 1.6, 2.6, 1.9, 1.7, 0.9, 0.2, 2.0, 1.9, 1.9, 1.5, 2.2, 1.5, 1.6, 0.2, 1.5, 1.2, 1.0, 1.0, 0.6, 0.3];
+const EST=[0.6, 1.0, 0.2, 1.1, 1.4, 1.3, 1.2, 1.5, 1.7, 0.8, 0.8, 0.2, 1.7, 1.4, 1.3, 1.4, 1.9, 1.7, 1.4, 1.0, 0.9, 1.4, 1.2, 1.0, 1.5, 1.9, 0.8, 1.1, 0.2, 1.2, 1.4, 1.9, 2.2, 1.7, 1.3, 1.7, 0.7, 1.1, 0.2, 1.7, 1.9, 0.9, 1.1, 2.3, 1.9, 1.2, 1.3, 0.8, 1.1, 0.2, 1.3, 2.0, 1.7, 1.4, 2.3, 1.7, 1.5, 0.8, 0.2, 1.8, 1.7, 1.7, 1.3, 2.0, 1.3, 1.4, 0.2, 1.3, 1.1, 0.9, 0.9, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -3112,6 +3134,30 @@ document.querySelectorAll('.ytwrap').forEach(w=>{
 });
 
 paint();
+
+/* ---------- PRINT: every slide, every fragment, every figure ----------
+   Every slide is in the DOM, but paint() draws only the current slide's figure and
+   reveals only the fragments up to the current step -- so an unprepared print gives
+   one slide and a lot of empty boxes. Before the browser lays out the pages, reveal
+   every fragment and run every registered draw function once. A dark theme is swapped
+   to paper for the duration: black pages are not a kindness to anyone's printer.
+   ?print in the URL prepares the same way at load, which is how the PDFs are made. */
+let PRINT_THEME=null;
+function preparePrint(){
+  PRINT_THEME=document.body.dataset.theme;
+  if(PRINT_THEME==='nocturne') document.body.dataset.theme='paper';
+  document.querySelectorAll('.frag').forEach(e=>e.classList.add('on'));
+  Object.keys(DRAW).forEach(k=>{ try{ DRAW[k](); }catch(err){} });
+}
+function restorePrint(){
+  if(PRINT_THEME) document.body.dataset.theme=PRINT_THEME;
+  document.querySelectorAll('.frag').forEach(e=>e.classList.remove('on'));
+  paint();
+}
+addEventListener('beforeprint',preparePrint);
+addEventListener('afterprint',restorePrint);
+if(/[?&]print/.test(location.search)) preparePrint();
+
 </script>
 </body>
 </html>
