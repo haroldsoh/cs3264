@@ -1823,11 +1823,13 @@ const SLIDES = [
       </div>
     </div>
     <div class="col frag" data-f="0">
-      <p style="font-size:21px">Why not just use <span class="tex" data-tex="t \\in \\{1,2,3\\}"></span>? Because that would say class 2 sits
-      &#8220;between&#8221; classes 1 and 3, and that class 3 is twice as far from class 1 as class 2 is.</p>
+      <p style="font-size:20.5px">Each component is an <strong>indicator</strong>:
+      <span class="tex" data-tex="t_k = \\mathbb{I}\\bigl[\\text{the class is } k\\bigr]"></span>, so exactly one entry is 1 and the rest are 0.</p>
       <hr class="rule">
-      <p style="font-size:21px">The same objection as the start of the lecture: <strong>labels
-      are names, not quantities.</strong></p>
+      <p style="font-size:20.5px">Written this way the target has the same shape as the answer. The
+      model returns <span class="tex" data-tex="K"></span> probabilities, one per class, and the likelihood of a single car is
+      <span class="tex" data-tex="\\textstyle\\prod_{k=1}^{K} y_k^{\\,t_k}"></span> &#8212; the exponents switch every factor off except the true class&#8217;s, exactly as
+      <span class="tex" data-tex="\\mu^{t}(1-\\mu)^{1-t}"></span> did with two.</p>
     </div>
   </div>
   <p class="caption frag" data-f="1" style="margin-top:14px">We now need <span class="tex" data-tex="K"></span> scores instead of one, so
@@ -2055,33 +2057,38 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
     </div>
   </div>`},
 
-{s:"Part IV", t:"Negative sampling", draw:"neg", html:`
-  <div class="eyebrow">When exact was too slow &#183; word2vec, 2013 &#183; 1 of 2</div>
-  <h2 style="margin-bottom:10px">Approximate: skip the denominator entirely</h2>
+{s:"Part IV", t:"Sampled softmax", draw:"neg", html:`
+  <div class="eyebrow">When exact is too slow &#183; sample the sum &#183; 1 of 2</div>
+  <h2 style="margin-bottom:10px">Estimate the denominator from a sample</h2>
   <div class="demo">
-    <div class="demo-plot"><svg id="negsvg" viewBox="0 0 560 230"></svg></div>
+    <div class="demo-plot">
+      <svg id="negsvg" viewBox="0 0 560 230"></svg>
+      <p style="font-size:18.5px;max-width:none;margin-top:10px">Differentiating <span class="tex" data-tex="\\ln Z"></span> brings back
+      <strong>every class</strong>, weighted by how probable the model thinks it is:</p>
+      <div class="eq" style="margin:8px 0 0;font-size:20px"><span class="texd" data-tex="\\nabla \\ln Z = \\sum_{j=1}^{K} y_j\\, \\nabla a_j"></span></div>
+    </div>
     <div class="demo-ctrl">
-      <p style="font-size:19.5px;max-width:none">A vocabulary near a million, on CPUs, one update
-      per word &#8212; even streaming all of <span class="tex" data-tex="Z"></span> was too slow. So change the question: score the word
-      that occurred against <span class="tex" data-tex="k"></span> <strong>sampled impostors</strong>, as <span class="tex" data-tex="k{+}1"></span> little sigmoid problems,
-      and update only those rows. <span class="tex" data-tex="Z"></span> is never computed at all.</p>
-      <div class="eq" style="margin:10px 0 4px;font-size:19px"><span class="texd" data-tex="\\mathcal{L} = -\\ln \\sigma(a_{\\mathrm{true}}) - \\textstyle\\sum_{j=1}^{k} \\ln \\sigma(-a_j)"></span></div>
-      <p class="caption" style="margin:0">push the true word&#8217;s score up, push each
-      impostor&#8217;s down &#8212; a binary cross-entropy per row.</p>
-      <div class="ctrl-row" style="margin-top:10px"><label>impostors k <span class="val" id="negkv">5</span></label>
+      <p style="font-size:18.5px;max-width:none"><strong>Estimate that average from a sample.</strong>
+      Draw <span class="tex" data-tex="k"></span> classes from a proposal <span class="tex" data-tex="q"></span>, keep the true class, and take the softmax over that short
+      list of <span class="tex" data-tex="k{+}1"></span> alone:</p>
+      <div class="eq" style="margin:6px 0 3px;font-size:17.5px"><span class="texd" data-tex="\\hat{\\mathcal{L}} = -a'_t + \\ln\\!\\sum_{j \\in \\mathcal{C}} \\exp(a'_j), \\qquad a'_j = a_j - \\ln k\\,q_j, \\qquad \\mathcal{C} = \\{t\\} \\cup \\mathcal{S}"></span></div>
+      <p class="caption" style="margin:0">The correction <span class="tex" data-tex="-\\ln k q_j"></span> lets the small sum stand in for the big
+      one; with <span class="tex" data-tex="q"></span> uniform it is the same for every candidate and cancels &#8212; the true class
+      against <span class="tex" data-tex="k"></span> random others.</p>
+      <div class="ctrl-row" style="margin-top:9px;margin-bottom:10px"><label>sampled classes k <span class="val" id="negkv">5</span></label>
         <input type="range" id="negk" min="2" max="15" step="1" value="5"></div>
-      <div style="display:flex;gap:8px;margin:8px 0">
+      <div style="display:flex;gap:8px;margin:0 0 8px">
         <button class="bbtn" id="negb" type="button">resample</button>
       </div>
       <div class="stat" style="margin-bottom:8px"><span id="negst" style="font-size:15.5px;font-family:var(--font-math)">&#8212;</span></div>
-      <p class="caption">Strictly a different objective &#8212; but the embeddings it learns are what
-      made word2vec famous. Sampling lives on where <span class="tex" data-tex="K"></span> is larger still, such as recommender
-      catalogues.</p>
+      <p class="caption">Exact in the limit: as the sample grows the estimate approaches the full
+      softmax; for small <span class="tex" data-tex="k"></span> it is biased. A <strong>training-time</strong> economy &#8212; a
+      normalised answer at test time still needs all <span class="tex" data-tex="K"></span> scores.</p>
     </div>
   </div>`},
 
 {s:"Part IV", t:"A tree instead of a table", draw:"tree", html:`
-  <div class="eyebrow">When exact was too slow &#183; word2vec, 2013 &#183; 2 of 2</div>
+  <div class="eyebrow">When exact is too slow &#183; restructure the choice &#183; 2 of 2</div>
   <h2 style="margin-bottom:10px">Represent the choice differently: a tree of small questions</h2>
   <div class="demo">
     <div class="demo-plot"><svg id="trsvg" viewBox="0 0 560 300"></svg></div>
@@ -2120,7 +2127,7 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
   <h2 style="margin-bottom:16px">At modern scale, in one slide</h2>
   <div class="row top stretch" style="gap:22px">
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The head</div><p style="font-size:20px;max-width:none">A language model&#8217;s last layer is softmax classification with the vocabulary as the classes, trained on the cross-entropy derived today.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The cost</div><p style="font-size:20px;max-width:none">The normaliser <span class="tex" data-tex="Z"></span> touches every class &#8212; that is where the compute and the logit memory come from. Tying, chunking and approximating are ways of paying for it.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The cost</div><p style="font-size:20px;max-width:none">The normaliser <span class="tex" data-tex="Z"></span> touches every class &#8212; that is where the compute and the logit memory come from. Tying, streaming, sampling and trees are four ways of paying less.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Temperature</div><p style="font-size:20px;max-width:none">Rescales the scores before the softmax &#8212; the <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert"></span> dial with a new name. Small T is the argmax; large T is a shrug.</p></div>
   </div>`},
 
@@ -2200,7 +2207,7 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 0.2, 1.0, 1.2, 1.5, 0.9, 0.2, 1.4, 1.4, 0.9, 1.1, 1.0, 1.0, 1.3, 1.9, 1.2, 0.8, 0.2, 1.2, 2.2, 1.8, 1.1, 1.5, 1.2, 1.9, 1.8, 1.4, 1.7, 1.1, 0.7, 1.1, 0.2, 1.4, 1.4, 2.1, 1.5, 1.5, 1.3, 1.5, 1.1, 1.7, 1.7, 0.8, 1.1, 0.2, 1.7, 1.4, 1.5, 1.4, 2.0, 1.7, 1.3, 1.7, 1.3, 1.9, 0.9, 0.2, 1.3, 0.9, 1.4, 1.7, 1.3, 1.9, 1.3, 0.7, 1.1, 0.2, 1.4, 1.4, 1.2, 1.4, 1.7, 1.5, 0.7, 0.2, 1.5, 1.5, 1.7, 1.2, 1.3, 1.2, 1.5, 1.1, 0.7, 1.2, 1.1, 0.6, 0.3];
+const EST=[0.6, 0.2, 1.0, 1.2, 1.5, 0.9, 0.2, 1.4, 1.4, 0.9, 1.1, 1.0, 1.0, 1.3, 1.9, 1.2, 0.8, 0.2, 1.2, 2.2, 1.8, 1.1, 1.5, 1.2, 1.9, 1.8, 1.4, 1.7, 1.1, 0.7, 1.1, 0.2, 1.4, 1.4, 2.1, 1.5, 1.5, 1.3, 1.5, 1.1, 1.7, 1.7, 0.8, 1.1, 0.2, 1.7, 1.4, 1.5, 1.4, 2.0, 1.7, 1.3, 1.7, 1.3, 1.9, 0.9, 0.2, 1.3, 0.9, 1.4, 1.7, 1.3, 1.9, 1.3, 0.7, 1.1, 0.2, 1.4, 1.4, 1.2, 1.4, 1.7, 1.5, 0.7, 0.2, 1.5, 1.5, 1.7, 1.2, 1.3, 1.5, 1.5, 1.1, 0.7, 1.2, 1.1, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -3438,7 +3445,7 @@ function drawNeg(){
   const r=lcg(NEG_SEED);
   const neg=new Set();
   while(neg.size<NEG_K){ const i=Math.floor(r()*nc*nr); if(i!==TRUE) neg.add(i); }
-  let g='<text class="legend" x="'+x0+'" y="16">the vocabulary &#8212; one cell per word, one row of W each</text>';
+  let g='<text class="legend" x="'+x0+'" y="16">the K classes &#8212; one cell each, one row of W each</text>';
   for(let i=0;i<nc*nr;i++){
     const x=x0+(i%nc)*cw, y=y0+Math.floor(i/nc)*chh;
     if(i===TRUE)
@@ -3450,12 +3457,14 @@ function drawNeg(){
   }
   const ly=y0+nr*chh+22;
   g+='<rect x="'+x0+'" y="'+(ly-11)+'" width="13" height="13" rx="3" fill="var(--s1)"/>'
-   + '<text class="legend" x="'+(x0+20)+'" y="'+ly+'">the word that occurred</text>'
-   + '<rect x="'+(x0+195)+'" y="'+(ly-11)+'" width="13" height="13" rx="3" fill="none" stroke="var(--s2)" stroke-width="2"/>'
-   + '<text class="legend" x="'+(x0+215)+'" y="'+ly+'">'+NEG_K+' sampled impostors</text>';
+   + '<text class="legend" x="'+(x0+20)+'" y="'+ly+'">the true class</text>'
+   + '<rect x="'+(x0+175)+'" y="'+(ly-11)+'" width="13" height="13" rx="3" fill="none" stroke="var(--s2)" stroke-width="2"/>'
+   + '<text class="legend" x="'+(x0+195)+'" y="'+ly+'">'+NEG_K+' sampled classes &#8212; the candidate set</text>';
   svg.innerHTML=g;
   const st=document.getElementById('negst');
   if(st) st.innerHTML='rows of W touched this update: <strong>'+(NEG_K+1)+'</strong> of '+(nc*nr);
+  const c=document.getElementById('negcap');
+  if(c) c.innerHTML='candidate set: the true class + '+NEG_K+' sampled';
   const kv=document.getElementById('negkv'); if(kv) kv.textContent=NEG_K;
 }
 
