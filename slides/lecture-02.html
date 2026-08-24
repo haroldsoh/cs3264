@@ -783,9 +783,9 @@ const SLIDES = [
         <button class="bbtn sel" data-dist="pmf" type="button">discrete &#183; pmf</button>
         <button class="bbtn" data-dist="pdf" type="button">continuous &#183; pdf</button>
       </div>
-      <div class="ctrl-row" id="distsrow" style="display:none"><label>spread <span style="text-transform:none">&#963;</span> <span class="val" id="distsv">1.00</span></label>
+      <div class="ctrl-row" id="distsrow" style="visibility:hidden"><label>spread <span style="text-transform:none">&#963;</span> <span class="val" id="distsv">1.00</span></label>
         <input type="range" id="dists" min="0.25" max="1.6" step="0.05" value="1"></div>
-      <div class="warn" id="distwarn"></div>
+      <div class="warn" id="distwarn" style="min-height:86px"></div>
       <hr class="rule">
       <div class="dgrid" style="grid-template-columns:auto auto;gap:8px 14px">
         <div style="font-size:19px">discrete</div><div class="eq" style="margin:0"><span class="texd" data-tex="\\textstyle\\sum_k P(X=k) = 1"></span></div>
@@ -1071,7 +1071,7 @@ const SLIDES = [
     <div class="demo-plot"><svg id="likfig-wrap" viewBox="0 0 470 300"><g id="likfig"></g></svg></div>
     <div class="demo-ctrl">
       <div class="eq" style="margin:0 0 14px;font-size:21px"><span class="texd" data-tex="L(\\mu) = p(\\mathcal{D} \\mid \\mu)"></span></div>
-      <div class="ctrl-row"><label>mean &#956; <span class="val" id="likmuv">-1.60</span></label>
+      <div class="ctrl-row"><label>mean <span style="text-transform:none">&#956;</span> <span class="val" id="likmuv">-1.60</span></label>
         <input type="range" id="likmu" min="-3" max="3" step="0.02" value="-1.6"></div>
       <div class="readout">
         <div class="stat test"><div class="k">likelihood</div><div class="v" id="likval" style="font-size:20px">&#8212;</div></div>
@@ -1142,9 +1142,9 @@ const SLIDES = [
     <div class="demo-plot"><svg id="gssvg" viewBox="0 0 560 300"></svg></div>
     <div class="demo-ctrl">
       <div class="eq" style="margin:0 0 12px;font-size:21px"><span class="texd" data-tex="t_n \\sim \\mathcal{N}(\\mu, \\sigma^2)"></span></div>
-      <div class="ctrl-row"><label>&#956; <span class="val" id="gsmuv">2.0</span></label>
+      <div class="ctrl-row"><label><span style="text-transform:none">&#956;</span> <span class="val" id="gsmuv">2.0</span></label>
         <input type="range" id="gsmu" min="-1" max="5" step="0.1" value="2"></div>
-      <div class="ctrl-row"><label>&#963; <span class="val" id="gssv">1.0</span></label>
+      <div class="ctrl-row"><label><span style="text-transform:none">&#963;</span> <span class="val" id="gssv">1.0</span></label>
         <input type="range" id="gss" min="0.3" max="2.2" step="0.1" value="1"></div>
       <div style="display:flex;gap:8px;margin:10px 0 8px;flex-wrap:wrap">
         <button class="bbtn" id="gs1" type="button">draw 1</button>
@@ -1318,7 +1318,7 @@ const SLIDES = [
       <div class="eq" style="margin:0 0 16px;font-size:18px"><span class="texd" data-tex="\\varepsilon_n \\sim \\mathcal{N}(0,\\sigma^2)"></span></div>
       <div class="ctrl-row"><label>input x <span class="val" id="lgxv">0.55</span></label>
         <input type="range" id="lgx" min="0.05" max="0.95" step="0.01" value="0.55"></div>
-      <div class="ctrl-row"><label>noise &#963; <span class="val" id="lgsv">0.28</span></label>
+      <div class="ctrl-row"><label>noise <span style="text-transform:none">&#963;</span> <span class="val" id="lgsv">0.28</span></label>
         <input type="range" id="lgs" min="0.05" max="0.6" step="0.01" value="0.28"></div>
       <div style="display:flex;gap:8px;margin:10px 0 8px;flex-wrap:wrap">
         <button class="bbtn" id="lg1" type="button">draw t at this x</button>
@@ -1640,7 +1640,7 @@ const SLIDES = [
         <div class="eq" style="margin:0 0 4px;font-size:19px"><span class="texd" data-tex="\\lambda = \\sigma_\\varepsilon^2 / \\sigma_w^2"></span></div>
         <div class="v" id="lvlam" style="font-size:30px">0.063</div>
       </div>
-      <div class="warn" id="lvwarn"></div>
+      <div class="warn" id="lvwarn" style="min-height:66px"></div>
     </div>
   </div>`},
 
@@ -1967,7 +1967,7 @@ const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
 const canvas=document.getElementById('canvas');
-let idx=0,fragStep=0;
+let idx=0,fragStep=0,drawnIdx=-1;
 canvas.innerHTML=SLIDES.map((s,i)=>`<section class="slide" data-i="${i}">${s.html}</section>`).join('');
 const slides=[...canvas.querySelectorAll('.slide')];
 
@@ -1981,7 +1981,11 @@ function paint(){
   document.getElementById('progress').style.width=((idx+1)/SLIDES.length*100)+'%';
   document.getElementById('pagenum').textContent=`${idx+1} / ${SLIDES.length}`;
   if(t0!==null) updClock();
-  const d=SLIDES[idx].draw; if(d&&DRAW[d]) requestAnimationFrame(DRAW[d]);
+  /* Draw only on slide ENTRY. Redrawing on every fragment step replaces the whole
+     svg, and the re-rasterised text visibly flickers ("the graph font changes when
+     the box appears"). Demo listeners call their draw functions directly. */
+  const d=SLIDES[idx].draw; if(d&&DRAW[d]&&drawnIdx!==idx) requestAnimationFrame(DRAW[d]);
+  drawnIdx=idx;
   /* play video on the slide we just entered, pause and rewind everywhere else */
   slides.forEach((s,i)=>s.querySelectorAll('video').forEach(v=>{
     if(i===idx){ v.playbackRate=+(v.dataset.rate||1); v.play().catch(()=>{}); }
@@ -2754,7 +2758,7 @@ function drawDist(){
   }
   svg.innerHTML=g;
   document.querySelectorAll('[data-dist]').forEach(b=>b.classList.toggle('sel',b.dataset.dist===DIST_MODE));
-  const row=document.getElementById('distsrow'); if(row) row.style.display = DIST_MODE==='pdf' ? '' : 'none';
+  const row=document.getElementById('distsrow'); if(row) row.style.visibility = DIST_MODE==='pdf' ? 'visible' : 'hidden';
   const sv=document.getElementById('distsv'); if(sv) sv.textContent=DIST_S.toFixed(2);
   const wn=document.getElementById('distwarn');
   if(!wn) return;
