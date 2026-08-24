@@ -3435,9 +3435,9 @@ function drawTreeCost(){
   if(vv) vv.innerHTML='V = 2<sup>'+HIER_E+'</sup> &#8776; '+fmt(V);
 }
 
-/* ---------------------------------------------------------------- DEMO 20 — negative sampling
-   The update touches the true word and k sampled impostors; every other row of W
-   sits still. Resampling redraws the impostors. */
+/* ---------------------------------------------------------------- DEMO 20 — sampled softmax
+   The candidate set is the true class plus k sampled ones; the update touches those
+   rows of W and no others. Resampling redraws the sample. */
 let NEG_K=5, NEG_SEED=97;
 function drawNeg(){
   const svg=document.getElementById('negsvg'); if(!svg) return;
