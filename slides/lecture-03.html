@@ -539,6 +539,33 @@ const SLIDES = [
   <div style="position:absolute;right:88px;bottom:74px"><div style="text-align:center"><img src="media/pollev-qr.svg" alt="pollev.com/haroldsoh QR" style="width:158px;display:block;margin:0 auto 11px"><div style="font-family:var(--font-sans);font-size:19px;letter-spacing:.02em;color:var(--ink)"><strong>pollev.com/haroldsoh</strong></div></div></div>
   <p class="cred" style="margin-top:16px;text-align:left">Slides made with the help of Claude.</p>`},
 
+{s:"", t:"Housekeeping", html:`
+  <div class="eyebrow">Before we start</div>
+  <h2 style="margin-bottom:16px">Tutorials begin tomorrow</h2>
+  <div class="row top stretch" style="gap:20px">
+    <div class="col card">
+      <div class="eyebrow" style="margin-bottom:8px">Tutorial 1 &#183; tomorrow</div>
+      <p style="font-size:19.5px;max-width:none"><strong>Wednesday 26 August, BIZ2-0302.</strong>
+      Probability, linear algebra and the pseudoinverse.</p>
+      <p class="caption" style="margin-top:8px">T06 9am &#183; T01 10am &#183; T02 11am &#183;
+      T04 1pm &#183; T05 2pm. Attendance is taken &#8212; 10% of the grade, and two misses are free.</p>
+    </div>
+    <div class="col card frag" data-f="0">
+      <div class="eyebrow" style="margin-bottom:8px">Where the sheet is</div>
+      <p style="font-size:19.5px;max-width:none">On the course website, in the schedule table:
+      <strong>haroldsoh.com/cs3264</strong> &#8212; the Week 3 row, <em>tutorial 1 sheet</em>.</p>
+      <p class="caption" style="margin-top:8px">Slides and recordings live in the same table, one row
+      per week.</p>
+    </div>
+    <div class="col card accent frag" data-f="1">
+      <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">Tutorial 2 is up as well</div>
+      <p style="font-size:19.5px;max-width:none">Log-odds and multi-class, for <strong>Wednesday
+      2 September</strong> &#8212; today&#8217;s material, so you can read it alongside the lecture.</p>
+      <p class="caption" style="margin-top:8px">Sheets go up a week ahead all semester. Bring
+      attempts, not blank paper.</p>
+    </div>
+  </div>`},
+
 {s:"Recap", t:"Recap", div:true, html:`
   <div class="divider">
     <div class="part">Recap</div>
@@ -2101,7 +2128,8 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
     <h1 style="font-size:60px">Tutorial is tomorrow</h1>
     <div class="bar" style="margin:22px auto 20px"></div>
     <p class="lede" style="font-size:21px;max-width:46ch;margin:0 auto 10px">
-      Wednesday 26 August, BIZ2-0302. Probability, linear algebra and the pseudoinverse.</p>
+      Wednesday 26 August, BIZ2-0302. Probability, linear algebra and the pseudoinverse &#8212;
+      the sheet is on <strong>haroldsoh.com/cs3264</strong>, and Tutorial 2 is already up there too.</p>
     <p class="lede" style="font-size:21px;max-width:46ch;margin:0 auto">
       Next lecture: <strong>Classification II</strong> &#8212; Naive Bayes, and what happens when you
       model the inputs too.<br>Reading: PRML &#167;4.2.</p>
@@ -2118,7 +2146,7 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 0.2, 1.0, 1.2, 1.5, 0.9, 0.2, 1.4, 1.4, 0.9, 1.1, 1.0, 1.0, 1.3, 1.9, 1.2, 0.8, 0.2, 1.2, 2.2, 1.8, 1.1, 1.5, 1.2, 1.9, 1.8, 1.4, 1.7, 1.1, 0.7, 1.1, 0.2, 1.4, 1.4, 2.1, 1.5, 1.5, 1.3, 1.5, 1.1, 1.7, 1.7, 0.8, 1.1, 0.2, 1.7, 1.4, 1.5, 1.4, 2.0, 1.7, 1.3, 1.7, 1.3, 1.9, 0.9, 0.2, 1.3, 0.9, 1.4, 1.7, 1.3, 1.9, 1.3, 0.7, 1.1, 0.2, 1.4, 1.5, 1.4, 1.2, 1.4, 1.7, 1.5, 0.7, 1.5, 1.5, 1.7, 1.2, 1.1, 0.6, 0.3];
+const EST=[0.6, 1.0, 0.2, 1.0, 1.2, 1.5, 0.9, 0.2, 1.4, 1.4, 0.9, 1.1, 1.0, 1.0, 1.3, 1.9, 1.2, 0.8, 0.2, 1.2, 2.2, 1.8, 1.1, 1.5, 1.2, 1.9, 1.8, 1.4, 1.7, 1.1, 0.7, 1.1, 0.2, 1.4, 1.4, 2.1, 1.5, 1.5, 1.3, 1.5, 1.1, 1.7, 1.7, 0.8, 1.1, 0.2, 1.7, 1.4, 1.5, 1.4, 2.0, 1.7, 1.3, 1.7, 1.3, 1.9, 0.9, 0.2, 1.3, 0.9, 1.4, 1.7, 1.3, 1.9, 1.3, 0.7, 1.1, 0.2, 1.4, 1.5, 1.4, 1.2, 1.4, 1.7, 1.5, 0.7, 1.5, 1.5, 1.7, 1.2, 1.1, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
