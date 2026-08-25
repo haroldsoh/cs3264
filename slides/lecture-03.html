@@ -810,9 +810,9 @@ const SLIDES = [
       dashed line to a car is its <strong>residual</strong>; the height is that residual squared.
       The ex-Grab car sits 3.5 past the target, so it is charged &#8776; 12.5; a car near the boundary
       is charged &#8776; 0.4.</p>
-      <p class="caption frag" data-f="2" style="margin-top:6px">The pull each car exerts on the fit
-      is the <strong>slope where it stands</strong>:</p>
-      <div class="warn frag" data-f="2" id="whypull" style="min-height:66px;margin-top:6px"></div>
+      <p class="caption frag" data-f="2" style="margin-top:6px">Each car pushes the fit along its
+      own features, <span class="tex" data-tex="\\nabla_{\\mathbf{w}}\\mathcal{L}_n = 2(y_n - t_n)\\,\\mathbf{x}_n"></span>. The <strong>slope where it stands</strong> is the <strong>size</strong> of
+      that push &#8212; and the far car&#8217;s slope is several times the borderline car&#8217;s.</p>
     </div>
   </div>`},
 
@@ -884,7 +884,7 @@ const SLIDES = [
     <div class="demo-ctrl">
       <p style="font-size:19px;max-width:none;margin-bottom:4px">Last week&#8217;s linear part, noise
       dropped, zero bias, centred features:</p>
-      <div class="eq" style="margin:0 0 10px;font-size:20px"><span class="texd" data-tex="s(\\mathbf{x}) = \\mathbf{w}^\\top\\mathbf{x} = w_1 x_1 + w_2 x_2"></span></div>
+      <div class="eq" style="margin:0 0 10px;font-size:20px"><span class="texd" data-tex="y(\\mathbf{x}) = \\mathbf{w}^\\top\\mathbf{x} = w_1 x_1 + w_2 x_2"></span></div>
       <div class="ctrl-row" style="display:flex;flex-wrap:nowrap;gap:7px;margin-bottom:14px">
         <button class="bbtn" data-hps="1" type="button" style="padding:6px 11px;white-space:nowrap">1 &#183; features</button>
         <button class="bbtn" data-hps="2" type="button" style="padding:6px 11px;white-space:nowrap">2 &#183; the score</button>
@@ -910,7 +910,7 @@ const SLIDES = [
     <div class="demo-ctrl">
       <p style="font-size:19px;max-width:none;margin-bottom:4px">The same picture from straight
       above, with the bias put back:</p>
-      <div class="eq" style="margin:0 0 12px;font-size:20px"><span class="texd" data-tex="s(\\mathbf{x}) = w_0 + w_1 x_1 + w_2 x_2"></span></div>
+      <div class="eq" style="margin:0 0 12px;font-size:20px"><span class="texd" data-tex="y(\\mathbf{x}) = w_0 + w_1 x_1 + w_2 x_2"></span></div>
       <div class="ctrl-row" style="margin-bottom:12px"><label>w&#8321; &#183; age <span class="val" id="geow1v">0.7</span></label>
         <input type="range" id="geow1" min="-1.5" max="1.5" step="0.1" value="0.7"></div>
       <div class="ctrl-row" style="margin-bottom:12px"><label>w&#8322; &#183; mileage <span class="val" id="geow2v">&#8722;0.9</span></label>
@@ -927,12 +927,12 @@ const SLIDES = [
   <div class="row top" style="gap:26px">
     <div class="col card">
       <div class="eyebrow" style="margin-bottom:8px">What the score gives</div>
-      <p style="font-size:20px;max-width:none">A <strong>side</strong>. <span class="tex" data-tex="s > 0"></span> says sells, <span class="tex" data-tex="s < 0"></span> says it
+      <p style="font-size:20px;max-width:none">A <strong>side</strong>. <span class="tex" data-tex="y > 0"></span> says sells, <span class="tex" data-tex="y < 0"></span> says it
       does not, and the line says where the answer changes.</p>
     </div>
     <div class="col card frag" data-f="0">
       <div class="eyebrow" style="margin-bottom:8px">What it will not give</div>
-      <p style="font-size:20px;max-width:none">A car at <span class="tex" data-tex="s = 0.1"></span> and a car at <span class="tex" data-tex="s = 7"></span> both read
+      <p style="font-size:20px;max-width:none">A car at <span class="tex" data-tex="y = 0.1"></span> and a car at <span class="tex" data-tex="y = 7"></span> both read
       &#8220;sells&#8221;. One sits on the line, the other far past it. <strong>How sure?</strong></p>
     </div>
   </div>
@@ -1013,7 +1013,10 @@ const SLIDES = [
         <input type="range" id="sigw" min="0.2" max="4" step="0.1" value="1"></div>
     </div>
     <div class="demo-plot">
-      <div class="eq" style="margin:0 0 8px;font-size:22px;text-align:center"><span class="texd" data-tex="\\sigma(a) = \\frac{1}{1+e^{-a}}"></span></div>
+      <div class="eq" style="margin:0 0 2px;font-size:22px;text-align:center"><span class="texd" data-tex="\\sigma(a) = \\frac{1}{1+e^{-a}}"></span></div>
+      <p class="caption" style="text-align:center;margin:0 0 6px">the <strong>sigmoid</strong>, also
+      called the <strong>logistic function</strong> &#8212; which is where <em>logistic</em>
+      regression gets its name</p>
       <svg id="ssvg" viewBox="0 0 560 250"></svg>
       <p class="caption" style="margin-top:8px">Grey dashed is the raw linear score,
       which runs off the top and bottom; the sigmoid keeps the <strong>ordering</strong> and folds the
@@ -1537,14 +1540,10 @@ const SLIDES = [
       <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert"></span> moves every <span class="tex" data-tex="y_n"></span> closer to its label &#8212; so every term of the loss
       <span class="tex" data-tex="-\\bigl[t_n\\ln y_n + (1-t_n)\\ln(1-y_n)\\bigr]"></span> keeps falling, and the whole loss slides towards 0 <strong>without ever reaching a
       minimum</strong>:</p>
-      <p class="caption frag" data-f="0" style="margin:8px 0 0">The data does not move: the picture
-      on the left holds the feature fixed, so growing <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert"></span> steepens the curve towards a step. Measured
-      in score units <span class="tex" data-tex="\\mathbf{w}^\\top\\mathbf{x}"></span> instead, the curve would be the one fixed sigmoid and the <em>points</em>
-      would fly outward &#8212; the same fact, read on a different axis.</p>
       <svg id="seplsvg" viewBox="0 0 420 150" style="width:100%;display:block;margin:4px 0 0"></svg>
       <p class="caption" style="margin:0 0 6px">Computed from the ten points on the left; the dots
       mark the two curves drawn there.</p>
-      <div class="card accent frag" data-f="1" style="margin-top:10px;padding:12px 16px;text-align:center">
+      <div class="card accent frag" data-f="0" style="margin-top:10px;padding:12px 16px;text-align:center">
         <p style="font-size:21px;max-width:none"><strong>How do we fix this?</strong></p>
       </div>
     </div>
@@ -1869,12 +1868,14 @@ const SLIDES = [
   </div>`},
 
 {s:"Part IV", t:"Softmax", draw:"sm", html:`
-  <div class="eyebrow">Live demo &#183; move the scores</div>
-  <h2 style="margin-bottom:10px">From K scores to K probabilities</h2>
+  <div class="eyebrow">Missing piece 2, again &#183; live demo</div>
+  <h2 style="margin-bottom:10px">The <em>softmax</em>: from K scores to K probabilities</h2>
   <div class="demo">
     <div class="demo-plot"><svg id="msvg" viewBox="0 0 560 250"></svg></div>
     <div class="demo-ctrl">
-      <div class="eq" style="margin:0 0 12px;font-size:21px"><span class="texd" data-tex="y_k = \\frac{\\exp(a_k)}{\\sum_{j} \\exp(a_j)}"></span></div>
+      <div class="eq" style="margin:0 0 4px;font-size:21px"><span class="texd" data-tex="y_k = \\frac{\\exp(a_k)}{\\sum_{j} \\exp(a_j)}"></span></div>
+      <p class="caption" style="text-align:center;margin:0 0 12px">the <strong>softmax</strong> &#8212;
+      a smooth stand-in for taking the maximum: let one score pull away and its share goes to 1</p>
       <div class="ctrl-row"><label>sells fast <span class="val" id="smz0">2.0</span></label>
         <input type="range" id="sm0" min="-3" max="5" step="0.1" value="2"></div>
       <div class="ctrl-row"><label>sells slowly <span class="val" id="smz1">1.0</span></label>
@@ -2663,7 +2664,7 @@ function drawGeo(){
       const px=Math.max(xa+78, Math.min(xb-78, X(v[0]*0.86))), py=Math.max(yt+16, Math.min(yb-10, Y(v[1]*0.86)));
       return '<text class="legend" x="'+px.toFixed(1)+'" y="'+py.toFixed(1)+'" text-anchor="middle" fill="'+col
         + '" paint-order="stroke" stroke="var(--bg)" stroke-width="3.5" stroke-linejoin="round">'+txt+'</text>'; };
-    g+=put(hi,'s &gt; 0 &#183; predict sells','var(--s1)')+put(lo,'s &lt; 0 &#183; predict not','var(--s2)');
+    g+=put(hi,'y &gt; 0 &#183; predict sells','var(--s1)')+put(lo,'y &lt; 0 &#183; predict not','var(--s2)');
   }
   g+='<text class="legend" x="'+((xa+xb)/2)+'" y="'+(H-4)+'" text-anchor="middle">age, from the fleet average</text>'
    + '<text class="legend" x="'+(-(yt+yb)/2)+'" y="13" text-anchor="middle" transform="rotate(-90)">mileage, from the average</text>';
@@ -2703,7 +2704,7 @@ function drawSep(){
    + '<text class="legend" x="27" y="22">&#8214;w&#8214; = 8, later in training</text></g>';
   /* the ten cars do not move: the feature is fixed and w is what grows */
   g+='<text class="tick" x="'+A.X(0)+'" y="'+(A.Y(1.15)+12)+'" text-anchor="middle">the boundary stays at x = 0</text>';
-  g+=axlab(A,W,H,'the feature x &#8212; the data never moves','&#963;(w x) &#8212; predicted probability');
+  g+=axlab(A,W,H,'the feature x','&#963;(w x) &#8212; predicted probability');
   svg.innerHTML=g;
   /* the same fact in the loss: cross-entropy of these ten points as ||w|| scales the
      SAME boundary. Every point is on its correct side, so every term falls and the
@@ -2980,10 +2981,6 @@ function drawWhy(){
   g+=arrow(sB,L(sB),sB-0.45,L(sB-0.45),'var(--s4)',2.2);         /* barely any, and the other way */
   g+='<text class="legend" x="'+(A.X(sF+1.9))+'" y="'+A.Y(9.5)+'" fill="var(--accent)">the pull &#8733; the slope</text>';
   svg.innerHTML=g;
-  const st=document.getElementById('whypull');
-  if(st) st.innerHTML='slope at the ex-Grab car <strong>'+Math.abs(2*(sF+1)).toFixed(1)
-    + '</strong> against <strong>'+Math.abs(2*(sB+1)).toFixed(1)+'</strong> at the borderline car &#8212; '
-    + (Math.abs((sF+1)/(sB+1))).toFixed(1)+'&#215; the pull, and in the opposite direction';
 }
 
 /* ---------------------------------------------------------------- the categorical distribution
@@ -2991,7 +2988,7 @@ function drawWhy(){
    is the constraint, not a control. */
 function drawCat(){
   const svg=document.getElementById('catsvg'); if(!svg) return;
-  const W=300,H=230, mu=[0.55,0.30,0.15], lab=['sells fast','sells slowly','does not'];
+  const W=300,H=230, mu=[0.55,0.30,0.15], lab=['class 1','class 2','class 3'];
   const ml=46, mb=52, mt=18, Y=p=>H-mb-(H-mt-mb)*p;
   let g='<line class="axis" x1="'+ml+'" y1="'+(H-mb)+'" x2="'+(W-10)+'" y2="'+(H-mb)+'"/>'
        +'<line class="axis" x1="'+ml+'" y1="'+mt+'" x2="'+ml+'" y2="'+(H-mb)+'"/>';
@@ -3001,10 +2998,9 @@ function drawCat(){
     const x=ml+18+i*76;
     g+='<rect x="'+x+'" y="'+Y(p)+'" width="52" height="'+Math.max(1,H-mb-Y(p))+'" rx="2" fill="var(--s'+(i===0?1:i===1?3:2)+')" opacity=".85"/>'
      + '<text class="matn" style="font-size:13.5px" x="'+(x+26)+'" y="'+(Y(p)-7)+'" text-anchor="middle">'+p.toFixed(2)+'</text>'
-     + '<text class="tick" style="font-size:10.5px" x="'+(x+26)+'" y="'+(H-mb+15)+'" text-anchor="middle">'+lab[i].split(' ')[0]+'</text>'
-     + '<text class="tick" style="font-size:10.5px" x="'+(x+26)+'" y="'+(H-mb+31)+'" text-anchor="middle">'+(lab[i].split(' ')[1]||'')+'</text>';
+     + '<text class="tick" x="'+(x+26)+'" y="'+(H-mb+17)+'" text-anchor="middle">'+lab[i]+'</text>';
   });
-  g+='<text class="legend" x="'+((ml+W-10)/2)+'" y="'+(H-6)+'" text-anchor="middle">three bars, and they must sum to one</text>';
+  g+='<text class="legend" x="'+((ml+W-10)/2)+'" y="'+(H-14)+'" text-anchor="middle">three bars, and they must sum to one</text>';
   svg.innerHTML=g;
 }
 
@@ -3984,12 +3980,12 @@ function drawHp2(){
     if(Math.abs(h0)>0.35){
       g+=ln(P(c0[0],c0[1],0),P(c0[0],c0[1],h0),'var(--ink-soft)',1.2,' stroke-dasharray="4 3"');
       const mid=P(c0[0],c0[1],h0/2);
-      g+='<text class="matn" style="font-size:14px" x="'+(mid[0]-9)+'" y="'+(mid[1]+4)+'" text-anchor="end"'+halo+'>s</text>';
+      g+='<text class="matn" style="font-size:14px" x="'+(mid[0]-9)+'" y="'+(mid[1]+4)+'" text-anchor="end"'+halo+'>y</text>';
     }
     /* name the surface, above whichever corner rides highest */
     let top=SQ[0]; SQ.forEach(v=>{ if(sc(v)>sc(top)) top=v; });
     const tp=P(top[0],top[1],sc(top));
-    g+='<text class="tick" x="'+tp[0].toFixed(1)+'" y="'+(tp[1]-11).toFixed(1)+'" text-anchor="middle"'+halo+'>s = w&#7488;x</text>';
+    g+='<text class="tick" x="'+tp[0].toFixed(1)+'" y="'+(tp[1]-11).toFixed(1)+'" text-anchor="middle"'+halo+'>y = w&#7488;x</text>';
   }
 
   /* ---- where the plane crosses zero: the boundary, and w at right angles to it ---- */
@@ -4044,7 +4040,7 @@ function drawHp2(){
     : st===1
     ? 'Two features, each measured from the fleet average and put on a common scale. No line yet &#8212; nothing has been fitted.'
     : st===2
-    ? 'Every car gets its score, s = w&#7488;x. The score is linear, so the scores lie on a <strong>plane</strong> tilted in the direction of w &#8212; positive above the ground, negative below.'
+    ? 'Every car gets its score, y = w&#7488;x. The score is linear, so the scores lie on a <strong>plane</strong> tilted in the direction of w &#8212; positive above the ground, negative below.'
     : 'The plane meets the ground along one line: every x on it has <strong>w&#7488;x = 0</strong>. A dot product of zero <em>is</em> perpendicular &#8212; so w stands at right angles to the boundary, always.';
 }
 
