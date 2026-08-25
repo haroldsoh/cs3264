@@ -793,9 +793,10 @@ const SLIDES = [
   <h2 style="margin-bottom:14px">Squared error punishes being &#8220;too correct&#8221;</h2>
   <div class="row top" style="gap:30px">
     <div class="col" style="flex:1.05">
-      <p style="font-size:20.5px">An ex-Grab car sits far on the correct side, so its linear score
-      comes out around <span class="tex" data-tex="-4.6"></span> when its target is <span class="tex" data-tex="t=-1"></span>. Squared error charges that car</p>
-      <div class="eq" style="margin:12px 0;font-size:23px"><span class="texd" data-tex="(-4.6 - (-1))^2 \\approx 13"></span></div>
+      <p style="font-size:20.5px">Under the boundary fitted <em>before</em> they arrived, an ex-Grab
+      car sits far on the correct side: its linear score comes out around <span class="tex" data-tex="-4.5"></span> when its target is
+      <span class="tex" data-tex="t=-1"></span>. Squared error charges that car</p>
+      <div class="eq" style="margin:12px 0;font-size:23px"><span class="texd" data-tex="(-4.5 - (-1))^2 \\approx 12.5"></span></div>
       <p style="font-size:20.5px">for being &#8220;too correct&#8221;. The only way to reduce the
       charge is to tilt the boundary until that score comes back towards <span class="tex" data-tex="-1"></span> &#8212; and the tilt is
       paid for by the cars near the boundary, the ones that actually matter.</p>
@@ -805,11 +806,13 @@ const SLIDES = [
       <p class="caption frag" data-f="0" style="margin-top:8px"><strong>Reading the figure:</strong>
       the curve is one car&#8217;s squared loss against its linear score; zero loss sits exactly at
       the target <span class="tex" data-tex="-1"></span>.</p>
-      <p class="caption frag" data-f="1" style="margin-top:6px">The ex-Grab car sits far up the
-      curve (loss &#8776; 13); a car near the boundary sits at the bottom (&#8776; 0.2).</p>
+      <p class="caption frag" data-f="1" style="margin-top:6px">The gap along the axis from the
+      dashed line to a car is its <strong>residual</strong>; the height is that residual squared.
+      The ex-Grab car sits 3.5 past the target, so it is charged &#8776; 12.5; a car near the boundary
+      is charged &#8776; 0.4.</p>
       <p class="caption frag" data-f="2" style="margin-top:6px">The pull each car exerts on the fit
-      is the <strong>slope where it stands</strong> &#8212; so the far car outpulls everyone, and
-      the boundary moves to serve a car that was already right.</p>
+      is the <strong>slope where it stands</strong>:</p>
+      <div class="warn frag" data-f="2" id="whypull" style="min-height:66px;margin-top:6px"></div>
     </div>
   </div>`},
 
@@ -895,9 +898,7 @@ const SLIDES = [
       <div class="warn" id="hp2warn" style="min-height:72px"></div>
       <p class="frag" data-f="0" style="font-size:18px;max-width:none;margin-top:10px">Scale both
       weights up and the plane tilts more steeply, but crosses zero along the <strong>same</strong>
-      line: the boundary follows the <strong>direction</strong> of <span class="tex" data-tex="\\mathbf{w}"></span>, not its size. Put the bias back
-      and the plane slides up or down &#8212; the crossing leaves the centre, still perpendicular
-      to <span class="tex" data-tex="\\mathbf{w}"></span>.</p>
+      line: the boundary follows the <strong>direction</strong> of <span class="tex" data-tex="\\mathbf{w}"></span>, not its size.</p>
     </div>
   </div>`},
 
@@ -917,9 +918,6 @@ const SLIDES = [
       <div class="ctrl-row" style="margin-bottom:10px"><label>bias w&#8320; <span class="val" id="geobv">0.0</span></label>
         <input type="range" id="geob" min="-2.5" max="2.5" step="0.1" value="0"></div>
       <div class="warn" id="geowarn" style="min-height:72px"></div>
-      <p class="frag" data-f="0" style="font-size:18.5px;max-width:none;margin-top:10px">In <span class="tex" data-tex="d"></span>
-      features the boundary is flat and <span class="tex" data-tex="(d{-}1)"></span>-dimensional &#8212; a <strong>hyperplane</strong>. Nothing
-      about the argument changes there; only the picture runs out.</p>
     </div>
   </div>`},
 
@@ -935,8 +933,7 @@ const SLIDES = [
     <div class="col card frag" data-f="0">
       <div class="eyebrow" style="margin-bottom:8px">What it will not give</div>
       <p style="font-size:20px;max-width:none">A car at <span class="tex" data-tex="s = 0.1"></span> and a car at <span class="tex" data-tex="s = 7"></span> both read
-      &#8220;sells&#8221;. One sits on the line, the other far past it. <strong>How sure?</strong>
-      The sign cannot say.</p>
+      &#8220;sells&#8221;. One sits on the line, the other far past it. <strong>How sure?</strong></p>
     </div>
   </div>
   <div class="card accent frag" data-f="1" style="margin-top:18px;padding:14px 18px">
@@ -1115,8 +1112,8 @@ const SLIDES = [
   <h2 style="margin-bottom:16px">The pieces, in one slide</h2>
   <div class="row top stretch" style="gap:22px">
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The story</div><p style="font-size:20px;max-width:none">Features &#8594; score &#8594; probability &#8594; one coin flip. The flip is the only random step, and it is the label &#8212; last week&#8217;s story with a coin where the noise was.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Bernoulli + sigmoid</div><p style="font-size:20px;max-width:none">The coin is a Bernoulli, <span class="tex" data-tex="\\mu^t(1-\\mu)^{1-t}"></span>; the sigmoid turns the unbounded score into its bias without disturbing the ordering.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Why that squashing</div><p style="font-size:20px;max-width:none">It makes <span class="tex" data-tex="\\mathbf{w}^\\top\\mathbf{x}"></span> the log-odds. The boundary is still a straight line.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Bernoulli + sigmoid</div><p style="font-size:20px;max-width:none">The coin is a Bernoulli, <span class="tex" data-tex="\\mu^t(1-\\mu)^{1-t}"></span>; the sigmoid turns the unbounded score into the parameter <span class="tex" data-tex="\mu"></span> without disturbing the ordering.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Why that squashing</div><p style="font-size:20px;max-width:none">It makes <span class="tex" data-tex="\\mathbf{w}^\\top\\mathbf{x}"></span> the log-odds. The boundary is still a straight line. More in Tutorial 2.</p></div>
   </div>`},
 
 {s:"Part I", t:"Questions (Part I)", div:true, html:`
@@ -1141,8 +1138,8 @@ const SLIDES = [
   <div class="dgrid" style="grid-template-columns:auto auto minmax(0,330px)">
     <div style="font-size:20px"><strong>Data</strong></div><div class="eq" style="margin:0"><span class="tex" data-tex="\\mathcal{D} = \\{(\\mathbf{x}_n,t_n)\\},\\ t_n \\in \\{0,1\\}"></span></div>
     <div class="dnote">labels, not numbers</div>
-    <div class="frag" data-f="0" style="font-size:20px"><strong>Probability</strong></div><div class="eq frag" data-f="0" style="margin:0"><span class="tex" data-tex="y = \\sigma(\\mathbf{w}^\\top\\mathbf{x})"></span></div>
-    <div class="dnote frag" data-f="0">the coin&#8217;s bias <span class="tex" data-tex="\\mu(\\mathbf{x})"></span> &#8212; the deterministic part of the story</div>
+    <div class="frag" data-f="0" style="font-size:20px"><strong>Function</strong></div><div class="eq frag" data-f="0" style="margin:0"><span class="tex" data-tex="y = \\sigma(\\mathbf{w}^\\top\\mathbf{x})"></span></div>
+    <div class="dnote frag" data-f="0">the parameter <span class="tex" data-tex="\\mu(\\mathbf{x})"></span> &#8212; the deterministic part of the story</div>
     <div class="frag" data-f="1" style="font-size:20px"><strong>Likelihood</strong></div><div class="eq frag" data-f="1" style="margin:0"><span class="tex" data-tex="p(t \\mid \\mathbf{x},\\mathbf{w}) = \\mathrm{Bern}\\bigl(t \\mid \\sigma(\\mathbf{w}^\\top\\mathbf{x})\\bigr)"></span></div>
     <div class="dnote frag" data-f="1">Bernoulli, with <span class="tex" data-tex="y"></span> as its parameter</div>
     <div class="frag" data-f="2" style="font-size:20px"><strong>Prior</strong></div><div class="eq frag" data-f="2" style="margin:0"><span class="tex" data-tex="p(\\mathbf{w}) = \\mathcal{N}(\\mathbf{w} \\mid \\mathbf{0}, \\alpha^{-1}\\mathbf{I})"></span></div>
@@ -1186,7 +1183,7 @@ const SLIDES = [
     <p class="caption" style="margin-top:10px;text-align:center"><strong>Binary cross-entropy.</strong>
     Note the minus sign covers the whole bracket.</p>
   </div>
-  <p class="figcap frag" data-f="3" style="margin-top:14px;text-align:center">
+  <p class="figcap frag" data-f="2" style="margin-top:14px;text-align:center">
     The negative log of the Bernoulli likelihood &#8212; the same route that produced squared error last week.</p>`},
 
 {s:"Part II", t:"What the loss looks like", draw:"bce", html:`
@@ -1209,23 +1206,28 @@ const SLIDES = [
 {s:"Part II", t:"MAP", html:`
   <div class="eyebrow">Step 3 &#8212; and the prior</div>
   <h2 style="margin-bottom:14px">Add the prior, get the regulariser</h2>
-  <p style="font-size:21px;margin-bottom:12px">Exactly last week's move. Maximising the posterior means
-  minimising the sum of two negative logs:</p>
-  <div class="eq" style="margin:12px 0 16px;font-size:25px"><span class="texd" data-tex="\\mathcal{L}(\\mathbf{w}) = \\underbrace{-\\sum_{n}\\bigl[t_n\\ln y_n + (1-t_n)\\ln(1-y_n)\\bigr]}_{\\text{cross-entropy}} \\;+\\; \\underbrace{\\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert_2^2}_{\\text{from the prior}}"></span></div>
+  <p style="font-size:20px;margin-bottom:10px">Exactly last week&#8217;s move: maximising the posterior
+  is minimising the sum of two negative logs. Take the prior a line at a time.</p>
+  <div class="dgrid" style="grid-template-columns:max-content minmax(0,1fr);gap:7px 18px;margin-bottom:10px">
+    <div style="font-size:19px;align-self:center">the prior, unchanged from last week</div>
+    <div class="eq" style="margin:0;font-size:19px;text-align:left"><span class="texd" data-tex="p(\\mathbf{w}) = \\mathcal{N}(\\mathbf{w} \\mid \\mathbf{0},\\ \\alpha^{-1}\\mathbf{I})"></span></div>
+    <div class="frag" data-f="0" style="font-size:19px;align-self:center">write it out</div>
+    <div class="eq frag" data-f="0" style="margin:0;font-size:19px;text-align:left"><span class="texd" data-tex="p(\\mathbf{w}) = \\left(\\tfrac{\\alpha}{2\\pi}\\right)^{\\!D/2} \\exp\\!\\left(-\\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert^2\\right)"></span></div>
+    <div class="frag" data-f="1" style="font-size:19px;align-self:center">its negative log</div>
+    <div class="eq frag" data-f="1" style="margin:0;font-size:19px;text-align:left"><span class="texd" data-tex="-\\ln p(\\mathbf{w}) = \\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert^2 + \\text{const}"></span></div>
+  </div>
+  <p class="caption frag" data-f="1" style="margin:0 0 10px">The constant does not depend on <span class="tex" data-tex="\\mathbf{w}"></span>, so it
+  cannot change where the minimum sits &#8212; drop it and add what is left to the cross-entropy:</p>
+  <div class="eq frag" data-f="2" style="margin:6px 0 14px;font-size:23px"><span class="texd" data-tex="\\mathcal{L}(\\mathbf{w}) = \\underbrace{-\\sum_{n}\\bigl[t_n\\ln y_n + (1-t_n)\\ln(1-y_n)\\bigr]}_{\\text{cross-entropy}} \\;+\\; \\underbrace{\\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert_2^2}_{\\text{from the prior}}"></span></div>
   <div class="row top" style="gap:26px">
-    <div class="col card frag" data-f="0">
-      <div class="eyebrow" style="margin-bottom:8px">The first term</div>
-      <p style="font-size:20px;max-width:none">is the cross-entropy we just derived &#8212; the
-      negative log-likelihood of the Bernoulli.</p>
-    </div>
-    <div class="col card frag" data-f="1">
-      <div class="eyebrow" style="margin-bottom:8px">The second</div>
-      <p style="font-size:20px;max-width:none">is the same <span class="tex" data-tex="\\ell_2"></span> penalty as ridge regression, from the
+    <div class="col card frag" data-f="3">
+      <div class="eyebrow" style="margin-bottom:8px">The second term</div>
+      <p style="font-size:19.5px;max-width:none">is the same <span class="tex" data-tex="\\ell_2"></span> penalty as ridge regression, out of the
       same zero-mean Gaussian prior.</p>
     </div>
-    <div class="col card accent frag" data-f="2">
+    <div class="col card accent frag" data-f="3">
       <div class="eyebrow" style="margin-bottom:8px;color:var(--accent)">Worth noticing</div>
-      <p style="font-size:20px;max-width:none">The <em>likelihood</em> changed. The <em>prior</em> did not
+      <p style="font-size:19.5px;max-width:none">The <em>likelihood</em> changed. The <em>prior</em> did not
       &#8212; so the regulariser is identical.</p>
     </div>
   </div>`},
@@ -1288,10 +1290,7 @@ const SLIDES = [
     <div class="col card"><div class="eyebrow" style="margin-bottom:6px">A</div><p style="font-size:20px;max-width:none"><strong>Below &#189;</strong> &#8212; buy more freely.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:6px">B</div><p style="font-size:20px;max-width:none"><strong>At &#189;</strong> &#8212; the mistakes roughly balance.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:6px">C</div><p style="font-size:20px;max-width:none"><strong>Above &#189;</strong> &#8212; buy only when quite sure.</p></div>
-  </div>
-  <p class="caption frag" data-f="0" style="margin-top:16px;text-align:center">Commit to one &#8212;
-  and to a rough number. The model&#8217;s probability is about to meet the dealer&#8217;s
-  ledger.</p>`},
+  </div>`},
 
 {s:"Part II", t:"The cost of a cut", draw:"cost", html:`
   <div class="eyebrow">PRML &#167;1.5 &#183; decision theory, in three lines</div>
@@ -1308,9 +1307,10 @@ const SLIDES = [
       </div>
       <p class="caption frag" data-f="2" style="margin-top:10px">The cut is the <strong>cost
       ratio</strong> &#8212; no new fitting, just arithmetic on the model&#8217;s probability. On
-      the right, the model&#8217;s expected cost bottoms out exactly at that ratio. The faint curve
-      is the realised cost on the sixty cars &#8212; jerked around by single listings; with data
-      this small, the derivation is the sturdier guide.</p>
+      the right, the model&#8217;s expected cost bottoms out exactly at that ratio. The faint
+      curves are the realised cost &#8212; the sixty cars, and seven resamples of them. Each one
+      puts its minimum somewhere different: with data this small the derivation is the sturdier
+      guide.</p>
     </div>
     <div class="col frag" data-f="2" style="flex:1.05">
       <div class="fig"><svg id="cstsvg" viewBox="0 0 560 290"></svg></div>
@@ -1371,20 +1371,24 @@ const SLIDES = [
 {s:"Part III", t:"Deriving the gradient", html:`
   <div class="eyebrow">Step 4 &#8212; differentiate</div>
   <h2 style="margin-bottom:14px">Deriving the gradient</h2>
-  <div class="dgrid" style="grid-template-columns:auto auto minmax(0,300px)">
-    <div style="font-size:20px">one fact first</div><div class="eq" style="margin:0"><span class="tex" data-tex="\\sigma'(a) = \\sigma(a)\\bigl(1-\\sigma(a)\\bigr)"></span></div>
-    <div class="dnote">the sigmoid&#8217;s derivative &#8212; two lines to verify at home</div>
-    <div class="frag" data-f="0" style="font-size:20px">so</div><div class="eq frag" data-f="0" style="margin:0"><span class="tex" data-tex="\\nabla_{\\mathbf{w}} \\ln y_n = (1-y_n)\\,\\mathbf{x}_n"></span></div>
-    <div class="dnote frag" data-f="0">chain rule; the <span class="tex" data-tex="y_n"></span> in <span class="tex" data-tex="y_n'/y_n"></span> cancels</div>
-    <div class="frag" data-f="1" style="font-size:20px">and</div><div class="eq frag" data-f="1" style="margin:0"><span class="tex" data-tex="\\nabla_{\\mathbf{w}} \\ln (1-y_n) = -\\,y_n\\,\\mathbf{x}_n"></span></div>
-    <div class="dnote frag" data-f="1">same steps, opposite sign</div>
-    <div class="frag" data-f="2" style="font-size:20px">assemble</div><div class="eq frag" data-f="2" style="margin:0"><span class="tex" data-tex="\\nabla_{\\mathbf{w}}\\mathcal{L} = -\\sum_n \\bigl[t_n(1-y_n) - (1-t_n)\\,y_n\\bigr]\\mathbf{x}_n"></span></div>
-    <div class="dnote frag" data-f="2">the <span class="tex" data-tex="t_n y_n"></span> terms cancel</div>
+  <div class="dgrid" style="grid-template-columns:auto auto minmax(0,270px);gap:8px 14px">
+    <div style="font-size:19px">the model</div><div class="eq" style="margin:0;font-size:19px"><span class="tex" data-tex="y_n = \\sigma(\\mathbf{w}^\\top\\mathbf{x}_n)"></span></div>
+    <div class="dnote">the score, squashed</div>
+    <div style="font-size:19px">the loss</div><div class="eq" style="margin:0;font-size:19px"><span class="tex" data-tex="\\mathcal{L} = -\\sum_n \\bigl[t_n\\ln y_n + (1-t_n)\\ln(1-y_n)\\bigr]"></span></div>
+    <div class="dnote">what we are differentiating</div>
+    <div class="frag" data-f="0" style="font-size:19px">one fact</div><div class="eq frag" data-f="0" style="margin:0;font-size:19px"><span class="tex" data-tex="\\sigma'(a) = \\sigma(a)\\bigl(1-\\sigma(a)\\bigr)"></span></div>
+    <div class="dnote frag" data-f="0">the sigmoid&#8217;s derivative &#8212; two lines to verify at home</div>
+    <div class="frag" data-f="1" style="font-size:19px">so</div><div class="eq frag" data-f="1" style="margin:0;font-size:19px"><span class="tex" data-tex="\\nabla_{\\mathbf{w}} \\ln y_n = (1-y_n)\\,\\mathbf{x}_n"></span></div>
+    <div class="dnote frag" data-f="1">chain rule; the <span class="tex" data-tex="y_n"></span> in <span class="tex" data-tex="y_n'/y_n"></span> cancels</div>
+    <div class="frag" data-f="2" style="font-size:19px">and</div><div class="eq frag" data-f="2" style="margin:0;font-size:19px"><span class="tex" data-tex="\\nabla_{\\mathbf{w}} \\ln (1-y_n) = -\\,y_n\\,\\mathbf{x}_n"></span></div>
+    <div class="dnote frag" data-f="2">same steps, opposite sign</div>
+    <div class="frag" data-f="3" style="font-size:19px">assemble</div><div class="eq frag" data-f="3" style="margin:0;font-size:19px"><span class="tex" data-tex="\\nabla_{\\mathbf{w}}\\mathcal{L} = -\\sum_n \\bigl[t_n(1-y_n) - (1-t_n)\\,y_n\\bigr]\\mathbf{x}_n"></span></div>
+    <div class="dnote frag" data-f="3">the <span class="tex" data-tex="t_n y_n"></span> terms cancel</div>
   </div>
-  <div class="card accent frag" data-f="3" style="margin-top:16px;padding:14px 22px">
-    <div class="eq" style="margin:0;font-size:26px"><span class="texd" data-tex="\\nabla_{\\mathbf{w}}\\,\\mathcal{L} = \\sum_{n=1}^{N} \\bigl(y_n - t_n\\bigr)\\,\\mathbf{x}_n"></span></div>
-    <p class="caption" style="margin-top:8px;text-align:center">All the sigmoid&#8217;s curvature
-    collapses out of the gradient. This is what the sigmoid&#8211;cross-entropy pairing buys.</p>
+  <div class="card accent frag" data-f="4" style="margin-top:12px;padding:12px 20px">
+    <div class="eq" style="margin:0;font-size:24px"><span class="texd" data-tex="\\nabla_{\\mathbf{w}}\\,\\mathcal{L} = \\sum_{n=1}^{N} \\bigl(y_n - t_n\\bigr)\\,\\mathbf{x}_n"></span></div>
+    <p class="caption" style="margin-top:6px;text-align:center">All the sigmoid&#8217;s curvature
+    collapses out of the gradient &#8212; what the sigmoid&#8211;cross-entropy pairing buys.</p>
   </div>`},
 
 {s:"Part III", t:"No closed form", html:`
@@ -1452,6 +1456,9 @@ const SLIDES = [
       <p style="font-size:20px">&#8212; error times feature, the expression we just derived, with
       <span class="tex" data-tex="y_n"></span> hardened to 0 or 1. Misclassified points move the boundary; correct ones leave it
       alone.</p>
+      <p class="caption" style="margin-top:10px">Many texts, PRML among them, write the same rule
+      with <span class="tex" data-tex="\\mathrm{sign}(\\mathbf{w}^\\top\\mathbf{x})"></span> and targets in <span class="tex" data-tex="\\{-1,+1\\}"></span>, updating by <span class="tex" data-tex="\\mathbf{w} \\leftarrow \\mathbf{w} + \\eta\\, t_n \\mathbf{x}_n"></span> on the mistakes. Same algorithm, the other label
+      convention &#8212; the one flagged at the start of the lecture.</p>
     </div>
     <div class="col">
       <div class="card">
@@ -1530,10 +1537,14 @@ const SLIDES = [
       <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert"></span> moves every <span class="tex" data-tex="y_n"></span> closer to its label &#8212; so every term of the loss
       <span class="tex" data-tex="-\\bigl[t_n\\ln y_n + (1-t_n)\\ln(1-y_n)\\bigr]"></span> keeps falling, and the whole loss slides towards 0 <strong>without ever reaching a
       minimum</strong>:</p>
+      <p class="caption frag" data-f="0" style="margin:8px 0 0">The data does not move: the picture
+      on the left holds the feature fixed, so growing <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert"></span> steepens the curve towards a step. Measured
+      in score units <span class="tex" data-tex="\\mathbf{w}^\\top\\mathbf{x}"></span> instead, the curve would be the one fixed sigmoid and the <em>points</em>
+      would fly outward &#8212; the same fact, read on a different axis.</p>
       <svg id="seplsvg" viewBox="0 0 420 150" style="width:100%;display:block;margin:4px 0 0"></svg>
       <p class="caption" style="margin:0 0 6px">Computed from the ten points on the left; the dots
       mark the two curves drawn there.</p>
-      <div class="card accent frag" data-f="0" style="margin-top:10px;padding:12px 16px;text-align:center">
+      <div class="card accent frag" data-f="1" style="margin-top:10px;padding:12px 16px;text-align:center">
         <p style="font-size:21px;max-width:none"><strong>How do we fix this?</strong></p>
       </div>
     </div>
@@ -1618,8 +1629,8 @@ const SLIDES = [
   <div class="eyebrow">Where we are on the ladder</div>
   <h2 style="margin-bottom:16px">Two rungs climbed, one to go</h2>
   <div class="row top stretch" style="gap:20px">
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">MLE &#10003;</div><p style="font-size:19.5px;max-width:none">Cross-entropy is its negative log; fitted by walking downhill &#8212; and on separated data it runs away.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">MAP &#10003;</div><p style="font-size:19.5px;max-width:none">The prior adds <span class="tex" data-tex="\\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert^2"></span> to the loss and <span class="tex" data-tex="\\alpha\\mathbf{w}"></span> to the gradient &#8212; the regulariser, and the fix for the runaway.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">MLE <span style="color:var(--s4)">&#10003;</span></div><p style="font-size:19.5px;max-width:none">Cross-entropy is its negative log; fitted by walking downhill &#8212; and on separated data it runs away.</p></div>
+    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">MAP <span style="color:var(--s4)">&#10003;</span></div><p style="font-size:19.5px;max-width:none">The prior adds <span class="tex" data-tex="\\tfrac{\\alpha}{2}\\lVert\\mathbf{w}\\rVert^2"></span> to the loss and <span class="tex" data-tex="\\alpha\\mathbf{w}"></span> to the gradient &#8212; the regulariser, and the fix for the runaway.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Bayesian &#8212; next</div><p style="font-size:19.5px;max-width:none">Both rungs still hand back <strong>one</strong> <span class="tex" data-tex="\\mathbf{w}"></span>. Keeping the whole posterior is the third rung, and it starts now.</p></div>
   </div>`},
 
@@ -1835,6 +1846,28 @@ const SLIDES = [
   <p class="caption frag" data-f="1" style="margin-top:14px">We now need <span class="tex" data-tex="K"></span> scores instead of one, so
   <span class="tex" data-tex="\\mathbf{w}"></span> becomes a matrix: one weight vector per class.</p>`},
 
+{s:"Part IV", t:"The categorical distribution", draw:"cat", html:`
+  <div class="eyebrow">Missing piece 1, again &#183; a distribution that produces one of K labels</div>
+  <h2 style="margin-bottom:12px">A die instead of a coin</h2>
+  <div class="row top" style="gap:30px">
+    <div class="col" style="flex:1.15">
+      <p style="font-size:20.5px">One roll, <span class="tex" data-tex="K"></span> faces, and one number per face. The whole distribution
+      is a vector <span class="tex" data-tex="\\boldsymbol{\\mu} = (\\mu_1,\\dots,\\mu_K)"></span> that must be non-negative and <strong>sum to one</strong>:</p>
+      <div class="eq" style="margin:14px 0 10px;font-size:24px"><span class="texd" data-tex="p(\\mathbf{t} \\mid \\boldsymbol{\\mu}) = \\prod_{k=1}^{K} \\mu_k^{\\,t_k}, \\qquad \\sum_{k=1}^{K}\\mu_k = 1"></span></div>
+      <p style="font-size:20px">With <span class="tex" data-tex="\\mathbf{t}"></span> one-hot, every exponent is 0 except the true class&#8217;s,
+      whose exponent is 1 &#8212; so the product collapses to <span class="tex" data-tex="\\mu_{\\text{true}}"></span>. The exponents are switches, exactly
+      as they were for the coin.</p>
+      <p class="frag" data-f="1" style="font-size:20px;margin-top:10px"><strong>Check it at <span class="tex" data-tex="K=2"></span>:</strong>
+      write <span class="tex" data-tex="\\mu_1 = \\mu"></span> and <span class="tex" data-tex="\\mu_2 = 1-\\mu"></span>, and the formula becomes <span class="tex" data-tex="\\mu^{t_1}(1-\\mu)^{t_2}"></span> &#8212; the Bernoulli, unchanged.</p>
+    </div>
+    <div class="col">
+      <div class="fig"><svg id="catsvg" viewBox="0 0 300 230"></svg></div>
+      <p class="caption frag" data-f="0" style="margin-top:8px">The constraint is the whole
+      difficulty: <span class="tex" data-tex="K-1"></span> free numbers, not <span class="tex" data-tex="K"></span>. A linear score respects no such constraint &#8212; which
+      is what the next slide has to fix.</p>
+    </div>
+  </div>`},
+
 {s:"Part IV", t:"Softmax", draw:"sm", html:`
   <div class="eyebrow">Live demo &#183; move the scores</div>
   <h2 style="margin-bottom:10px">From K scores to K probabilities</h2>
@@ -1891,8 +1924,7 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
   <div class="card accent frag" data-f="2" style="margin-top:16px;padding:14px 22px">
     <p style="font-size:20.5px;max-width:none">Only the <strong>difference</strong> <span class="tex" data-tex="a_1 - a_2"></span> ever mattered.
     So for two classes you may pin one score at zero and keep a single weight vector &#8212; which is
-    precisely the model of Parts I&#8211;III. Nothing was replaced; it was a special case all
-    along.</p>
+    precisely the model of Parts I&#8211;III.</p>
   </div>`},
 
 {s:"Part IV", t:"Categorical cross entropy", html:`
@@ -1953,14 +1985,6 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
     <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The loss</div><p style="font-size:20px;max-width:none">Categorical cross-entropy, from the same negative log. And the same gradient.</p></div>
   </div>`},
 
-{s:"Part IV", t:"Part IV", div:true, html:`
-  <div class="divider">
-    <div class="part">Part IV &#183; continued</div>
-    <h1>At modern scale</h1>
-    <div class="bar"></div>
-    <div class="sub">A language model&#8217;s last layer is the classifier on the board.</div>
-  </div>`},
-
 {s:"Part IV", t:"The next-token head", draw:"head", html:`
   <div class="eyebrow">Where you have already met K = 128,256</div>
   <h2 style="margin-bottom:10px">An LLM&#8217;s last layer is a softmax classifier</h2>
@@ -2009,126 +2033,12 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
       training keeps the whole logit tensor for the backward pass. The line is that tensor&#8217;s
       size against <span class="tex" data-tex="K"></span>, for one batch of 8 &#215; 4,096 tokens in fp32 &#8212; straight on log axes,
       and unforgiving.</p>
-      <div class="card accent frag" data-f="0" style="margin-top:12px;padding:12px 16px;text-align:center">
-        <p style="font-size:21px;max-width:none"><strong>How do we get this cost down?</strong></p>
+      <div class="card accent frag" data-f="0" style="margin-top:12px;padding:12px 16px">
+        <p style="font-size:19.5px;max-width:none">That one line is why large models share their two
+        word tables, never hold the whole logit tensor at once, and split the vocabulary across GPUs.
+        The thing being optimised is the classifier you derived today.</p>
       </div>
     </div>
-  </div>`},
-
-{s:"Part IV", t:"Weight tying", draw:"tie", html:`
-  <div class="eyebrow">Getting the cost down &#183; exact &#183; 1 of 2</div>
-  <h2 style="margin-bottom:10px">Tie the weights</h2>
-  <div class="demo">
-    <div class="demo-plot"><svg id="tiesvg" viewBox="0 0 560 240"></svg></div>
-    <div class="demo-ctrl">
-      <p style="font-size:19px;max-width:none">Two big tables bracket the network: the
-      <strong>embedding</strong> turns a token id into a vector (one row per token), and the
-      <strong>head</strong> scores every token (one row per token). Each row answers the same
-      question &#8212; <em>what is this token like?</em> &#8212; once on the way in, once on the
-      way out.</p>
-      <div style="display:flex;gap:8px;margin:10px 0">
-        <button class="bbtn" id="tiebtn" type="button">share one matrix</button>
-      </div>
-      <div class="stat" style="margin-bottom:8px;min-height:44px"><span id="tiestat" style="font-size:15px;font-family:var(--font-math)">&#8212;</span></div>
-      <p class="caption">Tying bets the two answers can be the <strong>same row</strong>: token
-      k&#8217;s score becomes h&#8242;&#8202;&#183;&#8202;(its embedding). Nothing in the loss
-      changes, the head stops being extra parameters, and in practice quality holds &#8212; GPT-2
-      and Gemma both ship tied.</p>
-    </div>
-  </div>`},
-
-{s:"Part IV", t:"Streaming the softmax", draw:"chunk", html:`
-  <div class="eyebrow">Getting the cost down &#183; exact &#183; 2 of 2</div>
-  <h2 style="margin-bottom:10px">Stream the softmax &#8212; the full tensor never exists</h2>
-  <div class="demo">
-    <div class="demo-plot"><svg id="chsvg" viewBox="0 0 560 252"></svg></div>
-    <div class="demo-ctrl">
-      <p style="font-size:19.5px;max-width:none">The loss needs only two numbers: the true
-      token&#8217;s score, and <span class="tex" data-tex="\\ln Z"></span>. The naive route materialises all <span class="tex" data-tex="V"></span> logits to get them. The
-      streamed route computes a <strong>block</strong>, folds it into the running pair (m, s),
-      and discards it.</p>
-      <div style="display:flex;gap:8px;margin:10px 0 8px">
-        <button class="bbtn" id="chn" type="button">fold in the next block</button>
-        <button class="bbtn" id="chr" type="button">reset</button>
-      </div>
-      <div class="warn" id="chwarn" style="min-height:84px"></div>
-      <p class="caption" style="margin-top:8px">Exact &#8212; same loss, same gradients. This is
-      what fused cross-entropy kernels in modern training stacks do.</p>
-    </div>
-  </div>`},
-
-{s:"Part IV", t:"Sampled softmax", draw:"neg", html:`
-  <div class="eyebrow">When exact is too slow &#183; sample the sum &#183; 1 of 2</div>
-  <h2 style="margin-bottom:10px">Estimate the denominator from a sample</h2>
-  <div class="demo">
-    <div class="demo-plot">
-      <svg id="negsvg" viewBox="0 0 560 230"></svg>
-      <p style="font-size:18.5px;max-width:none;margin-top:10px">Differentiating <span class="tex" data-tex="\\ln Z"></span> brings back
-      <strong>every class</strong>, weighted by how probable the model thinks it is:</p>
-      <div class="eq" style="margin:8px 0 0;font-size:20px"><span class="texd" data-tex="\\nabla \\ln Z = \\sum_{j=1}^{K} y_j\\, \\nabla a_j"></span></div>
-    </div>
-    <div class="demo-ctrl">
-      <p style="font-size:18.5px;max-width:none"><strong>Estimate that average from a sample.</strong>
-      Draw <span class="tex" data-tex="k"></span> classes from a proposal <span class="tex" data-tex="q"></span>, keep the true class, and take the softmax over that short
-      list of <span class="tex" data-tex="k{+}1"></span> alone:</p>
-      <div class="eq" style="margin:6px 0 3px;font-size:17.5px"><span class="texd" data-tex="\\hat{\\mathcal{L}} = -a'_t + \\ln\\!\\sum_{j \\in \\mathcal{C}} \\exp(a'_j), \\qquad a'_j = a_j - \\ln k\\,q_j, \\qquad \\mathcal{C} = \\{t\\} \\cup \\mathcal{S}"></span></div>
-      <p class="caption" style="margin:0">The correction <span class="tex" data-tex="-\\ln k q_j"></span> lets the small sum stand in for the big
-      one; with <span class="tex" data-tex="q"></span> uniform it is the same for every candidate and cancels &#8212; the true class
-      against <span class="tex" data-tex="k"></span> random others.</p>
-      <div class="ctrl-row" style="margin-top:9px;margin-bottom:10px"><label>sampled classes k <span class="val" id="negkv">5</span></label>
-        <input type="range" id="negk" min="2" max="15" step="1" value="5"></div>
-      <div style="display:flex;gap:8px;margin:0 0 8px">
-        <button class="bbtn" id="negb" type="button">resample</button>
-      </div>
-      <div class="stat" style="margin-bottom:8px"><span id="negst" style="font-size:15.5px;font-family:var(--font-math)">&#8212;</span></div>
-      <p class="caption">Exact in the limit: as the sample grows the estimate approaches the full
-      softmax; for small <span class="tex" data-tex="k"></span> it is biased. A <strong>training-time</strong> economy &#8212; a
-      normalised answer at test time still needs all <span class="tex" data-tex="K"></span> scores.</p>
-    </div>
-  </div>`},
-
-{s:"Part IV", t:"A tree instead of a table", draw:"tree", html:`
-  <div class="eyebrow">When exact is too slow &#183; restructure the choice &#183; 2 of 2</div>
-  <h2 style="margin-bottom:10px">Represent the choice differently: a tree of small questions</h2>
-  <div class="demo">
-    <div class="demo-plot"><svg id="trsvg" viewBox="0 0 560 300"></svg></div>
-    <div class="demo-ctrl">
-      <p style="font-size:19.5px;max-width:none">Put the words at the <strong>leaves</strong>. Choosing
-      a word is then a run of small left-or-right decisions &#8212; each one a
-      <strong>sigmoid</strong> with its own weight vector at that node.</p>
-      <div style="display:flex;gap:8px;margin:10px 0 8px">
-        <button class="bbtn" id="trb" type="button">pick another word</button>
-      </div>
-      <p style="font-size:19.5px;max-width:none">The word&#8217;s probability is the
-      <strong>product along its path</strong>, so the loss <span class="tex" data-tex="-\\ln p(\\text{word})"></span> is a <strong>sum of binary
-      cross-entropies</strong> &#8212; one per branch. No sum over the vocabulary appears
-      anywhere.</p>
-    </div>
-  </div>`},
-
-{s:"Part IV", t:"What the tree saves", draw:"treecost", html:`
-  <div class="eyebrow">Hierarchical softmax &#183; the bill</div>
-  <h2 style="margin-bottom:10px">Depth grows like the log, and that is the whole trick</h2>
-  <div class="demo">
-    <div class="demo-plot"><svg id="tcsvg" viewBox="0 0 560 190"></svg></div>
-    <div class="demo-ctrl">
-      <p style="font-size:19.5px;max-width:none">A balanced tree over <span class="tex" data-tex="V"></span> words is only <span class="tex" data-tex="\\log_2 V"></span> deep
-      &#8212; so one update touches the path&#8217;s score vectors instead of all <span class="tex" data-tex="V"></span> of them.</p>
-      <div class="ctrl-row" style="margin-top:10px"><label>vocabulary <span class="val" id="hievv">&#8212;</span></label>
-        <input type="range" id="hie" min="10" max="20" step="1" value="10"></div>
-      <p class="caption" style="margin-top:10px">This is <strong>hierarchical softmax</strong>. The
-      probabilities are exact for the tree&#8217;s model &#8212; what changed is the model of the
-      choice, from one flat K-way pick to a cascade of binary ones.</p>
-    </div>
-  </div>`},
-
-{s:"Part IV", t:"At modern scale, in one slide", html:`
-  <div class="eyebrow">Before we close</div>
-  <h2 style="margin-bottom:16px">At modern scale, in one slide</h2>
-  <div class="row top stretch" style="gap:22px">
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The head</div><p style="font-size:20px;max-width:none">A language model&#8217;s last layer is softmax classification with the vocabulary as the classes, trained on the cross-entropy derived today.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">The cost</div><p style="font-size:20px;max-width:none">The normaliser <span class="tex" data-tex="Z"></span> touches every class &#8212; that is where the compute and the logit memory come from. Tying, streaming, sampling and trees are four ways of paying less.</p></div>
-    <div class="col card"><div class="eyebrow" style="margin-bottom:8px">Temperature</div><p style="font-size:20px;max-width:none">Rescales the scores before the softmax &#8212; the <span class="tex" data-tex="\\lVert\\mathbf{w}\\rVert"></span> dial with a new name. Small T is the argmax; large T is a shrug.</p></div>
   </div>`},
 
 {s:"Part IV", t:"Summary", html:`
@@ -2207,7 +2117,7 @@ y = np.exp(z) / np.sum(np.exp(z))</pre>
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.6, 0.2, 1.0, 1.2, 1.5, 0.9, 0.2, 1.4, 1.4, 0.9, 1.1, 1.0, 1.0, 1.3, 1.9, 1.2, 0.8, 0.2, 1.2, 2.2, 1.8, 1.1, 1.5, 1.2, 1.9, 1.8, 1.4, 1.7, 1.1, 0.7, 1.1, 0.2, 1.4, 1.4, 2.1, 1.5, 1.5, 1.3, 1.5, 1.1, 1.7, 1.7, 0.8, 1.1, 0.2, 1.7, 1.4, 1.5, 1.4, 2.0, 1.7, 1.3, 1.7, 1.3, 1.9, 0.9, 0.2, 1.3, 0.9, 1.4, 1.7, 1.3, 1.9, 1.3, 0.7, 1.1, 0.2, 1.4, 1.4, 1.2, 1.4, 1.7, 1.5, 0.7, 0.2, 1.5, 1.5, 1.7, 1.2, 1.3, 1.5, 1.5, 1.1, 0.7, 1.2, 1.1, 0.6, 0.3];
+const EST=[0.6, 0.2, 1.0, 1.2, 1.5, 0.9, 0.2, 1.4, 1.4, 0.9, 1.1, 1.0, 1.0, 1.3, 1.9, 1.2, 0.8, 0.2, 1.2, 2.2, 1.8, 1.1, 1.5, 1.2, 1.9, 1.8, 1.4, 1.7, 1.1, 0.7, 1.1, 0.2, 1.4, 1.4, 2.1, 1.5, 1.5, 1.3, 1.5, 1.1, 1.7, 1.7, 0.8, 1.1, 0.2, 1.7, 1.4, 1.5, 1.4, 2.0, 1.7, 1.3, 1.7, 1.3, 1.9, 0.9, 0.2, 1.3, 0.9, 1.4, 1.7, 1.3, 1.9, 1.3, 0.7, 1.1, 0.2, 1.4, 1.5, 1.4, 1.2, 1.4, 1.7, 1.5, 0.7, 1.5, 1.5, 1.7, 1.2, 1.1, 0.6, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
@@ -2776,7 +2686,7 @@ function drawSep(){
   const W=560,H=250, A=ax3(W,H,-8,8,-0.15,1.15,4,0.5,52);
   let g=clipDef(A,W,H,'cpsep')+A.s;
   g+='<line x1="'+A.X(-8)+'" y1="'+A.Y(0.5)+'" x2="'+A.X(8)+'" y2="'+A.Y(0.5)+'" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="4 4"/>';
-  [[1.0,'var(--accent2)',false,'&#8214;w&#8214; moderate'],[8,'var(--accent)',true,'&#8214;w&#8214; after many more steps']]
+  [[1.0,'var(--accent2)',false],[8,'var(--accent)',true]]
   .forEach(([k,c,dash])=>{
     g+='<path d="'+pathOf(lin(-8,8,300).map(z=>[A.X(z),A.Y(sig(k*z))]))+'" fill="none" stroke="'+c
      + '" stroke-width="2.8"'+(dash?' stroke-dasharray="6 5"':'')+' clip-path="url(#cpsep)"/>'; });
@@ -2788,10 +2698,12 @@ function drawSep(){
   /* bottom-right quadrant: both curves are pinned to the top asymptote there */
   g+='<g transform="translate('+A.X(1.6)+','+A.Y(0.32)+')">'
    + '<line x1="0" y1="-4" x2="20" y2="-4" stroke="var(--accent2)" stroke-width="2.6"/>'
-   + '<text class="legend" x="27" y="0">after a while</text>'
+   + '<text class="legend" x="27" y="0">&#8214;w&#8214; = 1</text>'
    + '<line x1="0" y1="18" x2="20" y2="18" stroke="var(--accent)" stroke-width="2.6" stroke-dasharray="6 5"/>'
-   + '<text class="legend" x="27" y="22">much later</text></g>';
-  g+=axlab(A,W,H,'w&#7488;x','&#963;(w&#7488;x)');
+   + '<text class="legend" x="27" y="22">&#8214;w&#8214; = 8, later in training</text></g>';
+  /* the ten cars do not move: the feature is fixed and w is what grows */
+  g+='<text class="tick" x="'+A.X(0)+'" y="'+(A.Y(1.15)+12)+'" text-anchor="middle">the boundary stays at x = 0</text>';
+  g+=axlab(A,W,H,'the feature x &#8212; the data never moves','&#963;(w x) &#8212; predicted probability');
   svg.innerHTML=g;
   /* the same fact in the loss: cross-entropy of these ten points as ||w|| scales the
      SAME boundary. Every point is on its correct side, so every term falls and the
@@ -3019,31 +2931,44 @@ function drawTemp(){
    Deterministic, so every run of the deck draws the same "random" labels. */
 function lcg(s){ return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
 
-/* ---------------------------------------------------------------- DEMO 13 — why LSQ breaks
-   The mechanism behind the boundary tilt, drawn instead of asserted: one class's
-   squared loss as a function of the linear score. The ex-Grab car sits far up the
-   parabola, the car near the boundary sits at the bottom, and the pull each exerts
-   is the slope where it stands. */
+/* ---------------------------------------------------------------- DEMO 3 — why it breaks
+   One car's squared loss against its LINEAR SCORE, for a car whose target is -1. The
+   horizontal axis is the score, so the parabola's foot sits at the target and the gap
+   from the dashed line to a car is its residual -- the quantity that gets squared.
+   Both cars are real listings, scored under the fit from BEFORE the ex-Grab cars were
+   added: that is the configuration in which they are "too correct" and start pulling. */
 function drawWhy(){
   const svg=document.getElementById('whysvg'); if(!svg) return;
   const W=460,H=300, A=ax3(W,H,-6,2,0,26,2,5,50);
+  const wpre=lsqFit(D_SOLD,D_LOT), sc=p=>wpre[0]+wpre[1]*p[0]+wpre[2]*p[1];
+  const fs=D_FLEET.map(sc), fmean=fs.reduce((a,b)=>a+b,0)/fs.length;
+  const sF=fs.reduce((a,b)=>Math.abs(b-fmean)<Math.abs(a-fmean)?b:a, fs[0]);   /* a typical ex-Grab car */
+  const sB=D_LOT.map(sc).reduce((a,b)=>b>a?b:a);                              /* the lot car nearest the boundary */
+  const L=s=>(s+1)*(s+1);
   let g=clipDef(A,W,H,'cpwhy')+A.s;
-  g+=axlab(A,W,H,'linear score w&#7488;x for a car with t = &#8722;1','squared loss (score+1)&#178;');
+  g+=axlab(A,W,H,'linear score w&#7488;x for a car with t = &#8722;1','squared loss (score + 1)&#178;');
+  /* the residual, measured along the axis: this is the number that gets squared */
+  const yb=1.6;
+  g+='<line x1="'+A.X(sF)+'" y1="'+A.Y(yb)+'" x2="'+A.X(-1)+'" y2="'+A.Y(yb)+'" stroke="var(--ink-soft)" stroke-width="1.2"/>';
+  [sF,-1].forEach(x=>{ g+='<line x1="'+A.X(x)+'" y1="'+(A.Y(yb)-4)+'" x2="'+A.X(x)+'" y2="'+(A.Y(yb)+4)+'" stroke="var(--ink-soft)" stroke-width="1.2"/>'; });
+  g+='<text class="tick" x="'+A.X((sF-1)/2)+'" y="'+(A.Y(yb)-7)+'" text-anchor="middle">residual '
+   + Math.abs(sF+1).toFixed(1)+'</text>';
   /* the loss parabola for the t = -1 class */
-  g+='<path d="'+pathOf(lin(-6,2,200).map(s=>[A.X(s),A.Y((s+1)*(s+1))]))+'" fill="none" '
+  g+='<path d="'+pathOf(lin(-6,2,200).map(s=>[A.X(s),A.Y(L(s))]))+'" fill="none" '
    + 'stroke="var(--accent2)" stroke-width="2.8" clip-path="url(#cpwhy)"/>';
   /* zero-loss target */
   g+='<line x1="'+A.X(-1)+'" y1="'+A.Y(0)+'" x2="'+A.X(-1)+'" y2="'+A.Y(25)+'" stroke="var(--rule)" stroke-width="1.2" stroke-dasharray="4 4"/>'
    + '<text class="tick" x="'+A.X(-1)+'" y="'+(A.Y(25)-6)+'" text-anchor="middle">target &#8722;1</text>';
   /* the two cars */
-  const cars=[[-4.6,'the ex-Grab',13,'var(--accent)'],[-1.4,'a car near the boundary',0.16,'var(--s4)']];
-  cars.forEach(([s,lab,L,col])=>{
-    g+='<line x1="'+A.X(s)+'" y1="'+A.Y(0)+'" x2="'+A.X(s)+'" y2="'+A.Y((s+1)*(s+1))+'" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="3 3"/>'
-     + '<circle cx="'+A.X(s)+'" cy="'+A.Y((s+1)*(s+1))+'" r="5" fill="'+col+'"/>';
+  [[sF,'var(--accent)'],[sB,'var(--s4)']].forEach(([s,col])=>{
+    g+='<line x1="'+A.X(s)+'" y1="'+A.Y(0)+'" x2="'+A.X(s)+'" y2="'+A.Y(L(s))+'" stroke="'+col+'" stroke-width="1.2" stroke-dasharray="3 3"/>'
+     + '<circle cx="'+A.X(s)+'" cy="'+A.Y(L(s))+'" r="5" fill="'+col+'"/>';
   });
-  g+='<text class="legend" x="'+(A.X(-4.6)+10)+'" y="'+(A.Y(13)-12)+'">the ex-Grab car &#8212; loss &#8776; 13</text>'
-   + '<text class="legend" x="'+(A.X(-1.4)+10)+'" y="'+(A.Y(0.16)-12)+'">near the boundary &#8212; loss &#8776; 0.2</text>';
-  /* the pull: the slope of the parabola where each car stands */
+  g+='<text class="legend" x="'+(A.X(sF)+10)+'" y="'+(A.Y(L(sF))-12)+'">the ex-Grab car &#8212; loss &#8776; '+L(sF).toFixed(1)+'</text>';
+  /* the borderline car is labelled above itself, clear of the residual bar */
+  g+='<line x1="'+A.X(sB)+'" y1="'+A.Y(5.0)+'" x2="'+A.X(sB)+'" y2="'+A.Y(L(sB)+0.5)+'" stroke="var(--s4)" stroke-width="1"/>'
+   + '<text class="legend" x="'+A.X(sB)+'" y="'+(A.Y(5.2))+'" text-anchor="middle" fill="var(--s4)">a borderline car &#8212; '+L(sB).toFixed(1)+'</text>';
+  /* the pull: the slope of the parabola where each car stands, and they point opposite ways */
   const arrow=(x0,y0,x1,y1,col,wid)=>{
     const dx=A.X(x1)-A.X(x0), dy=A.Y(y1)-A.Y(y0), l=Math.hypot(dx,dy), ux=dx/l, uy=dy/l;
     const tip=[A.X(x1),A.Y(y1)];
@@ -3051,9 +2976,35 @@ function drawWhy(){
      + '<path d="M'+tip[0]+' '+tip[1]+'l'+(-10*ux+5*uy)+' '+(-10*uy-5*ux)+'M'+tip[0]+' '+tip[1]+'l'+(-10*ux-5*uy)+' '+(-10*uy+5*ux)
      + '" stroke="'+col+'" stroke-width="'+wid+'" fill="none" stroke-linecap="round"/>';
   };
-  g+=arrow(-4.6,13,-3.1,4.4,'var(--accent)',3.2);      /* big pull towards the target */
-  g+=arrow(-1.4,0.16,-1.15,0.02,'var(--s4)',2.2);      /* barely any */
-  g+='<text class="legend" x="'+(A.X(-3.4))+'" y="'+A.Y(9.5)+'" fill="var(--accent)">the pull &#8733; the slope</text>';
+  g+=arrow(sF,L(sF),sF+1.5,L(sF+1.5),'var(--accent)',3.2);       /* a long way downhill */
+  g+=arrow(sB,L(sB),sB-0.45,L(sB-0.45),'var(--s4)',2.2);         /* barely any, and the other way */
+  g+='<text class="legend" x="'+(A.X(sF+1.9))+'" y="'+A.Y(9.5)+'" fill="var(--accent)">the pull &#8733; the slope</text>';
+  svg.innerHTML=g;
+  const st=document.getElementById('whypull');
+  if(st) st.innerHTML='slope at the ex-Grab car <strong>'+Math.abs(2*(sF+1)).toFixed(1)
+    + '</strong> against <strong>'+Math.abs(2*(sB+1)).toFixed(1)+'</strong> at the borderline car &#8212; '
+    + (Math.abs((sF+1)/(sB+1))).toFixed(1)+'&#215; the pull, and in the opposite direction';
+}
+
+/* ---------------------------------------------------------------- the categorical distribution
+   Three bars that must sum to one -- the die beside the coin of Part I. Static: the point
+   is the constraint, not a control. */
+function drawCat(){
+  const svg=document.getElementById('catsvg'); if(!svg) return;
+  const W=300,H=230, mu=[0.55,0.30,0.15], lab=['sells fast','sells slowly','does not'];
+  const ml=46, mb=52, mt=18, Y=p=>H-mb-(H-mt-mb)*p;
+  let g='<line class="axis" x1="'+ml+'" y1="'+(H-mb)+'" x2="'+(W-10)+'" y2="'+(H-mb)+'"/>'
+       +'<line class="axis" x1="'+ml+'" y1="'+mt+'" x2="'+ml+'" y2="'+(H-mb)+'"/>';
+  [0,0.5,1].forEach(p=>{ g+='<text class="tick" x="'+(ml-8)+'" y="'+(Y(p)+4)+'" text-anchor="end">'+p+'</text>';
+    if(p>0) g+='<line class="gridline" x1="'+ml+'" y1="'+Y(p)+'" x2="'+(W-10)+'" y2="'+Y(p)+'"/>'; });
+  mu.forEach((p,i)=>{
+    const x=ml+18+i*76;
+    g+='<rect x="'+x+'" y="'+Y(p)+'" width="52" height="'+Math.max(1,H-mb-Y(p))+'" rx="2" fill="var(--s'+(i===0?1:i===1?3:2)+')" opacity=".85"/>'
+     + '<text class="matn" style="font-size:13.5px" x="'+(x+26)+'" y="'+(Y(p)-7)+'" text-anchor="middle">'+p.toFixed(2)+'</text>'
+     + '<text class="tick" style="font-size:10.5px" x="'+(x+26)+'" y="'+(H-mb+15)+'" text-anchor="middle">'+lab[i].split(' ')[0]+'</text>'
+     + '<text class="tick" style="font-size:10.5px" x="'+(x+26)+'" y="'+(H-mb+31)+'" text-anchor="middle">'+(lab[i].split(' ')[1]||'')+'</text>';
+  });
+  g+='<text class="legend" x="'+((ml+W-10)/2)+'" y="'+(H-6)+'" text-anchor="middle">three bars, and they must sum to one</text>';
   svg.innerHTML=g;
 }
 
@@ -3850,7 +3801,20 @@ function drawCost(){
   const A=ax3(W,H,0,1,0,14000,0.25,3500,64);
   let g=clipDef(A,W,H,'cpcst')+A.s+axlab(A,W,H,'the cut c','cost on the sixty cars ($)');
   const cs=lin(0.02,0.98,193);
-  g+='<path d="'+pathOf(cs.map(c=>[A.X(c),A.Y(Math.min(realAt(c),14000))]))+'" fill="none" stroke="var(--ink-soft)" stroke-width="1.6" opacity=".45" clip-path="url(#cpcst)"/>';
+  /* the realised cost is one draw of a noisy thing. Resample the sixty cars a few times
+     (with replacement) and draw each realised curve: the spread IS the point -- with data
+     this small the realised minimum wanders, while the derived cut does not. */
+  const rnd=lcg(4242);
+  for(let b=0;b<7;b++){
+    const idxS=T_SOLD.map(()=>T_SOLD[Math.floor(rnd()*T_SOLD.length)]);
+    const idxL=T_LOT.map(()=>T_LOT[Math.floor(rnd()*T_LOT.length)]);
+    const rb=c=>{ let fp=0,fn=0;
+      idxL.forEach(p=>{ if(sig(dot3(w,p))>c) fp++; });
+      idxS.forEach(p=>{ if(sig(dot3(w,p))<=c) fn++; });
+      return COST_FP*fp+COST_FN*fn; };
+    g+='<path d="'+pathOf(cs.map(c=>[A.X(c),A.Y(Math.min(rb(c),14000))]))+'" fill="none" stroke="var(--ink-soft)" stroke-width="1.2" opacity=".22" clip-path="url(#cpcst)"/>';
+  }
+  g+='<path d="'+pathOf(cs.map(c=>[A.X(c),A.Y(Math.min(realAt(c),14000))]))+'" fill="none" stroke="var(--ink-soft)" stroke-width="1.6" opacity=".55" clip-path="url(#cpcst)"/>';
   g+='<path d="'+pathOf(cs.map(c=>[A.X(c),A.Y(Math.min(expAt(c),14000))]))+'" fill="none" stroke="var(--accent2)" stroke-width="2.8" clip-path="url(#cpcst)"/>';
   const cstar=COST_FP/(COST_FP+COST_FN);
   g+='<line x1="'+A.X(cstar)+'" y1="'+A.Y(0)+'" x2="'+A.X(cstar)+'" y2="'+A.Y(13300)+'" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 4"/>'
@@ -3863,7 +3827,7 @@ function drawCost(){
    + '<line x1="0" y1="-4" x2="20" y2="-4" stroke="var(--accent2)" stroke-width="2.8"/>'
    + '<text class="legend" x="27" y="0">expected cost, under the model&#8217;s probabilities</text>'
    + '<line x1="0" y1="18" x2="20" y2="18" stroke="var(--ink-soft)" stroke-width="1.6" opacity=".45"/>'
-   + '<text class="legend" x="27" y="22">realised cost, against what actually happened</text></g>';
+   + '<text class="legend" x="27" y="22">realised cost &#8212; the sixty cars, and seven resamples of them</text></g>';
   svg.innerHTML=g;
 }
 
@@ -4181,7 +4145,7 @@ function drawCostK(){
   svg.innerHTML=g;
 }
 
-const DRAW={clf:drawClf,lsqQ1:drawLsqQ1,lsqA1:drawLsqA1,lsqQ2:drawLsqQ2,lsqA2:drawLsqA2,why:drawWhy,bern:drawBern,sig:drawSig,bce:drawBce,gd:drawGd,gdm:drawGdmini,sm:drawSm,geo:drawGeo,sep:drawSep,sepfix:drawSepFix,lift:drawLift,thr:drawThr,temp:drawTemp,gen3:drawGen3,lgen3:drawLgen3,tie:drawTie,chunk:drawChunk,neg:drawNeg,bpts:drawBpts,bpost:drawBpost,blap:drawBlap,bfan:drawBfan,bcar:drawBcars,cost:drawCost,roc:drawRoc,regen:drawRegen,odds:drawOdds,xor:drawXor,head:drawHead,costk:drawCostK,tree:drawTree,treecost:drawTreeCost,hp2:drawHp2};
+const DRAW={clf:drawClf,lsqQ1:drawLsqQ1,lsqA1:drawLsqA1,lsqQ2:drawLsqQ2,lsqA2:drawLsqA2,why:drawWhy,bern:drawBern,sig:drawSig,bce:drawBce,gd:drawGd,gdm:drawGdmini,sm:drawSm,geo:drawGeo,sep:drawSep,sepfix:drawSepFix,lift:drawLift,thr:drawThr,temp:drawTemp,gen3:drawGen3,lgen3:drawLgen3,cat:drawCat,bpts:drawBpts,bpost:drawBpost,blap:drawBlap,bfan:drawBfan,bcar:drawBcars,cost:drawCost,roc:drawRoc,regen:drawRegen,odds:drawOdds,xor:drawXor,head:drawHead,costk:drawCostK,hp2:drawHp2};
 document.getElementById('sigw')?.addEventListener('input',e=>{SIG_W=+e.target.value;drawSig();});
 document.getElementById('bmu')?.addEventListener('input',e=>{BERN_MU=+e.target.value;drawBern();});
 document.getElementById('hp2w1')?.addEventListener('input',e=>{HP2_W1=+e.target.value;drawHp2();});
@@ -4195,9 +4159,7 @@ document.getElementById('lg3x')?.addEventListener('input',e=>{LG3_X=+e.target.va
 document.getElementById('lg3y')?.addEventListener('input',e=>{LG3_Y=+e.target.value;drawLgen3();});
 document.getElementById('lifttilt')?.addEventListener('input',e=>{LIFT_TILT=+e.target.value;drawLift();});
 document.getElementById('liftrot')?.addEventListener('input',e=>{LIFT_ROT=+e.target.value;drawLift();});
-document.getElementById('hie')?.addEventListener('input',e=>{HIER_E=+e.target.value;drawTreeCost();});
 document.getElementById('rocc')?.addEventListener('input',e=>{ROC_C=+e.target.value;drawRoc();});
-document.getElementById('negk')?.addEventListener('input',e=>{NEG_K=+e.target.value;drawNeg();});
 document.getElementById('bfn')?.addEventListener('input',e=>{BF_N=+e.target.value;drawBfan();});
 [0,1,2].forEach(i=>document.getElementById('sm'+i)?.addEventListener('input',e=>{SM_Z[i]=+e.target.value;drawSm();}));
 document.addEventListener('click',e=>{ const t=e.target; if(!t) return;
@@ -4213,11 +4175,6 @@ document.addEventListener('click',e=>{ const t=e.target; if(!t) return;
   if(t.id==='lg3d')  lg3Draw(1);
   if(t.id==='lg3sp') lg3Spread();
   if(t.id==='lg3r')  lg3Reset();
-  if(t.id==='tiebtn'){ TIE_ON=!TIE_ON; drawTie(); }
-  if(t.id==='chn') chNext();
-  if(t.id==='chr') chReset();
-  if(t.id==='negb'){ NEG_SEED=(NEG_SEED*97+13)>>>0; drawNeg(); }
-  if(t.id==='trb'){ TR_LEAF=(TR_LEAF*5+3)%8; drawTree(); }
 });
 
 /* Click-to-advance, but never from a control. We remember where the pointer went DOWN:
