@@ -1351,12 +1351,14 @@ const SLIDES = [
   <div class="actbadge">Predict first &#183; then drag</div>
   <h2 style="margin-bottom:10px">Sweep the cut and a curve appears</h2>
   <div class="demo">
-    <div class="demo-plot"><svg id="rocsvg" viewBox="0 0 560 310"></svg></div>
+    <div class="demo-plot">
+      <svg id="rocsvg" viewBox="0 0 560 310"></svg>
+      <p class="caption frag" data-f="1" style="margin-top:6px"><strong>AUC</strong> is what it says:
+      the <strong>area under the curve</strong> &#8212; equal to the probability that a random seller
+      scores above a random non-seller.</p>
+    </div>
     <div class="demo-ctrl">
-      <p style="font-size:18.5px;max-width:none">Turn the two error counts into <strong>rates</strong>:
-      the fraction of cars that <em>did</em> sell which we caught, against the fraction of the rest we
-      bought by mistake. Each cut <span class="tex" data-tex="c"></span> gives one point; sweeping it traces the curve.</p>
-      <p style="font-size:18.5px;max-width:none;margin-top:8px"><strong>ROC</strong> is short for
+      <p style="font-size:18.5px;max-width:none"><strong>ROC</strong> is short for
       <strong>receiver operating characteristic</strong> &#8212; from wartime radar, where the
       &#8220;receiver&#8221; was the operator judging whether a blip was an aircraft, trading missed
       planes against false alarms.</p>
@@ -1367,9 +1369,6 @@ const SLIDES = [
       <p class="caption frag" data-f="0" style="margin-top:7px">Towards <strong>(0,0)</strong>: a
       stricter cut calls fewer cars positive of either kind. Choosing a threshold is choosing where
       to stand on the curve.</p>
-      <p class="caption frag" data-f="1" style="margin-top:6px"><strong>AUC</strong> is what it says:
-      the <strong>area under the curve</strong> &#8212; equal to the probability that a random seller
-      scores above a random non-seller.</p>
     </div>
   </div>`},
 
