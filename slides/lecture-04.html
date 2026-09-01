@@ -685,8 +685,7 @@ const SLIDES = [
     <div class="col card frag" data-f="1">
       <div class="eyebrow" style="margin-bottom:8px">Missing features</div>
       <p style="font-size:19px;max-width:none">A model of <span class="tex" data-tex="\\mathbf{x}"></span> can
-      <strong>integrate out</strong> what it did not observe &#8212; Part III shows this costing
-      one line.</p>
+      <strong>integrate out</strong> what it did not observe.</p>
     </div>
     <div class="col card frag" data-f="2">
       <div class="eyebrow" style="margin-bottom:8px">Scarce labels, new classes</div>
@@ -715,12 +714,13 @@ const SLIDES = [
   <table style="font-size:17.5px">
     <thead><tr><th style="width:27%">Family</th><th style="width:37%">How it writes the story</th><th style="width:12%">Evaluate <span class="tex" data-tex="p(\\mathbf{x})"></span>?</th><th style="width:12%">Sample?</th><th style="width:12%">Latent?</th></tr></thead>
     <tbody>
-      <tr><td><strong>Naive Bayes, GMM</strong></td><td>a simple parametric cloud per class</td><td>yes</td><td>yes</td><td>the class</td></tr>
+      <tr><td><strong>Naive Bayes</strong></td><td>a simple parametric cloud per class, the class <strong>labelled</strong></td><td>yes</td><td>yes</td><td>none</td></tr>
       <tr class="frag" data-f="0"><td><strong>Autoregressive</strong> &#183; language models</td><td>the product rule, one token at a time</td><td>yes</td><td>yes</td><td>none</td></tr>
-      <tr class="frag" data-f="1"><td><strong>VAE</strong></td><td>draw a code, decode it to data</td><td>a bound</td><td>yes</td><td>yes</td></tr>
-      <tr class="frag" data-f="2"><td><strong>Diffusion</strong></td><td>learn to undo noise, step by step</td><td>a bound</td><td>yes, slowly</td><td>the noise path</td></tr>
-      <tr class="frag" data-f="3"><td><strong>Normalising flow</strong></td><td>an invertible map from a simple density</td><td>yes</td><td>yes</td><td>yes</td></tr>
-      <tr class="frag" data-f="4"><td><strong>GAN</strong></td><td>a generator judged by a critic</td><td>no</td><td>yes</td><td>yes</td></tr>
+      <tr class="frag" data-f="1"><td><strong>GMM</strong></td><td>the same clouds, the class <strong>unobserved</strong></td><td>yes</td><td>yes</td><td>the class</td></tr>
+      <tr class="frag" data-f="2"><td><strong>VAE</strong></td><td>draw a code, decode it to data</td><td>a bound</td><td>yes</td><td>yes</td></tr>
+      <tr class="frag" data-f="3"><td><strong>Diffusion</strong></td><td>learn to undo noise, step by step</td><td>a bound</td><td>yes, slowly</td><td>the noise path</td></tr>
+      <tr class="frag" data-f="4"><td><strong>Normalising flow</strong></td><td>an invertible map from a simple density</td><td>yes</td><td>yes</td><td>yes</td></tr>
+      <tr class="frag" data-f="5"><td><strong>GAN</strong></td><td>a generator judged by a critic</td><td>no</td><td>yes</td><td>yes</td></tr>
     </tbody>
   </table>
   <p class="caption" style="margin-top:12px">The last three columns are what each
@@ -757,9 +757,9 @@ const SLIDES = [
     </div>
   </div>`},
 
-{s:"Part I", t:"The story, run backwards", draw:"gen4", html:`
+{s:"Part I", t:"The generative story", draw:"gen4", html:`
   <div class="eyebrow">Notion before notation</div>
-  <h2 style="margin-bottom:10px">The story, run backwards</h2>
+  <h2 style="margin-bottom:10px">The generative story</h2>
   <div class="fig" style="background:transparent;box-shadow:none;margin-bottom:8px">
     <svg viewBox="0 0 900 140"><g id="gen4fig"></g></svg>
   </div>
@@ -806,10 +806,7 @@ const SLIDES = [
     <div class="col card"><div class="eyebrow" style="margin-bottom:6px">A</div><p style="font-size:19.5px;max-width:none">Assign it to the cloud whose <strong>centre is nearest</strong>.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:6px">B</div><p style="font-size:19.5px;max-width:none">Assign it to the class under which this <span class="tex" data-tex="\\mathbf{x}_\\ast"></span> is <strong>most probable</strong>, weighted by how common the class is.</p></div>
     <div class="col card"><div class="eyebrow" style="margin-bottom:6px">C</div><p style="font-size:19.5px;max-width:none">Ignore the clouds and fit last week&#8217;s line.</p></div>
-  </div>
-  <p class="caption frag" data-f="0" style="margin-top:16px;text-align:center">Commit to one.
-  Nearest-centre ignores both the spreads and the class frequencies &#8212; B uses everything the
-  story gives us.</p>`},
+  </div>`},
 
 {s:"Part I", t:"Bayes at test time", html:`
   <div class="eyebrow">The answer is B &#8212; and it is a rule you know</div>
@@ -2409,7 +2406,7 @@ function nbBar(yTop){
   return s;
 }
 
-/* ---------------------------------------------------------------- DEMO 1 — the story, run backwards
+/* ---------------------------------------------------------------- DEMO 1 — the generative story
    One car generated left to right: coin first, then the class's feature
    distribution, then the row. Numbers computed from the fit. */
 function drawGen4(){
