@@ -1362,8 +1362,10 @@ const SLIDES = [
 
 {s:"Part IV", t:"Hoeffding, stated", html:`
   <div class="eyebrow">A guarantee at every V</div>
-  <h2 style="margin-bottom:14px">How far can <span class="tex" data-tex="\\widehat{\\mu}"></span> be from <span class="tex" data-tex="\\mu"></span>?</h2>
-  <div class="eq" style="margin:10px 0 20px;font-size:30px"><span class="texd" data-tex="\\Pr\\bigl(|\\widehat{\\mu} - \\mu| > \\varepsilon\\bigr) \\;\\le\\; 2\\exp(-2V\\varepsilon^2)"></span></div>
+  <h2 style="margin-bottom:10px">How far can <span class="tex" data-tex="\\widehat{\\mu}"></span> be from <span class="tex" data-tex="\\mu"></span>?</h2>
+  <p style="font-size:19.5px"><strong>Hoeffding&#8217;s inequality</strong> answers it, for an average of <span class="tex" data-tex="V"></span>
+  independent draws in <span class="tex" data-tex="[0,1]"></span>:</p>
+  <div class="eq" style="margin:10px 0 18px;font-size:30px"><span class="texd" data-tex="\\Pr\\bigl(|\\widehat{\\mu} - \\mu| > \\varepsilon\\bigr) \\;\\le\\; 2\\exp(-2V\\varepsilon^2)"></span></div>
   <div class="dgrid frag" data-f="0" style="grid-template-columns:auto minmax(0,1fr);gap:12px 24px">
     <div style="font-size:19px"><strong>No approximation</strong></div>
     <div style="font-size:19px">Holds at <span class="tex" data-tex="V = 20"></span> exactly as it holds at <span class="tex" data-tex="V = 20{,}000"></span>. The Gaussian on the previous slide is an
@@ -1468,7 +1470,11 @@ const SLIDES = [
       happens is at most the sum of their probabilities:</p>
       <div class="eq" style="margin:6px 0 8px;font-size:21px"><span class="texd" data-tex="\\Pr\\Bigl(\\textstyle\\bigcup_{j} B_j\\Bigr) \\le \\sum_{j} \\Pr(B_j)"></span></div>
       <p style="font-size:16.5px;max-width:none">Overlaps get counted more than once, so the sum can only be
-      too big. Needs no independence.</p>
+      too big. Equality exactly when the events are <strong>mutually exclusive</strong> &#8212; no two can happen
+      together.</p>
+      <p style="font-size:16.5px;max-width:none;margin-top:6px">It assumes nothing else. In particular <strong>no
+      independence</strong>: every candidate is scored on the same validation set, so these events are far from
+      independent, and the step still holds.</p>
       <div class="ctrl-row" style="margin-top:6px"><label>number of events <span class="val" id="unmv">3</span></label>
         <input type="range" id="unmr" min="1" max="8" step="1" value="3"></div>
       <div class="warn" id="unwarn" style="min-height:96px"></div>
@@ -2982,8 +2988,8 @@ function drawUnion5(){
   svg.innerHTML=g;
   const a=document.getElementById('unmv'); if(a) a.textContent=UN_M;
   const w=document.getElementById('unwarn'); if(!w) return;
-  w.innerHTML=UN_M+' bad events. Where discs overlap, the sum counts that region more than once, so the sum is <strong>at least</strong> the union &#8212; equal only when nothing overlaps. '
-   + 'No independence needed. In our problem B<sub>j</sub> = &#8220;candidate j&#8217;s score is off by &#949; or more&#8221;.';
+  w.innerHTML=UN_M+' bad events. Where discs overlap, the sum counts that region more than once, so the sum is <strong>at least</strong> the union &#8212; equality only if no two discs meet, that is, if the events are <strong>mutually exclusive</strong>. '
+   + 'Independence is a different property, and is not needed here: in our problem B<sub>j</sub> = &#8220;candidate j&#8217;s score is off by &#949; or more&#8221;, and every score comes from the same validation set.';
 }
 
 /* ---- the interpolation threshold, in three panels ------------------------------
