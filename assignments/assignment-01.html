@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="CS3264 Assignment 1 (Stump the Model): write six math questions that Qwen3-1.7B gets wrong, and explain why.">
+<title>CS3264 Assignment 1 · Stump the Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;700&amp;family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f3ec;
+    --surface: #fffdf8;
+    --surface-2: #efe9dc;
+    --ink: #211f1a;
+    --ink-dim: #6b6357;
+    --line: #e2dbc9;
+    --accent: #2c5c4c;
+    --accent-ink: #1c3d32;
+    --accent-soft: #dbe8e0;
+    --warn: #a15a1c;
+    --warn-soft: #f1e0cd;
+    --bad: #9c3b34;
+    --bad-soft: #f2ddd8;
+    --shadow: 0 1px 2px rgba(33,31,26,0.06), 0 8px 24px -12px rgba(33,31,26,0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1b1a16;
+      --surface: #242219;
+      --surface-2: #2c2a1f;
+      --ink: #ece7d9;
+      --ink-dim: #a89f8c;
+      --line: #3a372b;
+      --accent: #7cb8a2;
+      --accent-ink: #d3ece3;
+      --accent-soft: #2b3d35;
+      --warn: #d99a53;
+      --warn-soft: #3c2f1e;
+      --bad: #d97a72;
+      --bad-soft: #3c2320;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1b1a16;
+    --surface: #242219;
+    --surface-2: #2c2a1f;
+    --ink: #ece7d9;
+    --ink-dim: #a89f8c;
+    --line: #3a372b;
+    --accent: #7cb8a2;
+    --accent-ink: #d3ece3;
+    --accent-soft: #2b3d35;
+    --warn: #d99a53;
+    --warn-soft: #3c2f1e;
+    --bad: #d97a72;
+    --bad-soft: #3c2320;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", "Segoe UI", sans-serif;
+    line-height: 1.65;
+    font-size: 16px;
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+  .mono {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  header.doc-head {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.75rem;
+    margin-bottom: 2.25rem;
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    background: var(--accent-soft);
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 3px;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-family: "Source Serif 4", serif;
+    font-weight: 700;
+    font-size: 2.1rem;
+    line-height: 1.2;
+    margin: 0 0 0.5rem;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .doc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.2rem;
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+  }
+  .doc-meta b { color: var(--ink); font-weight: 600; }
+
+  .intro {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+    padding: 1.3rem 1.5rem;
+    margin-bottom: 2.5rem;
+    box-shadow: var(--shadow);
+    font-size: 1.02rem;
+  }
+  .intro > *:last-child { margin-bottom: 0; }
+
+  section { margin-bottom: 2.75rem; }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+  .sec-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    white-space: nowrap;
+  }
+  h2 {
+    font-family: "Source Serif 4", serif;
+    font-weight: 700;
+    font-size: 1.45rem;
+    margin: 0;
+    color: var(--ink);
+  }
+  h3 {
+    font-family: "Inter", sans-serif;
+    font-weight: 700;
+    font-size: 1.02rem;
+    margin: 1.5rem 0 0.6rem;
+    color: var(--ink);
+  }
+  p { margin: 0 0 0.9rem; }
+  ul, ol { padding-left: 1.3rem; margin: 0 0 0.9rem; }
+  li { margin-bottom: 0.4rem; }
+  strong { font-weight: 600; }
+  code.inline {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 0.08em 0.35em;
+    border-radius: 3px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 1.3rem 1.4rem;
+    margin-bottom: 1.1rem;
+    box-shadow: var(--shadow);
+  }
+  .card > *:last-child { margin-bottom: 0; }
+
+  .checklist { list-style: none; padding: 0; margin: 0 0 1.1rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .checklist li {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-bottom: 0;
+  }
+  .checklist li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.2rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+    background: var(--surface);
+  }
+
+  .step-flow {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .step-flow li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 2.4rem;
+    margin-bottom: 0;
+  }
+  .step-flow li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0.05rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .example {
+    background: var(--surface-2);
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 1.1rem;
+  }
+  .example > *:last-child { margin-bottom: 0; }
+  .example-title {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin-bottom: 0.6rem;
+  }
+  pre.code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    margin: 0 0 0.9rem;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .table-wrap { overflow-x: auto; margin-bottom: 1.1rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  caption {
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    margin-bottom: 0.5rem;
+    caption-side: top;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: var(--surface-2);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { font-family: "JetBrains Mono", monospace; text-align: right; white-space: nowrap; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.18rem 0.55rem;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .chip-good { background: var(--accent-soft); color: var(--accent-ink); }
+  .chip-warn { background: var(--warn-soft); color: var(--warn); }
+  .chip-bad { background: var(--bad-soft); color: var(--bad); }
+
+  .callout {
+    border: 1px solid var(--warn);
+    background: var(--warn-soft);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.1rem;
+    color: var(--ink);
+  }
+  .callout > *:last-child { margin-bottom: 0; }
+  .callout-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--warn);
+    margin-bottom: 0.4rem;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 2.5rem;
+    padding-top: 1.2rem;
+    color: var(--ink-dim);
+    font-size: 0.85rem;
+  }
+  footer code { font-family: "JetBrains Mono", monospace; }
+
+  @media (max-width: 560px) {
+    h1 { font-size: 1.65rem; }
+    .page { padding: 2rem 1.1rem 4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="doc-head">
+    <span class="eyebrow">Assignment 1 · 15% of final grade</span>
+    <h1>Stump the Model</h1>
+    <div class="doc-meta">
+      <span><b>Course:</b> CS3264 Foundations of Machine Learning</span>
+      <span><b>Individual work</b></span>
+      <span><b>Deadline:</b> Friday 13 November 2026, 23:59 (last Friday of lectures)</span>
+    </div>
+  </header>
+
+  <div class="intro">
+    <p><strong>In one sentence:</strong> write six math questions that a specific AI model gets wrong, and explain why you think it will get them wrong.</p>
+    <p style="margin-bottom:0;">This is not about writing hard or tricky questions for its own sake. It is about finding a real weak spot in how a model reasons — the kind of weak spot you can only find if you actually understand the material yourself. Simply asking an AI tool to "make a hard question" will not work reliably, because you also need to know the model well enough to predict, in advance, why it will fail. That is the actual skill being tested here.</p>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">1</span>
+      <h2>What you need to do</h2>
+    </div>
+    <p>Write <strong>6 original questions</strong>. Each question must:</p>
+    <ul class="checklist">
+      <li>Be about a topic from this course (see the list of topics in Section 2)</li>
+      <li>Have exactly <strong>one correct number</strong> as the answer — no multiple parts, no open-ended discussion</li>
+      <li>Be solvable with pen and paper — no figures, no data files, no code needed to solve it</li>
+      <li>Come with your own full written solution (we call this the <em>derivation</em>)</li>
+      <li>Come with a short guess, in your own words, about why the AI model will get it wrong</li>
+    </ul>
+    <p>Across your 6 questions, you must use <strong>at least 4 different topics</strong> from the list in Section 2, and <strong>no more than 2 questions on the same topic</strong>. This stops everyone from writing all 6 questions about the one topic that happens to be easiest to break.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">2</span>
+      <h2>Topics you can write about</h2>
+    </div>
+    <p>Pick a topic for each question from this fixed list — it must match one of these six blocks from the syllabus:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Topic name (use this exact word)</th><th>What it covers</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">regression_prob</td><td>Regression, probability, MLE/MAP (Weeks 1–2)</td></tr>
+          <tr><td class="mono">classification</td><td>Classification, naive Bayes, overfitting, bias-variance (Weeks 3–5)</td></tr>
+          <tr><td class="mono">pac_learning</td><td>Learning theory / PAC bounds (Week 6)</td></tr>
+          <tr><td class="mono">nn_backprop</td><td>Neural networks, backpropagation, CNNs, transformers, SGD (Weeks 8–9)</td></tr>
+          <tr><td class="mono">kernels_svm</td><td>Kernels, support vector machines (Week 10)</td></tr>
+          <tr><td class="mono">unsupervised</td><td>k-means, EM, VAEs, KL divergence (Weeks 11–12)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">3</span>
+      <h2>A full example</h2>
+    </div>
+    <p>Here is one real, complete question, written the way yours should look:</p>
+    <div class="example">
+      <div class="example-title">Topic: kernels_svm &nbsp;·&nbsp; Reason: definition_ambiguity</div>
+      <p><strong>Question:</strong> A hard-margin SVM has weight vector w = [6, 8]. The two supporting hyperplanes are w·x + b = 1 and w·x + b = −1. Report the perpendicular distance between these two hyperplanes.</p>
+      <p><strong>Your solution:</strong> ‖w‖ = √(6² + 8²) = √100 = 10. The full margin width is 2/‖w‖ = 2/10 = <strong>0.2</strong>.</p>
+      <p><strong>Answer:</strong> 0.2 &nbsp; (accept anything within 1% of this)</p>
+      <p style="margin-bottom:0;"><strong>Why you think the model will fail:</strong> Models sometimes report 1/‖w‖ instead — the distance from just one hyperplane to the decision boundary — because the word "margin" is used loosely in different textbooks to mean either quantity. The full distance between the two hyperplanes is 2/‖w‖, not 1/‖w‖.</p>
+    </div>
+    <p>This question is well formed: it is short, self-contained, has exactly one number as the answer, and the written reason is specific to this exact question rather than a generic guess.</p>
+    <div class="callout">
+      <div class="callout-title">Note</div>
+      <p style="margin-bottom:0;">This example is here to show the format. It is <strong>not</strong> an actual stump: Qwen3-1.7B answers it correctly with 0.2. It is also the sample question in the notebook, so you can see this for yourself. A well-formed question with a plausible failure reason is the starting point; only running it against the model, as in Section 5, tells you whether the model actually falls for it.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">4</span>
+      <h2>How to submit</h2>
+    </div>
+    <p>Submit <strong>one JSONL file</strong> (a plain text file with one JSON object per line — see the worked example below). It should contain your 6 questions, one per line. Each question needs these nine pieces of information, plus one optional field if you are claiming the bonus in Section 7:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>What goes here</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">student_id</td><td>Your matriculation number (e.g. <code class="inline">A0123456X</code>) — the same on all 6 lines</td></tr>
+          <tr><td class="mono">question_number</td><td>Which question this is: 1 through 6</td></tr>
+          <tr><td class="mono">category</td><td>One of the six topic names from Section 2</td></tr>
+          <tr><td class="mono">failure_mode</td><td>A short label for why you expect the model to fail — one of: <code class="inline">formula_confusion</code>, <code class="inline">sign_or_direction</code>, <code class="inline">multi_step_compounding</code>, <code class="inline">edge_case_or_degenerate</code>, <code class="inline">arithmetic_precision</code>, <code class="inline">definition_ambiguity</code>, or <code class="inline">other</code></td></tr>
+          <tr><td class="mono">question_text</td><td>The question itself — nothing else. Do not add your own "give me the final answer" instruction; we add this automatically so every student's question looks the same to the model.</td></tr>
+          <tr><td class="mono">derivation</td><td>Your full written solution, step by step</td></tr>
+          <tr><td class="mono">final_answer</td><td>The correct number</td></tr>
+          <tr><td class="mono">answer_tolerance</td><td>How close a model's answer needs to be to count as correct — an object with a <code class="inline">type</code> (<code class="inline">"relative"</code> or <code class="inline">"absolute"</code>) and a <code class="inline">value</code>. Use relative (e.g. 1% = 0.01) unless your answer is 0 or very close to 0, in which case use absolute instead.</td></tr>
+          <tr><td class="mono">failure_prediction</td><td>2–3 sentences, in your own words, on why you expect the model to get this specific question wrong</td></tr>
+          <tr><td class="mono">bonus_note</td><td><em>Optional</em> — include it only if you are claiming the frontier-model bonus from Section 7 for this question. Name the exact model and version you tested, the date you tested it, and what it answered. Leave the field out otherwise.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>What one line of your file should look like</h3>
+    <p>This is the same worked example from Section 3, written exactly as it should appear in your file. In your actual file, this whole thing is <strong>one single line</strong> — it's only broken across multiple lines here to make it easier to read.</p>
+    <pre class="code">{
+  "student_id": "A0123456X",
+  "question_number": 1,
+  "category": "kernels_svm",
+  "failure_mode": "definition_ambiguity",
+  "question_text": "A hard-margin SVM has weight vector w = [6, 8]. The two supporting hyperplanes are w.x + b = 1 and w.x + b = -1. Report the perpendicular distance between these two hyperplanes.",
+  "derivation": "||w|| = sqrt(6^2 + 8^2) = sqrt(100) = 10. The full margin width is 2/||w|| = 2/10 = 0.2.",
+  "final_answer": 0.2,
+  "answer_tolerance": {"type": "relative", "value": 0.01},
+  "failure_prediction": "Models sometimes report 1/||w|| instead of the full 2/||w|| width between both hyperplanes, because the word margin is used ambiguously to mean either quantity."
+}</pre>
+    <p>Your finished file has 6 lines like this one, back to back — one per question, each a complete, valid JSON object on its own line.</p>
+    <p>If you are claiming the bonus for a question, add <code class="inline">"bonus_note": "..."</code> as a tenth field on that question's line. Section 7 of the notebook checks your finished file against all of these rules.</p>
+
+    <h3>Where and how to submit</h3>
+    <p><strong>When:</strong> by <strong>Friday 13 November 2026, 23:59</strong> (Singapore time) — the last Friday of lectures, in Week 13.</p>
+    <p><strong>Where to submit:</strong> through Canvas, as a single file upload to the Assignment 1 submission point.</p>
+    <p style="margin-bottom:0;"><strong>File name:</strong> name your file <code class="inline">&lt;your_student_id&gt;_submission.jsonl</code> — for example, <code class="inline">A0123456X_submission.jsonl</code>.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">5</span>
+      <h2>The model you are trying to beat</h2>
+    </div>
+    <p>We use <strong>one fixed AI model</strong> for the whole term, named exactly below. It is picked so it is neither too weak (everyone would beat it easily) nor too strong (nobody could beat it) — it sits in a range where a genuinely good question can succeed and a weak one cannot.</p>
+
+    <h3>Main model</h3>
+    <div class="card">
+      <p><strong>Qwen3-1.7B</strong> (Hugging Face id: <code class="inline">Qwen/Qwen3-1.7B</code>), run with these fixed settings:</p>
+      <ul style="margin-bottom:0;">
+        <li>Greedy decoding — the model always picks its single most likely next word, no randomness</li>
+        <li>Reasoning ("thinking") turned on — the model writes out its working before the final answer</li>
+        <li>Up to 8192 tokens of output per question, so the model has room to finish its reasoning</li>
+        <li>A fixed system prompt, plus one fixed instruction appended to every question asking for a final numeric answer on its own line — both are printed in full in the notebook</li>
+      </ul>
+    </div>
+
+    <h3>Validate your question with the provided notebook</h3>
+    <p>A ready-to-run notebook, <a href="cs3264_assignment1_test_your_question.ipynb"><code class="inline">cs3264_assignment1_test_your_question.ipynb</code></a>, is provided together with this document. <a href="https://colab.research.google.com/github/haroldsoh/cs3264/blob/main/assignments/cs3264_assignment1_test_your_question.ipynb">Open it directly in Google Colab</a> (free, needs only a Google account), go to <code class="inline">Runtime → Change runtime type</code> and select a T4 GPU, then paste in your question text, your final answer, and your tolerance. It downloads and runs the exact same model with the exact same settings used for grading — greedy decoding, thinking mode on, the same system prompt and the same fixed instruction appended to your question — and tells you directly whether the model matches your answer.</p>
+    <p>The notebook also runs your question a second time and checks the two runs agree. Because decoding is greedy, this confirms the result is deterministic on that machine. Grading is run on the same type of GPU as Colab's free tier (an NVIDIA T4) with the same software settings, so the notebook is the closest preview of grading you can get.</p>
+    <p style="margin-bottom:0;">The notebook reports one of four verdicts: <code class="inline">NOT STUMPED</code>, <code class="inline">STUMPED</code>, <code class="inline">STUMPED (no readable number)</code>, or <code class="inline">NO RESULT</code>. The last one means the model ran out of its 8192-token budget before finishing, usually because it fell into a repetition loop. Such a run earns no stump marks in grading (see Section 6), so if you see it, rewrite the question until the model commits to a definite answer.</p>
+
+    <h3>A quick, informal check: Qwen Chat</h3>
+    <p style="margin-bottom:0;">You can also get a rough first impression of how today's AI models handle your question on <a href="https://chat.qwen.ai">Qwen Chat</a>. This is faster, but less reliable: Qwen Chat currently only offers newer Qwen versions than the one used for grading, and it does not let you control decoding settings, so it cannot confirm reproducibility the way the notebook can. Use it as an early filter, not as your final check — the notebook above is what actually tells you whether a question works.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">6</span>
+      <h2>How your questions are graded</h2>
+    </div>
+    <p>After the deadline, every student's 6 questions are sent to the model, one at a time, using the exact same setup for everyone:</p>
+    <ul class="checklist">
+      <li>The model sees only a fixed system prompt, your question text, and one fixed instruction asking it to give a final numeric answer</li>
+      <li>The model gets exactly one attempt — no retries, no extra hints, no tools</li>
+      <li>A question counts as a <strong>stump</strong> if the model finishes and its final answer does not match your declared answer within your declared tolerance. If the model finishes but its final line contains no readable number, that also counts as a stump, and a TA checks the response by hand</li>
+      <li>If the model runs out of its 8192-token budget before finishing — usually because it fell into a repetition loop — the run produces <strong>no result</strong> and the question does <strong>not</strong> count as a stump. The notebook shows you when this happens, so you can rewrite the question before you submit</li>
+    </ul>
+    <p>Separately, a teaching assistant checks that your written solution is actually correct and that the question really belongs to the topic you chose. A question with a wrong or unclear solution does not earn stump marks, even if the model also happened to get it wrong — the point is to find genuine weaknesses, not to submit broken questions.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">7</span>
+      <h2>Marks — 100 total</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part</th><th class="num">Marks</th><th>How it's marked</th></tr></thead>
+        <tbody>
+          <tr><td>Valid questions with correct, well-written solutions</td><td class="num mono">54</td><td>9 marks per question, marked by a TA</td></tr>
+          <tr><td>Questions that actually stump the model</td><td class="num mono">32</td><td>8 marks per stumped question, up to a maximum of 4 (you do not need to stump all 6)</td></tr>
+          <tr><td>Your written reasons for why the model would fail</td><td class="num mono">14</td><td>Marked leniently — about how specific and thought-through your reason is, not whether it turned out to be right</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>How marks are decided for each part</h3>
+    <p><strong>Valid questions and solutions (54 marks, 9 per question):</strong></p>
+    <ul>
+      <li><strong>Full marks:</strong> self-contained question, on-topic, one clear number as the answer, and a complete, correct solution</li>
+      <li><strong>Small deductions:</strong> right answer, mostly right solution, but a step is unclear or the tolerance you set is a bit too loose or too tight</li>
+      <li><strong>Partial marks:</strong> your solution has a real mistake but shows you understood the right method, or the question is borderline not really "computational"</li>
+      <li><strong>Little or no marks:</strong> your stated answer doesn't match your own solution, the topic is wrong, the question needs a figure or outside data to solve, or it's unclear what single number is being asked for</li>
+    </ul>
+    <p style="font-size:0.9rem; color:var(--ink-dim);">A question with little or no marks here also cannot earn stump marks — a broken question "beating" the model doesn't count.</p>
+    <p><strong>Stumps (32 marks, 8 each, capped at 4):</strong> this part is decided automatically by running your questions through the model, as described in Section 6. Only questions that pass the check above are eligible.</p>
+    <p><strong>Failure reasons (14 marks total):</strong></p>
+    <ul>
+      <li><strong>High marks:</strong> names a specific reason tied to exactly this question, not a generic guess</li>
+      <li><strong>Middle marks:</strong> plausible, but generic — could be copy-pasted onto almost any question unchanged</li>
+      <li><strong>Low marks:</strong> boilerplate text, or doesn't match the reason category you picked</li>
+    </ul>
+    <p>A good reason still earns full marks even if that particular question does not end up stumping the model — you are marked on the quality of your thinking, not on the outcome.</p>
+    <div class="card">
+      <p style="margin-bottom:0;"><strong>Example:</strong> 6 valid, well-written questions gives the full <strong class="mono">54</strong>; 2 real stumps gives 2 × 8 = <strong class="mono">16</strong>. That's <strong class="mono">70</strong> from those two parts alone, plus up to <strong class="mono">14</strong> more depending on how specific your failure-reason writing is — solid, honest work like this lands roughly in the low-to-mid 80s out of 100.</p>
+    </div>
+
+    <h3>Bonus: beating a much stronger model</h3>
+    <p>This bonus is not added to Assignment 1's own score. If one of your questions also stumps a frontier-level model — GPT-5.5 or later, or Claude 4.7 or later — you earn up to <strong>10 percentage points added to your Assignment 2 score</strong>, capped so Assignment 2 cannot go above 100%. It only helps if your Assignment 2 mark was below full marks.</p>
+    <p style="margin-bottom:0;">To claim it, add the optional <code class="inline">bonus_note</code> field to that question's line in your file (see Section 4): name the exact model and version you tested, the date, and what it answered. Keep a screenshot or a shareable link to the conversation in case a TA asks to see it.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">8</span>
+      <h2>Copying</h2>
+    </div>
+    <p style="margin-bottom:0;">We compare every student's questions against every other student's, using an automatic similarity check. Two very similar questions from different students get flagged for a TA to look at by hand. This is only a flag for review, never an automatic penalty — and we never reward a question for being "more different," so there is no reason to deliberately make your questions strange just to avoid a flag.</p>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <span class="sec-tag">9</span>
+      <h2>Before you submit</h2>
+    </div>
+    <ul class="checklist">
+      <li>You have 6 questions, covering at least 4 different topics, with no more than 2 questions on the same topic</li>
+      <li>Every question has exactly one number as its answer</li>
+      <li>Every question is fully self-contained — no figures, no files, no code needed</li>
+      <li>You did not add your own "give the final answer" instruction to the question text</li>
+      <li>Every solution is complete enough that a classmate could follow it without you there to explain</li>
+      <li>You ran every question you are counting on as a stump through the provided notebook, and it reported <code class="inline">STUMPED</code> on both runs — not <code class="inline">NO RESULT</code></li>
+      <li>If you are claiming the bonus for a question, that line has a <code class="inline">bonus_note</code> naming the exact model and version you tested</li>
+    </ul>
+  </section>
+
+
+</div>
+</body>
+</html>
