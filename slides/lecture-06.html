@@ -1725,6 +1725,16 @@ const SLIDES = [
     <div class="col"><svg id="bnd6r" viewBox="0 0 560 330" style="width:100%;height:300px;display:block"></svg></div>
   </div>`},
 
+{s:"Summary", t:"Mid-semester survey", div:true, html:`
+  <div class="divider" style="align-items:center;text-align:center">
+    <h1 style="font-size:56px">Mid-semester survey</h1>
+    <div class="bar" style="margin:18px auto 24px"></div>
+    <img src="media/survey-qr.svg" alt="QR code for the mid-semester survey, forms.gle/r9UM2oT6rkZd2hUo8"
+         style="width:320px;display:block;margin:0 auto 14px">
+    <div style="font-family:var(--font-sans);font-size:22px;letter-spacing:.02em;color:var(--ink)">
+      <strong>forms.gle/r9UM2oT6rkZd2hUo8</strong></div>
+  </div>`},
+
 {s:"Summary", t:"See you after recess", div:true, html:`
   <div class="divider" style="align-items:center;text-align:center">
     <h1 style="font-size:56px">Midterm: 29 September</h1>
@@ -1749,7 +1759,7 @@ const SLIDES = [
    ran 95, so every figure here is an earlier estimate scaled by 0.62. If you add a
    slide, write what you actually expect to spend -- these numbers are now real
    minutes, not the optimistic ones. */
-const EST=[0.5, 0.8, 0.7, 0.2, 1.1, 1.4, 1.4, 0.2, 2.3, 1.6, 1.6, 0.2, 1.3, 1.7, 1.6, 1.3, 1.4, 1.8, 1.8, 2.4, 2.3, 1.4, 1.8, 1.9, 1.6, 2.3, 1.1, 1.6, 1.6, 1.7, 2.1, 1.8, 1.6, 1.8, 2.1, 1.5, 2.0, 1.8, 1.6, 1.3, 1.1, 0.2, 1.7, 1.8, 1.1, 1.7, 1.6, 1.6, 2.7, 2.2, 1.9, 1.6, 1.9, 1.6, 1.1, 0.2, 1.9, 1.1, 0.2, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 0.3];
+const EST=[0.5, 0.8, 0.7, 0.2, 1.1, 1.4, 1.4, 0.2, 2.3, 1.6, 1.6, 0.2, 1.3, 1.7, 1.6, 1.3, 1.4, 1.8, 1.8, 2.4, 2.3, 1.4, 1.8, 1.9, 1.6, 2.3, 1.1, 1.6, 1.6, 1.7, 2.1, 1.8, 1.6, 1.8, 2.1, 1.5, 2.0, 1.8, 1.6, 1.3, 1.1, 0.2, 1.7, 1.8, 1.1, 1.7, 1.6, 1.6, 2.7, 2.2, 1.9, 1.6, 1.9, 1.6, 1.1, 0.2, 1.9, 1.1, 0.2, 1.3, 1.3, 1.3, 1.3, 1.3, 1.3, 1.1, 0.3];
 const EST_TOTAL=EST.reduce((a,b)=>a+b,0);
 const cumMin=i=>EST.slice(0,i+1).reduce((a,b)=>a+(b||0),0);
 
