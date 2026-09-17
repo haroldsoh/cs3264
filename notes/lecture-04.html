@@ -30,12 +30,12 @@
 <ol class="toc-list">
 <li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
 <li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
-<li class="toc-h2"><a href="#discriminative-and-generative-models">Discriminative and Generative Models</a></li>
+<li class="toc-h1"><a href="#discriminative-and-generative-models">Discriminative and Generative Models</a></li>
 <li class="toc-h3"><a href="#making-a-prediction">Making a Prediction</a></li>
 <li class="toc-h3"><a href="#why-model-more-than-we-need">Why Model More Than We Need?</a></li>
-<li class="toc-h2"><a href="#naive-bayes-giving-the-model-useful-structure">Naive Bayes: Giving the Model Useful Structure</a></li>
-<li class="toc-h3"><a href="#the-naive-assumption">The Naive Assumption</a></li>
-<li class="toc-h3"><a href="#gaussian-naive-bayes">Gaussian Naive Bayes</a></li>
+<li class="toc-h1"><a href="#naive-bayes-giving-the-model-useful-structure">Naive Bayes: Giving the Model Useful Structure</a></li>
+<li class="toc-h2"><a href="#the-naive-assumption">The Naive Assumption</a></li>
+<li class="toc-h2"><a href="#gaussian-naive-bayes">Gaussian Naive Bayes</a></li>
 <li class="toc-h2"><a href="#learning-naive-bayes">Learning Naive Bayes</a></li>
 <li class="toc-h3"><a href="#learning-the-class-prior">Learning the Class Prior</a></li>
 <li class="toc-h3"><a href="#learning-the-feature-distributions">Learning the Feature Distributions</a></li>
@@ -46,11 +46,11 @@
 <li class="toc-h2"><a href="#naive-bayes-for-text">Naive Bayes for Text</a></li>
 <li class="toc-h3"><a href="#the-zero-count-problem">The Zero-Count Problem</a></li>
 <li class="toc-h3"><a href="#laplace-smoothing">Laplace Smoothing</a></li>
-<li class="toc-h2"><a href="#what-a-generative-model-buys-us">What a Generative Model Buys Us</a></li>
+<li class="toc-h1"><a href="#what-a-generative-model-buys-us">What a Generative Model Buys Us</a></li>
 <li class="toc-h3"><a href="#missing-features">Missing Features</a></li>
 <li class="toc-h3"><a href="#generating-new-data">Generating New Data</a></li>
 <li class="toc-h2"><a href="#what-the-naive-assumption-costs">What the Naive Assumption Costs</a></li>
-<li class="toc-h2"><a href="#generative-and-discriminative-models-revisited">Generative and Discriminative Models Revisited</a></li>
+<li class="toc-h1"><a href="#generative-and-discriminative-models-revisited">Generative and Discriminative Models Revisited</a></li>
 <li class="toc-h2"><a href="#a-broader-view-of-generative-models">A Broader View of Generative Models</a></li>
 <li class="toc-h1"><a href="#summary">Summary</a></li>
 </ol>
@@ -93,7 +93,7 @@ p(t)\,p(\mathbf{x}\mid t).\]</span></p>
 </ul>
 <p>To achieve these learning objectives, we will start by comparing discriminative and generative modelling. We will then build a simple generative classifier and see why a direct model of <span class="math inline">p(\mathbf{x}\mid t)</span> quickly becomes difficult. Naive Bayes will solve this problem by <em>imposing structure</em> on the distribution. We will then see how this structure makes learning and prediction simple, before considering the benefits and costs of the assumptions we made.</p>
 <hr />
-<h2 id="discriminative-and-generative-models">Discriminative and Generative Models</h2>
+<h1 id="discriminative-and-generative-models">Discriminative and Generative Models</h1>
 <p>Suppose our data is</p>
 <p><span class="math display">\[\mathcal{D}
 =
@@ -167,7 +167,7 @@ p(\mathbf{x}\mid t')p(t')
 <p><strong>A discriminative model directly models the prediction. A generative model models how the data is produced and obtains the prediction using Bayes' rule.</strong></p>
 </blockquote>
 <hr />
-<h2 id="naive-bayes-giving-the-model-useful-structure">Naive Bayes: Giving the Model Useful Structure</h2>
+<h1 id="naive-bayes-giving-the-model-useful-structure">Naive Bayes: Giving the Model Useful Structure</h1>
 <p>Recall that our model comprises two parts: the class prior <span class="math inline">p(t)</span> and the class-conditional distribution <span class="math inline">p(\mathbf{x}\mid t)</span>. The class prior is easy to specify: we use a Bernoulli distribution if there are only two classes. If we have more classes, we use the Categorical distribution.</p>
 <p>The tricky part is the class-conditional distribution</p>
 <p><span class="math display">\[p(\mathbf{x}\mid t).\]</span></p>
@@ -180,7 +180,7 @@ p(\mathbf{x}\mid t')p(t')
 <p><span class="math display">\[p(x^1,\ldots,x^M\mid t).\]</span></p>
 <p>The problem is that a general joint distribution can be very complicated. We need to describe not only each feature separately, but also how every feature varies with every other feature. The number of quantities we need to estimate can grow very quickly with <span class="math inline">M</span>.</p>
 <p><strong><a class="slide-link" href="../slides/lecture-04.html#22" target="_blank" rel="noopener">Slide 22</a></strong> makes this problem concrete by increasing the number of features. A flexible joint model quickly has many more parameters than we can reliably estimate from the available data.</p>
-<h3 id="the-naive-assumption">The Naive Assumption</h3>
+<h2 id="the-naive-assumption">The Naive Assumption</h2>
 <p>Naive Bayes makes a strong simplifying assumption:</p>
 <blockquote>
 <p><strong>Given the class, the features are independent.</strong></p>
@@ -203,7 +203,7 @@ p(x^2\mid t),\quad
 \ldots,\quad
 p(x^M\mid t).\]</span></p>
 <p>Each feature can now be handled separately. To make this idea concreate, let's examine the example that uses Gaussians.</p>
-<h3 id="gaussian-naive-bayes">Gaussian Naive Bayes</h3>
+<h2 id="gaussian-naive-bayes">Gaussian Naive Bayes</h2>
 <p>For continuous features such as age and mileage, a simple choice is to model each feature with a Gaussian:</p>
 <p><span class="math display">\[p(x^m\mid t=k)
 =
@@ -498,7 +498,7 @@ N_t+2a
 <p><strong>MLE uses the observed counts. MAP uses the observed counts plus prior pseudo-counts.</strong></p>
 </blockquote>
 <hr />
-<h2 id="what-a-generative-model-buys-us">What a Generative Model Buys Us</h2>
+<h1 id="what-a-generative-model-buys-us">What a Generative Model Buys Us</h1>
 <p>Because a generative model represents the joint distribution, it supports questions that a conditional classifier does not answer directly.</p>
 <h3 id="missing-features">Missing Features</h3>
 <p>Suppose a car's age is known but its mileage is missing. We want</p>
@@ -558,7 +558,7 @@ p(x^1\mid t)p(x^2\mid t).\]</span></p>
 <li>the same assumption prevents the model from representing some real relationships between features</li>
 </ul>
 <hr />
-<h2 id="generative-and-discriminative-models-revisited">Generative and Discriminative Models Revisited</h2>
+<h1 id="generative-and-discriminative-models-revisited">Generative and Discriminative Models Revisited</h1>
 <p>We can now compare Naive Bayes with logistic regression more clearly.</p>
 <p>Logistic regression directly models</p>
 <p><span class="math display">\[p(t\mid\mathbf{x}).\]</span></p>

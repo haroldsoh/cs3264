@@ -32,7 +32,7 @@
 <li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
 <li class="toc-h1"><a href="#what-is-machine-learning">What Is Machine Learning?</a></li>
 <li class="toc-h3"><a href="#a-recurring-picture">A recurring picture</a></li>
-<li class="toc-h1"><a href="#learning-from-examples">Learning From Examples</a></li>
+<li class="toc-h2"><a href="#learning-from-examples">Learning From Examples</a></li>
 <li class="toc-h1"><a href="#types-of-machine-learning-problems">Types of Machine Learning Problems</a></li>
 <li class="toc-h2"><a href="#supervised-learning">Supervised learning</a></li>
 <li class="toc-h3"><a href="#classification">Classification</a></li>
@@ -56,8 +56,8 @@
 <li class="toc-h3"><a href="#what-does-the-regulariser-actually-do">What Does the Regulariser Actually Do?</a></li>
 <li class="toc-h2"><a href="#the-cost-of-the-closed-form-solution">The Cost of the Closed-Form Solution</a></li>
 <li class="toc-h2"><a href="#gradient-descent">Gradient Descent</a></li>
-<li class="toc-h2"><a href="#the-bigger-picture">The Bigger Picture</a></li>
-<li class="toc-h2"><a href="#summary">Summary</a></li>
+<li class="toc-h1"><a href="#the-bigger-picture">The Bigger Picture</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
 </ol>
 </details>
 </aside>
@@ -124,7 +124,7 @@
 <p>Do not mix up the model and the learning algorithm. For example, a straight line is a model. Least squares is a method for choosing which straight line to use.</p>
 <p><a class="slide-link" href="../slides/lecture-01.html#5" target="_blank" rel="noopener">Slides 5-9</a> give several examples of this idea. The data can look very different, from images to stock prices to robot motion, but the underlying question is similar: <strong>what useful pattern can we learn from the data?</strong></p>
 <hr />
-<h1 id="learning-from-examples">Learning From Examples</h1>
+<h2 id="learning-from-examples">Learning From Examples</h2>
 <p>A single supervised learning example usually contains an <strong>input</strong> and a <strong>target</strong>. We write an example as <span class="math inline">(\mathbf{x}, t)</span>.</p>
 <p>Here:</p>
 <ul>
@@ -704,7 +704,7 @@ E
 <li>but each update is a noisier estimate of the direction we should move.</li>
 </ul>
 <p>We will study gradient-based optimisation more carefully later. For now, the important point is that closed-form solutions are convenient for small problems, but iterative methods scale much better.</p>
-<h2 id="the-bigger-picture">The Bigger Picture</h2>
+<h1 id="the-bigger-picture">The Bigger Picture</h1>
 <p>We began with a straight line, but we have already encountered many of the central ideas in machine learning. Let's quickly revisit each one below:</p>
 <h4 id="data">Data</h4>
 <p>We observe examples</p>
@@ -728,7 +728,7 @@ E
 <p>We choose parameters that minimise the objective. Sometimes this gives a direct analytic solution. For larger or more complicated problems, we instead use iterative optimisation.</p>
 <h4 id="generalisation">Generalisation</h4>
 <p>Finally, we ask whether the learned model works on data that was not used to fit it. This last step is very important. A model is not useful simply because it remembers its training examples well. We would like to apply the model on unseen data.</p>
-<h2 id="summary">Summary</h2>
+<h1 id="summary">Summary</h1>
 <p>In this lecture, we introduced machine learning as the problem of learning useful patterns or prediction rules from data. A useful way to organise a machine learning method is through three ingredients:</p>
 <ol type="1">
 <li><strong>Data</strong>: what examples do we observe?</li>

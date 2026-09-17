@@ -30,8 +30,8 @@
 <ol class="toc-list">
 <li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
 <li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
-<li class="toc-h2"><a href="#from-point-predictions-to-probability-distributions">From Point Predictions to Probability Distributions</a></li>
-<li class="toc-h2"><a href="#probability-preliminaries">Probability Preliminaries</a></li>
+<li class="toc-h1"><a href="#from-point-predictions-to-probability-distributions">From Point Predictions to Probability Distributions</a></li>
+<li class="toc-h1"><a href="#probability-preliminaries">Probability Preliminaries</a></li>
 <li class="toc-h3"><a href="#discrete-probabilities-and-continuous-densities">Discrete Probabilities and Continuous Densities</a></li>
 <li class="toc-h3"><a href="#the-gaussian-distribution">The Gaussian Distribution</a></li>
 <li class="toc-h2"><a href="#two-basic-probability-rules">Two Basic Probability Rules</a></li>
@@ -43,18 +43,18 @@
 <li class="toc-h3"><a href="#a-gaussian-example">A Gaussian Example</a></li>
 <li class="toc-h3"><a href="#why-maximum-likelihood">Why Maximum Likelihood?</a></li>
 <li class="toc-h2"><a href="#multivariate-gaussians">Multivariate Gaussians</a></li>
-<li class="toc-h2"><a href="#linear-regression-a-probabilistic-approach">Linear Regression: A Probabilistic Approach</a></li>
+<li class="toc-h1"><a href="#linear-regression-a-probabilistic-approach">Linear Regression: A Probabilistic Approach</a></li>
 <li class="toc-h3"><a href="#the-distribution-of-the-target">The Distribution of the Target</a></li>
-<li class="toc-h3"><a href="#maximum-likelihood-for-linear-regression">Maximum Likelihood for Linear Regression</a></li>
-<li class="toc-h3"><a href="#the-noise-model-determines-the-loss">The Noise Model Determines the Loss</a></li>
+<li class="toc-h2"><a href="#maximum-likelihood-for-linear-regression">Maximum Likelihood for Linear Regression</a></li>
+<li class="toc-h2"><a href="#the-noise-model-determines-the-loss">The Noise Model Determines the Loss</a></li>
 <li class="toc-h2"><a href="#from-maximum-likelihood-to-a-bayesian-model">From Maximum Likelihood to a Bayesian Model</a></li>
 <li class="toc-h3"><a href="#a-prior-over-the-weights">A Prior Over the Weights</a></li>
 <li class="toc-h2"><a href="#maximum-a-posteriori-estimation">Maximum A Posteriori Estimation</a></li>
 <li class="toc-h3"><a href="#the-regularization-hyperparameter-lambda">The regularization hyperparameter <span class="math inline">\lambda</span>.</a></li>
-<li class="toc-h1"><a href="#point-estimates-versus-distributions-over-parameters">Point Estimates Versus Distributions Over Parameters</a></li>
-<li class="toc-h2"><a href="#bayesian-linear-regression">Bayesian Linear Regression</a></li>
+<li class="toc-h2"><a href="#point-estimates-versus-distributions-over-parameters">Point Estimates Versus Distributions Over Parameters</a></li>
+<li class="toc-h1"><a href="#bayesian-linear-regression">Bayesian Linear Regression</a></li>
 <li class="toc-h2"><a href="#making-predictions-with-the-posterior">Making Predictions With the Posterior</a></li>
-<li class="toc-h2"><a href="#two-sources-of-predictive-uncertainty">Two Sources of Predictive Uncertainty</a></li>
+<li class="toc-h1"><a href="#two-sources-of-predictive-uncertainty">Two Sources of Predictive Uncertainty</a></li>
 <li class="toc-h3"><a href="#aleatoric-uncertainty">Aleatoric Uncertainty</a></li>
 <li class="toc-h3"><a href="#epistemic-uncertainty">Epistemic Uncertainty</a></li>
 <li class="toc-h2"><a href="#mle-map-and-the-full-posterior">MLE, MAP, and the Full Posterior</a></li>
@@ -89,7 +89,7 @@
 </ul>
 <p>We will first review the small amount of probability needed for the lecture. We will then learn how to fit a probabilistic model using maximum likelihood. After that, we will apply the same ideas to regression and finally introduce the Bayesian view.</p>
 <hr />
-<h2 id="from-point-predictions-to-probability-distributions">From Point Predictions to Probability Distributions</h2>
+<h1 id="from-point-predictions-to-probability-distributions">From Point Predictions to Probability Distributions</h1>
 <p>Recall the three ingredients from Lecture 1:</p>
 <ul>
 <li><strong>Data:</strong> what we observe</li>
@@ -131,7 +131,7 @@ y(x_n;\mathbf{w})-t_n
 <p>The output of the model is now a <strong>probability distribution</strong>.</p>
 <p><strong>Why is this useful?</strong> Consider the used-car example on <strong><a class="slide-link" href="../slides/lecture-02.html#8" target="_blank" rel="noopener">Slide 8</a></strong>. Suppose two models both predict that a particular car should sell for $14,200. The seller asks $15,000. If selling prices for similar cars are tightly clustered around $14,200, then $15,000 is unusual. If selling prices vary widely, then $15,000 may be completely ordinary. The average prediction is identical in both cases. What differs is the <strong>uncertainty around that prediction</strong>.</p>
 <hr />
-<h2 id="probability-preliminaries">Probability Preliminaries</h2>
+<h1 id="probability-preliminaries">Probability Preliminaries</h1>
 <p>We need a few basic probability ideas for this lecture:</p>
 <ol type="1">
 <li>probability distributions</li>
@@ -445,7 +445,7 @@ t_n
 </ul>
 <p>You do not need to memorise the multivariate Gaussian density at this point. We will give you the formula in exams, but after a while, you will end up memorizing it because we use it very often.</p>
 <hr />
-<h2 id="linear-regression-a-probabilistic-approach">Linear Regression: A Probabilistic Approach</h2>
+<h1 id="linear-regression-a-probabilistic-approach">Linear Regression: A Probabilistic Approach</h1>
 <p>We now return to linear regression. Recall our regression model from Lecture 1:</p>
 <p><span class="math display">\[y(x;\mathbf{w})
 =
@@ -491,7 +491,7 @@ t_n
 <p><span class="math display">\[\mathbf{w}^{\top}\boldsymbol{\phi}(x_n).\]</span></p>
 <p>It is saying that targets are distributed <strong>around</strong> this value. The prediction gives the mean of the distribution, while <span class="math inline">\sigma^2</span> describes the variation around that mean.</p>
 <hr />
-<h3 id="maximum-likelihood-for-linear-regression">Maximum Likelihood for Linear Regression</h3>
+<h2 id="maximum-likelihood-for-linear-regression">Maximum Likelihood for Linear Regression</h2>
 <p>We can now use maximum likelihood to estimate <span class="math inline">\mathbf{w}</span>, which means we maximize the log-likelihood:</p>
 <p><span class="math display">\[\mathbf{w}_{\mathrm{ML}} = \operatorname*{arg\,max}_{\mathbf{w}} \log
 p(\mathcal{D}\mid\mathbf{w}).\]</span></p>
@@ -573,7 +573,7 @@ t_n
 \right)^2.\]</span></p>
 <p>So maximum likelihood gives us both the fitted function and an estimate of how much the observations vary around it.</p>
 <hr />
-<h3 id="the-noise-model-determines-the-loss">The Noise Model Determines the Loss</h3>
+<h2 id="the-noise-model-determines-the-loss">The Noise Model Determines the Loss</h2>
 <p>Gaussian noise is an assumption of our model. If the noise really is close to Gaussian, squared error is a sensible choice. If the noise has a different distribution, a different loss may be more appropriate.</p>
 <p>For example, suppose the noise follows a <strong>Laplace distribution</strong>:</p>
 <p><span class="math display">\[p(\varepsilon)
@@ -764,7 +764,7 @@ p(\mathbf{w}\mid\mathcal{D}).\]</span></p>
 <p>Suppose instead that the data is very clean and our prior allows a wide range of weights. Then <span class="math inline">\lambda</span> is small, and MAP approaches ordinary least squares.</p>
 <p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#57" target="_blank" rel="noopener">Slide 57</a></strong> lets you adjust both variances and see the implied value of <span class="math inline">\lambda</span>.</p>
 <hr />
-<h1 id="point-estimates-versus-distributions-over-parameters">Point Estimates Versus Distributions Over Parameters</h1>
+<h2 id="point-estimates-versus-distributions-over-parameters">Point Estimates Versus Distributions Over Parameters</h2>
 <p>MLE gives us one point:</p>
 <p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}.\]</span></p>
 <p>MAP gives us another point:</p>
@@ -777,7 +777,7 @@ p(\mathbf{w}\mid\mathcal{D}).\]</span></p>
 <p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D})\]</span></p>
 <p>instead of reducing it to its maximum. This is the full Bayesian approach.</p>
 <hr />
-<h2 id="bayesian-linear-regression">Bayesian Linear Regression</h2>
+<h1 id="bayesian-linear-regression">Bayesian Linear Regression</h1>
 <p>For our model, both the likelihood and prior are Gaussian:</p>
 <p><span class="math display">\[p(\mathbf{t}\mid\mathbf{X},\mathbf{w})
 =
@@ -862,7 +862,7 @@ p(\mathbf{w}\mid\mathcal{D})
 </blockquote>
 <p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#62" target="_blank" rel="noopener">Slide 62</a></strong> shows this idea directly. Each line corresponds to a different weight vector drawn from the posterior. Near data points, these functions tend to agree. Far from the data, they can disagree substantially.</p>
 <hr />
-<h2 id="two-sources-of-predictive-uncertainty">Two Sources of Predictive Uncertainty</h2>
+<h1 id="two-sources-of-predictive-uncertainty">Two Sources of Predictive Uncertainty</h1>
 <p>For Bayesian linear regression, the posterior predictive distribution is Gaussian:</p>
 <p><span class="math display">\[p(t\mid x,\mathcal{D})
 =

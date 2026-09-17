@@ -30,12 +30,12 @@
 <ol class="toc-list">
 <li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
 <li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
-<li class="toc-h2"><a href="#from-regression-to-classification">From Regression to Classification</a></li>
-<li class="toc-h3"><a href="#why-not-use-least-squares">Why Not Use Least Squares?</a></li>
+<li class="toc-h1"><a href="#from-regression-to-classification">From Regression to Classification</a></li>
+<li class="toc-h2"><a href="#why-not-use-least-squares">Why Not Use Least Squares?</a></li>
 <li class="toc-h2"><a href="#linear-decision-boundaries">Linear Decision Boundaries</a></li>
-<li class="toc-h2"><a href="#building-a-probabilistic-model-for-binary-labels">Building a Probabilistic Model for Binary Labels</a></li>
-<li class="toc-h3"><a href="#the-bernoulli-distribution">The Bernoulli Distribution</a></li>
-<li class="toc-h3"><a href="#from-a-linear-score-to-a-probability">From a Linear Score to a Probability</a></li>
+<li class="toc-h1"><a href="#building-a-probabilistic-model-for-binary-labels">Building a Probabilistic Model for Binary Labels</a></li>
+<li class="toc-h2"><a href="#the-bernoulli-distribution">The Bernoulli Distribution</a></li>
+<li class="toc-h2"><a href="#from-a-linear-score-to-a-probability">From a Linear Score to a Probability</a></li>
 <li class="toc-h3"><a href="#why-the-sigmoid-log-odds">Why the Sigmoid? Log-Odds</a></li>
 <li class="toc-h2"><a href="#learning-logistic-regression">Learning Logistic Regression</a></li>
 <li class="toc-h3"><a href="#cross-entropy-from-maximum-likelihood">Cross-Entropy From Maximum Likelihood</a></li>
@@ -48,10 +48,10 @@
 <li class="toc-h2"><a href="#bayesian-logistic-regression">Bayesian Logistic Regression</a></li>
 <li class="toc-h3"><a href="#the-laplace-approximation">The Laplace Approximation</a></li>
 <li class="toc-h3"><a href="#bayesian-prediction">Bayesian Prediction</a></li>
-<li class="toc-h2"><a href="#from-probabilities-to-decisions">From Probabilities to Decisions</a></li>
+<li class="toc-h1"><a href="#from-probabilities-to-decisions">From Probabilities to Decisions</a></li>
 <li class="toc-h3"><a href="#choosing-a-threshold-from-costs">Choosing a Threshold From Costs</a></li>
 <li class="toc-h3"><a href="#roc-curves">ROC Curves</a></li>
-<li class="toc-h2"><a href="#extension-more-than-two-classes">Extension: More Than Two Classes</a></li>
+<li class="toc-h1"><a href="#extension-more-than-two-classes">Extension: More Than Two Classes</a></li>
 <li class="toc-h3"><a href="#the-categorical-distribution">The Categorical Distribution</a></li>
 <li class="toc-h3"><a href="#softmax-from-scores-to-probabilities">Softmax: From Scores to Probabilities</a></li>
 <li class="toc-h3"><a href="#categorical-cross-entropy">Categorical Cross-Entropy</a></li>
@@ -89,7 +89,7 @@
 </ul>
 <p>We will first see why simply applying least squares to labels is unsatisfactory. We will then build a probabilistic model for binary labels and derive logistic regression from it. After discussing decisions and optimisation, we will revisit the Bayesian framework. Finally, we will extend the model to more than two classes.</p>
 <hr />
-<h2 id="from-regression-to-classification">From Regression to Classification</h2>
+<h1 id="from-regression-to-classification">From Regression to Classification</h1>
 <p>Suppose we have a dataset</p>
 <p><span class="math display">\[\mathcal{D}
 =
@@ -101,7 +101,7 @@
 <p><span class="math display">\[p(t=1\mid\mathbf{x}).\]</span></p>
 <p>Once we know this probability, the other probability is simply</p>
 <p><span class="math display">\[p(t=0\mid\mathbf{x})=1-p(t=1\mid\mathbf{x}).\]</span></p>
-<h3 id="why-not-use-least-squares">Why Not Use Least Squares?</h3>
+<h2 id="why-not-use-least-squares">Why Not Use Least Squares?</h2>
 <p>One possibility is to code the two classes numerically and apply the regression machinery from Lecture 1. For example, we could use targets <span class="math inline">t\in\{-1,+1\}</span> and fit</p>
 <p><span class="math display">\[y(\mathbf{x})=\mathbf{w}^{\top}\mathbf{x}\]</span></p>
 <p>using squared error. We could then classify a point according to whether <span class="math inline">y(\mathbf{x})</span> is positive or negative.</p>
@@ -134,7 +134,7 @@ w_2
 <p>The interactive plots on <strong><a class="slide-link" href="../slides/lecture-03.html#21" target="_blank" rel="noopener">Slides 21-22</a></strong> are useful for seeing these effects. Change the direction of <span class="math inline">\mathbf{w}</span> and the boundary rotates. Change the bias and the boundary is translated.</p>
 <p>This geometry will remain unchanged when we make the classifier probabilistic. We will transform the linear score into a probability, but the boundary will still correspond to a linear equation in the features.</p>
 <hr />
-<h2 id="building-a-probabilistic-model-for-binary-labels">Building a Probabilistic Model for Binary Labels</h2>
+<h1 id="building-a-probabilistic-model-for-binary-labels">Building a Probabilistic Model for Binary Labels</h1>
 <p>In Lecture 2, we modelled a regression target by specifying how the target was generated. We will use the same strategy here.</p>
 <p>For binary classification, a useful generative story is:</p>
 <ol type="1">
@@ -143,7 +143,7 @@ w_2
 <li>draw the observed label from a distribution with that probability</li>
 </ol>
 <p>The random part is no longer additive Gaussian noise. Instead, the label itself is a random draw from a two-outcome distribution.</p>
-<h3 id="the-bernoulli-distribution">The Bernoulli Distribution</h3>
+<h2 id="the-bernoulli-distribution">The Bernoulli Distribution</h2>
 <p>The appropriate distribution for a single binary outcome is the <strong>Bernoulli distribution</strong>. If <span class="math inline">t\in\{0,1\}</span>, then</p>
 <p><span class="math display">\[\mathrm{Bern}(t\mid\mu)
 =
@@ -159,7 +159,7 @@ p(t=0)=1-\mu.\]</span></p>
 <p>If <span class="math inline">t=0</span>, then</p>
 <p><span class="math display">\[\mu^0(1-\mu)^1=1-\mu.\]</span></p>
 <p>Our task now is to construct a value of <span class="math inline">\mu</span> from the input <span class="math inline">\mathbf{x}</span>.</p>
-<h3 id="from-a-linear-score-to-a-probability">From a Linear Score to a Probability</h3>
+<h2 id="from-a-linear-score-to-a-probability">From a Linear Score to a Probability</h2>
 <p>The linear model gives us</p>
 <p><span class="math display">\[a
 =
@@ -509,7 +509,7 @@ p(t=1\mid\mathbf{x},\mathcal{D})
 <p>Each sampled weight vector corresponds to a different decision boundary. Near regions with plenty of data, these boundaries tend to agree. Far away from the observed data, they may disagree substantially. <strong><a class="slide-link" href="../slides/lecture-03.html#64" target="_blank" rel="noopener">Slides 64-65</a></strong> show this effect.</p>
 <p>This is the same idea as Bayesian linear regression: instead of pretending that one fitted parameter vector is certainly correct, we average predictions over many plausible parameter values.</p>
 <hr />
-<h2 id="from-probabilities-to-decisions">From Probabilities to Decisions</h2>
+<h1 id="from-probabilities-to-decisions">From Probabilities to Decisions</h1>
 <p>Logistic regression gives us a probability</p>
 <p><span class="math display">\[y
 =
@@ -567,7 +567,7 @@ y
 {\mathrm{FP}+\mathrm{TN}}.\]</span></p>
 <p>An <strong>ROC curve</strong> plots TPR against FPR as the classification threshold is swept from one extreme to the other. Choosing a threshold corresponds to choosing a point on this curve. The interactive plot on <strong><a class="slide-link" href="../slides/lecture-03.html#43" target="_blank" rel="noopener">Slide 43</a></strong> shows this directly. The <strong>area under the ROC curve</strong>, or AUC, summarizes the ranking quality of the classifier across all thresholds.</p>
 <hr />
-<h2 id="extension-more-than-two-classes">Extension: More Than Two Classes</h2>
+<h1 id="extension-more-than-two-classes">Extension: More Than Two Classes</h1>
 <p>So far, we have assumed that the target has two possible values. Suppose instead that each example belongs to one of <span class="math inline">K</span> classes.</p>
 <p>For example, a used car might be classified as</p>
 <ul>

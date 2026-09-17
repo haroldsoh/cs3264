@@ -30,17 +30,17 @@
 <ol class="toc-list">
 <li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
 <li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
-<li class="toc-h2"><a href="#from-model-fitting-to-generalisation">From Model Fitting to Generalisation</a></li>
+<li class="toc-h1"><a href="#from-model-fitting-to-generalisation">From Model Fitting to Generalisation</a></li>
 <li class="toc-h2"><a href="#training-error-and-generalisation-error">Training Error and Generalisation Error</a></li>
 <li class="toc-h2"><a href="#the-training-dataset-is-random">The Training Dataset Is Random</a></li>
 <li class="toc-h2"><a href="#two-important-averages">Two Important Averages</a></li>
 <li class="toc-h3"><a href="#the-average-target">The Average Target</a></li>
 <li class="toc-h3"><a href="#the-average-model">The Average Model</a></li>
-<li class="toc-h2"><a href="#bias-variance-and-noise">Bias, Variance, and Noise</a></li>
+<li class="toc-h1"><a href="#bias-variance-and-noise">Bias, Variance, and Noise</a></li>
 <li class="toc-h3"><a href="#bias">Bias</a></li>
 <li class="toc-h3"><a href="#variance">Variance</a></li>
 <li class="toc-h3"><a href="#noise">Noise</a></li>
-<li class="toc-h2"><a href="#the-bias-variance-decomposition">The Bias-Variance Decomposition</a></li>
+<li class="toc-h1"><a href="#the-bias-variance-decomposition">The Bias-Variance Decomposition</a></li>
 <li class="toc-h3"><a href="#first-split-variance">First Split: Variance</a></li>
 <li class="toc-h3"><a href="#second-split-bias-and-noise">Second Split: Bias and Noise</a></li>
 <li class="toc-h2"><a href="#how-to-read-the-decomposition">How to Read the Decomposition</a></li>
@@ -49,7 +49,7 @@
 <li class="toc-h2"><a href="#model-complexity-and-the-bias-variance-trade-off">Model Complexity and the Bias-Variance Trade-Off</a></li>
 <li class="toc-h3"><a href="#which-term-does-a-change-affect">Which Term Does a Change Affect?</a></li>
 <li class="toc-h2"><a href="#regularisation-through-the-bias-variance-lens">Regularisation Through the Bias-Variance Lens</a></li>
-<li class="toc-h2"><a href="#validation-and-cross-validation">Validation and Cross-Validation</a></li>
+<li class="toc-h1"><a href="#validation-and-cross-validation">Validation and Cross-Validation</a></li>
 <li class="toc-h3"><a href="#k-fold-cross-validation"><span class="math inline">K</span>-Fold Cross-Validation</a></li>
 <li class="toc-h2"><a href="#why-can-validation-work">Why Can Validation Work?</a></li>
 <li class="toc-h2"><a href="#hoeffdings-inequality">Hoeffding's Inequality</a></li>
@@ -103,7 +103,7 @@
 </ul>
 <p>We will first build an intuitive picture using many possible training datasets. We will then derive the bias-variance decomposition. Then we will use it to understand underfitting and overfitting. Finally, we will discuss model selection and cross-validation.</p>
 <hr />
-<h2 id="from-model-fitting-to-generalisation">From Model Fitting to Generalisation</h2>
+<h1 id="from-model-fitting-to-generalisation">From Model Fitting to Generalisation</h1>
 <p>We've seen from earlier lectures that a richer model can represent more patterns, but more freedom is not automatically better. With limited data, a flexible model may adapt not only to the underlying pattern but also to accidental details of the training set.</p>
 <p>This is the problem we first saw with high-order polynomial regression in Lecture 1. As the polynomial degree increased, the training error kept falling. The error on held-out data eventually started to rise.</p>
 <p>At the time, we called this <strong>overfitting</strong>. We will now develop a more precise way to think about what is happening.</p>
@@ -177,7 +177,7 @@ y(x,\mathcal{D})
 <p>The average model is mainly a <strong>thinking tool</strong>. In a real problem we only have one training dataset, so we cannot actually average over every dataset we might have received.</p>
 <p>The interactive plots on <strong><a class="slide-link" href="../slides/lecture-05.html#18" target="_blank" rel="noopener">Slides 18-19</a></strong> make these two ideas concrete. At a fixed <span class="math inline">x</span>, each possible training set gives one fitted prediction. Their average is <span class="math inline">\bar{y}(x)</span>. Separately, repeated targets at the same <span class="math inline">x</span> vary around <span class="math inline">\bar{t}(x)</span> because of noise.</p>
 <hr />
-<h2 id="bias-variance-and-noise">Bias, Variance, and Noise</h2>
+<h1 id="bias-variance-and-noise">Bias, Variance, and Noise</h1>
 <p>We can now define the three sources of test error.</p>
 <h3 id="bias">Bias</h3>
 <p>The <strong>bias</strong> at input <span class="math inline">x</span> is the difference between the average model and the average target:</p>
@@ -220,7 +220,7 @@ t-\bar{t}(x)
 \varepsilon\sim\mathcal{N}(0,\sigma^2),\]</span></p>
 <p>the noise term is <span class="math inline">\sigma^2</span>.</p>
 <hr />
-<h2 id="the-bias-variance-decomposition">The Bias-Variance Decomposition</h2>
+<h1 id="the-bias-variance-decomposition">The Bias-Variance Decomposition</h1>
 <p>We now derive the result formally. The derivation is longer than the idea, but not especially difficult.</p>
 <p>We will use the same trick twice: <strong>add and subtract an average, then expand the square</strong>.</p>
 <p>We want the expected squared prediction error, averaged over future examples and over the random training dataset:</p>
@@ -441,7 +441,7 @@ y(x,\mathcal{D})-\bar{y}(x)
 </blockquote>
 <p>The best amount of regularisation depends on the data. We therefore need a principled way to choose hyperparameters such as <span class="math inline">\lambda</span>, polynomial degree, or model size.</p>
 <hr />
-<h2 id="validation-and-cross-validation">Validation and Cross-Validation</h2>
+<h1 id="validation-and-cross-validation">Validation and Cross-Validation</h1>
 <p>As we have previously seen, fitting a model solely on training error usually results in overfitting. To estimate generalisation performance, we need to evaluate the model on data that was <strong>not used to fit it</strong>.</p>
 <p>A common solution is to split the available data into:</p>
 <ul>
