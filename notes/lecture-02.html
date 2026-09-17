@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 2 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 2: Regression II — Probabilistic Modelling">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-02.html" target="_blank" rel="noopener">Lecture 2 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<article>
+<h1 id="lecture-2-regression-ii--probabilistic-modelling">Lecture 2: Regression II — Probabilistic Modelling</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In Lecture 1, we described machine learning methods using three main ingredients: <strong>data, model, and loss</strong>. For regression, we chose a squared-error loss because it seemed sensible. We also introduced ridge regression by adding a penalty on large weights.</p>
+<p>In this lecture, we ask a basic question:</p>
+<blockquote>
+<p>Where do these loss functions come from?</p>
+</blockquote>
+<p>The key idea is to make the model <strong>probabilistic</strong>. Instead of predicting a single number, the model describes a probability distribution over possible targets. Once we state how we believe the data was generated, the loss function can often be <strong>derived</strong> rather than chosen by hand.</p>
+<p>For example, if we assume that regression targets are corrupted by Gaussian noise, then maximum likelihood gives us squared error. If we also place a Gaussian prior on the weights, maximum a posteriori estimation gives us ridge regression.</p>
+<p>Taking the probabilistic view also gives us something new: a way to represent <strong>uncertainty</strong>. Rather than returning only a prediction, a model can tell us how uncertain that prediction is.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ul>
+<li>explain what a prior, likelihood, and posterior are.</li>
+<li>derive the maximum likelihood estimate (MLE) of the paramters for linear regression</li>
+<li>explain the difference between maximum likelihood estimation (MLE) and maximum a posteriori (MAP) estimation</li>
+<li>explain how a Gaussian prior on the weights gives ridge regression and the probabilistic meaning of the regularisation parameter <span class="math inline">\lambda</span></li>
+<li>explain why retaining a posterior distribution over parameters gives richer predictions than a single point estimate</li>
+<li>distinguish between aleatoric and epistemic uncertainty</li>
+</ul>
+<p>We will first review the small amount of probability needed for the lecture. We will then learn how to fit a probabilistic model using maximum likelihood. After that, we will apply the same ideas to regression and finally introduce the Bayesian view.</p>
+<hr />
+<h2 id="from-point-predictions-to-probability-distributions">From Point Predictions to Probability Distributions</h2>
+<p>Recall the three ingredients from Lecture 1:</p>
+<ul>
+<li><strong>Data:</strong> what we observe</li>
+<li><strong>Model:</strong> the family of predictions we allow</li>
+<li><strong>Loss:</strong> what counts as a bad prediction</li>
+</ul>
+<p>For linear regression, we used</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(x_n,t_n)\}_{n=1}^{N},\]</span></p>
+<p>a model</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}(x),\]</span></p>
+<p>and squared-error loss</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\sum_n
+\left(
+y(x_n;\mathbf{w})-t_n
+\right)^2.\]</span></p>
+<p>The problem is that we simply <em>chose</em> the last expression.</p>
+<p>Why square the error rather than use</p>
+<p><span class="math display">\[|y-t|\]</span></p>
+<p>or perhaps</p>
+<p><span class="math display">\[(y-t)^4?\]</span></p>
+<p>Similarly, for ridge regression we wrote down</p>
+<p><span class="math display">\[\frac{\lambda}{2}\|\mathbf{w}\|_2^2\]</span></p>
+<p>as a penalty on large weights. But why this particular penalty?</p>
+<p>Lecture 2 provides one answer: <strong>write down a probability model for how the data was generated</strong>. The structure remains data, model, and loss, but the model changes. Instead of saying</p>
+<blockquote>
+<p>the target is 14.2,</p>
+</blockquote>
+<p>we say something like</p>
+<blockquote>
+<p>targets around 14.2 are likely, and targets much further away are less likely.</p>
+</blockquote>
+<p>The output of the model is now a <strong>probability distribution</strong>.</p>
+<p><strong>Why is this useful?</strong> Consider the used-car example on <strong><a class="slide-link" href="../slides/lecture-02.html#8" target="_blank" rel="noopener">Slide 8</a></strong>. Suppose two models both predict that a particular car should sell for $14,200. The seller asks $15,000. If selling prices for similar cars are tightly clustered around $14,200, then $15,000 is unusual. If selling prices vary widely, then $15,000 may be completely ordinary. The average prediction is identical in both cases. What differs is the <strong>uncertainty around that prediction</strong>.</p>
+<hr />
+<h2 id="probability-preliminaries">Probability Preliminaries</h2>
+<p>We need a few basic probability ideas for this lecture:</p>
+<ol type="1">
+<li>probability distributions</li>
+<li>the sum rule</li>
+<li>the product rule</li>
+<li>Bayes' rule</li>
+<li>independence</li>
+</ol>
+<p>These ideas will reappear throughout the course.</p>
+<h3 id="discrete-probabilities-and-continuous-densities">Discrete Probabilities and Continuous Densities</h3>
+<p>For a <strong>discrete</strong> random variable, individual outcomes can have non-zero probability.</p>
+<p>For example,</p>
+<p><span class="math display">\[P(X=3)=0.2.\]</span></p>
+<p>The probabilities over all possible values must sum to one:</p>
+<p><span class="math display">\[\sum_x P(X=x)=1.\]</span></p>
+<p>For a <strong>continuous</strong> random variable, things work slightly differently. We describe the distribution using a <strong>probability density function</strong>, or pdf, written as <span class="math inline">p(x)</span>.</p>
+<p>For a continuous variable, probability corresponds to <strong>area under the density</strong>, not the height of the curve. For example,</p>
+<p><span class="math display">\[P(a&lt;X&lt;b)
+=
+\int_a^b p(x)\,dx.\]</span></p>
+<p>The entire density integrates to one:</p>
+<p><span class="math display">\[\int_{-\infty}^{\infty}p(x)\,dx=1.\]</span></p>
+<p>The value <span class="math inline">p(x)</span> itself is a <strong>density</strong>, not a probability. A probability density can even be larger than 1.</p>
+<p>Use the interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#13" target="_blank" rel="noopener">Slide 13</a></strong> and switch between the discrete pmf and continuous pdf. For the continuous case, reduce the spread <span class="math inline">\sigma</span>. You can make the peak rise above 1 while the total area remains 1.</p>
+<p>This distinction becomes important when we discuss likelihoods.</p>
+<h3 id="the-gaussian-distribution">The Gaussian Distribution</h3>
+<p>A distribution we will use repeatedly is the <strong>Gaussian distribution</strong>, also called the normal distribution:</p>
+<p><span class="math display">\[\mathcal{N}(x\mid\mu,\sigma^2)
+=
+\frac{1}{\sqrt{2\pi\sigma^2}}
+\exp
+\left(
+-\frac{(x-\mu)^2}{2\sigma^2}
+\right).\]</span></p>
+<p>It has two parameters:</p>
+<ul>
+<li><span class="math inline">\mu</span>, the <strong>mean</strong>, determines where the distribution is centred</li>
+<li><span class="math inline">\sigma^2</span>, the <strong>variance</strong>, determines its spread</li>
+</ul>
+<p>The quantity <span class="math inline">\sigma</span> is the <strong>standard deviation</strong>.</p>
+<p>Use <strong><a class="slide-link" href="../slides/lecture-02.html#14" target="_blank" rel="noopener">Slide 14</a></strong> to change the mean and variance. Notice that changing <span class="math inline">\mu</span> shifts the distribution while changing <span class="math inline">\sigma^2</span> changes how wide it is.</p>
+<p>We will use Gaussian distributions to describe noise in regression.</p>
+<h2 id="two-basic-probability-rules">Two Basic Probability Rules</h2>
+<p>There are two basic probability rules that will come up again and again during the course. You should get very familiar with them:</p>
+<h3 id="the-sum-rule">The Sum Rule</h3>
+<p>Suppose we have two variables <span class="math inline">x</span> and <span class="math inline">y</span> with joint distribution <span class="math inline">p(x,y)</span>.</p>
+<p>If we only care about <span class="math inline">x</span>, we can remove <span class="math inline">y</span> by summing over it:</p>
+<p><span class="math display">\[p(x)
+=
+\sum_y p(x,y).\]</span></p>
+<p>For continuous variables,</p>
+<p><span class="math display">\[p(x)
+=
+\int p(x,y)\,dy.\]</span></p>
+<p>The resulting <span class="math inline">p(x)</span> is called a <strong>marginal distribution</strong>, and the process is sometimes called <strong>marginalisation</strong>. Use the table on <strong><a class="slide-link" href="../slides/lecture-02.html#16" target="_blank" rel="noopener">Slide 16</a></strong>. Each cell represents a joint probability <span class="math inline">p(x,y)</span>. Adding across the appropriate cells removes one variable and leaves the marginal probability of the other.</p>
+<h3 id="the-product-rule">The Product Rule</h3>
+<p>The <strong>product rule</strong> is</p>
+<p><span class="math display">\[p(x,y)
+=
+p(y\mid x)p(x).\]</span></p>
+<p>Here <span class="math inline">p(y\mid x)</span> is a <strong>conditional probability</strong>: the probability of <span class="math inline">y</span> given that we know <span class="math inline">x</span>. Rearranging gives</p>
+<p><span class="math display">\[p(y\mid x)
+=
+\frac{p(x,y)}{p(x)}.\]</span></p>
+<p>Conditioning means restricting our attention to the cases where <span class="math inline">x</span> has a particular value and then rescaling the remaining probabilities so that they sum to one. Use <strong><a class="slide-link" href="../slides/lecture-02.html#17" target="_blank" rel="noopener">Slide 17</a></strong> and move the <span class="math inline">x</span> slider. The highlighted column is the part of the joint distribution we keep. Rescaling that column gives <span class="math inline">p(y\mid x)</span>.</p>
+<h2 id="bayes-rule">Bayes' Rule</h2>
+<p>From the sum and product rules, we can derive Bayes Rule which is an important one for probabilistic models.</p>
+<p>We will derive it here. The product rule can be written in two ways:</p>
+<p><span class="math display">\[p(A,B)
+=
+p(A\mid B)p(B),\]</span></p>
+<p>and</p>
+<p><span class="math display">\[p(A,B)
+=
+p(B\mid A)p(A).\]</span></p>
+<p>Since both expressions describe the same joint probability,</p>
+<p><span class="math display">\[p(A\mid B)p(B)
+=
+p(B\mid A)p(A).\]</span></p>
+<p>Dividing by <span class="math inline">p(B)</span> gives <strong>Bayes' rule</strong>:</p>
+<p><span class="math display">\[\boxed{
+p(A\mid B)
+=
+\frac{p(B\mid A)p(A)}
+{p(B)}
+}\]</span></p>
+<p>The denominator can be obtained using the sum rule:</p>
+<p><span class="math display">\[p(B)
+=
+\sum_{A'}p(B\mid A')p(A').\]</span></p>
+<p>So Bayes' rule is not really a separate probability rule; as you can see, it follows from the product rule and the sum rule. <a class="slide-link" href="../slides/lecture-02.html#21" target="_blank" rel="noopener">Slides <strong>21-23</strong></a> give a useful example of Bayes rule and how it is used.</p>
+<p>Applied to Machine Learning, Bayes' rule gives us the following:</p>
+<p><span class="math display">\[p(\theta\mid\mathcal{D})
+=
+\frac{
+p(\mathcal{D}\mid\theta)p(\theta)
+}{
+p(\mathcal{D})
+}.\]</span></p>
+<p>The terms have standard names:</p>
+<ul>
+<li>The <strong>Prior</strong> <span class="math inline">p(\theta)</span> describes what we believe about the parameters <span class="math inline">\theta</span> <strong>before</strong> observing the current data.</li>
+<li>The <strong>Likelihood</strong> <span class="math inline">p(\mathcal{D}\mid\theta)</span> describes how probable the observed data would be if the parameter were <span class="math inline">\theta</span>.</li>
+<li>The <strong>Posterior</strong> <span class="math inline">p(\theta\mid\mathcal{D})</span> describes what we believe about <span class="math inline">\theta</span> <strong>after</strong> observing the data.</li>
+<li>The <strong>Evidence</strong> <span class="math inline">p(\mathcal{D})</span> normalises the posterior so that it is a valid probability distribution.</li>
+</ul>
+<p>A useful shorthand is</p>
+<p><span class="math display">\[\boxed{
+\text{posterior}
+\propto
+\text{likelihood}
+\times
+\text{prior}
+}\]</span></p>
+<p>where <span class="math inline">\propto</span> means "proportional to".</p>
+<h2 id="independence">Independence</h2>
+<p>Two variables <span class="math inline">x</span> and <span class="math inline">y</span> are <strong>independent</strong> if knowing one tells us nothing about the other. Mathematically,</p>
+<p><span class="math display">\[p(x,y)
+=
+p(x)p(y).\]</span></p>
+<p>Equivalently,</p>
+<p><span class="math display">\[p(y\mid x)
+=
+p(y).\]</span></p>
+<p>Use the interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#25" target="_blank" rel="noopener">Slide 25</a></strong>. For the independent case, move the value of <span class="math inline">x</span>. The conditional distribution <span class="math inline">p(y\mid x)</span> does not move. For the dependent case, changing <span class="math inline">x</span> changes the conditional distribution.</p>
+<p>Independence becomes very useful when we have many data points. In this lecture, we will often assume that the noise affecting one data point is independent of the noise affecting another data point.</p>
+<p>This allows us to write</p>
+<p><span class="math display">\[p(t_1,\ldots,t_N\mid\theta)
+=
+\prod_{n=1}^{N}
+p(t_n\mid\theta).\]</span></p>
+<p>Instead of dealing with one large joint distribution, we get a product of simple terms. This is a strong modelling assumption and is useful, but it can also be wrong.</p>
+<hr />
+<h2 id="maximum-likelihood-estimation">Maximum Likelihood Estimation</h2>
+<p>Suppose the data <span class="math inline">\mathcal{D}</span> has already been observed. The expression</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\theta)\]</span></p>
+<p>can now be viewed as a function of <span class="math inline">\theta</span>. This appeared before when we introduced Bayes rule above and we called this function the <strong>likelihood</strong>:</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\theta).\]</span></p>
+<p>There is an important conceptual difference:</p>
+<ul>
+<li>in a probability distribution, <span class="math inline">\theta</span> is fixed and the data varies</li>
+<li>in a likelihood, the <strong>data is fixed and the parameter varies</strong></li>
+</ul>
+<p>The numerical expression may be exactly the same but a likelihood is <strong>not</strong> a probability distribution over <span class="math inline">\theta</span>. It does not have to integrate to one over the parameter <span class="math inline">\theta</span>.</p>
+<p>To make this clear, use the interactive example on <strong><a class="slide-link" href="../slides/lecture-02.html#26" target="_blank" rel="noopener">Slide 26</a></strong>. The observations remain fixed while you move the Gaussian mean <span class="math inline">\mu</span>. The likelihood changes according to how well that value of <span class="math inline">\mu</span> explains the fixed observations.</p>
+<p>The value of <span class="math inline">\mu</span> giving the highest likelihood is the <strong>maximum likelihood estimate</strong>:</p>
+<p><span class="math display">\[\theta_{\mathrm{ML}} = \operatorname*{arg\,max}_{\theta}
+p(\mathcal{D}\mid\theta).\]</span></p>
+<p>Usually, we will maximize the log-likelihood</p>
+<p><span class="math display">\[\theta_{\mathrm{ML}} = \operatorname*{arg\,max}_{\theta} \log
+p(\mathcal{D}\mid\theta).\]</span></p>
+<p>Since the log is strictly increasing, it doesn't change the location of the maximum point.</p>
+<h3 id="a-gaussian-example">A Gaussian Example</h3>
+<p>Let's make this more concrete with an example. Suppose we observe</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{t_n\}_{n=1}^{N}\]</span></p>
+<p>and assume that every observation was generated independently from the same Gaussian:</p>
+<p><span class="math display">\[t_n
+\sim
+\mathcal{N}(\mu,\sigma^2).\]</span></p>
+<p>For now, suppose <span class="math inline">\sigma^2</span> is known and only <span class="math inline">\mu</span> is unknown.</p>
+<p>The observations here are <strong>independent and identically distributed</strong>. Independent means one observation does not affect another. Identically distributed means they all come from the same probability distribution.</p>
+<h4 id="writing-the-likelihood">Writing the Likelihood</h4>
+<p>Because the observations are independent,</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mu)
+=
+p(t_1,\ldots,t_N\mid\mu)
+=
+\prod_{n=1}^{N}
+p(t_n\mid\mu).\]</span></p>
+<p>Using the Gaussian model,</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mu)
+=
+\prod_{n=1}^{N}
+\mathcal{N}(t_n\mid\mu,\sigma^2).\]</span></p>
+<p>Maximum likelihood chooses</p>
+<p><span class="math display">\[\mu_{\mathrm{ML}}
+=
+\operatorname*{arg\,max}_{\mu}
+p(\mathcal{D}\mid\mu).\]</span></p>
+<p>In words:</p>
+<blockquote>
+<p>Choose the parameter under which the data we actually observed is most probable.</p>
+</blockquote>
+<p>Products of many probabilities quickly become extremely small. Numerically, they can eventually become smaller than a computer can represent. More importantly, products are inconvenient to differentiate.</p>
+<p>We therefore take logarithms:</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mu).\]</span></p>
+<p>The logarithm is strictly increasing, so the value of <span class="math inline">\mu</span> that maximises the likelihood also maximises the log-likelihood. The useful identity is</p>
+<p><span class="math display">\[\log\prod_n a_n
+=
+\sum_n\log a_n.\]</span></p>
+<p>Hence,</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mu)
+=
+\sum_n
+\log\mathcal{N}(t_n\mid\mu,\sigma^2).\]</span></p>
+<p>Substituting the Gaussian density gives</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mu)
+=
+\sum_n
+\log
+\left[
+\frac{1}{\sqrt{2\pi\sigma^2}}
+\exp
+\left(
+-\frac{(t_n-\mu)^2}{2\sigma^2}
+\right)
+\right].\]</span></p>
+<p>Terms that do not depend on <span class="math inline">\mu</span> do not affect which <span class="math inline">\mu</span> maximises the expression. Removing those terms leaves</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mu)
+\propto
+-
+\frac{1}{2\sigma^2}
+\sum_n
+(t_n-\mu)^2.\]</span></p>
+<p>Maximising this is therefore equivalent to minimising</p>
+<p><span class="math display">\[\frac{1}{2}
+\sum_n
+(t_n-\mu)^2.\]</span></p>
+<p>We have just derived squared error from the assumption of Gaussian noise!</p>
+<h4 id="solving-for-the-gaussian-mean">Solving for the Gaussian Mean</h4>
+<p>Define</p>
+<p><span class="math display">\[\mathcal{L}(\mu)
+=
+\frac{1}{2}
+\sum_n
+(t_n-\mu)^2.\]</span></p>
+<p>Differentiate:</p>
+<p><span class="math display">\[\frac{\partial\mathcal{L}}
+{\partial\mu}
+=
+-
+\sum_n
+(t_n-\mu).\]</span></p>
+<p>At the optimum,</p>
+<p><span class="math display">\[-
+\sum_n
+(t_n-\mu)
+=
+0.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[N\mu
+=
+\sum_n t_n,\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\boxed{
+\mu_{\mathrm{ML}}
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+t_n
+}\]</span></p>
+<p>So the familiar sample mean is <em>not</em> something we had to assume. It is the maximum-likelihood estimate of the mean under a Gaussian model.</p>
+<p>Similarly, maximising the likelihood with respect to <span class="math inline">\sigma^2</span> gives</p>
+<p><span class="math display">\[\sigma^2_{\mathrm{ML}}
+=
+\frac{1}{N}
+\sum_n
+(t_n-\mu_{\mathrm{ML}})^2.\]</span></p>
+<p>Use the sampling demo on <strong><a class="slide-link" href="../slides/lecture-02.html#31" target="_blank" rel="noopener">Slide 31</a></strong> to see the generative direction: first choose <span class="math inline">\mu</span> and <span class="math inline">\sigma</span>, then repeatedly draw data from the distribution. Fitting does the reverse: we are given the draws and try to recover the parameters.</p>
+<h3 id="why-maximum-likelihood">Why Maximum Likelihood?</h3>
+<p>Maximum likelihood is widely used partly because it has useful large-sample properties.</p>
+<p>Under suitable conditions:</p>
+<ul>
+<li><strong>Consistency:</strong> as the amount of data grows, the estimate approaches the true parameter</li>
+<li><strong>Asymptotic normality:</strong> with enough data, the distribution of the estimate becomes approximately Gaussian around the true value</li>
+<li><strong>Asymptotic efficiency:</strong> for large datasets, MLE makes efficient use of the information in the data</li>
+</ul>
+<p>The word <strong>asymptotic</strong> is important. These statements describe what happens as <span class="math inline">N</span> becomes large. Maximum likelihood can behave poorly with little data.</p>
+<p>For example,</p>
+<p><span class="math display">\[\sigma^2_{\mathrm{ML}}
+=
+\frac{1}{N}
+\sum_n
+(t_n-\mu_{\mathrm{ML}})^2\]</span></p>
+<p>systematically underestimates the variance. The familiar unbiased sample-variance estimate instead divides by <span class="math inline">N-1</span>. As we have seen before, a parameter estimate that fits the observed data best is not necessarily the best estimate of the underlying truth when data is limited.</p>
+<h2 id="multivariate-gaussians">Multivariate Gaussians</h2>
+<p>Before we get to linear regression, we need one more concept: the Multivariate Gaussian, which is the generalization of the standard Gaussian to real vectors. For <span class="math inline">\mathbf{x}\in\mathbb{R}^D</span>,</p>
+<p><span class="math display">\[\mathcal{N}
+(
+\mathbf{x}
+\mid
+\boldsymbol{\mu},
+\boldsymbol{\Sigma}
+)
+=
+\frac{
+1
+}{
+(2\pi)^{D/2}
+|\boldsymbol{\Sigma}|^{1/2}
+}
+\exp
+\left[
+-\frac{1}{2}
+(\mathbf{x}-\boldsymbol{\mu})^\top
+\boldsymbol{\Sigma}^{-1}
+(\mathbf{x}-\boldsymbol{\mu})
+\right].\]</span></p>
+<p>Here:</p>
+<ul>
+<li><span class="math inline">\boldsymbol{\mu}</span> is a <span class="math inline">D</span>-dimensional mean vector</li>
+<li><span class="math inline">\boldsymbol{\Sigma}</span> is a <span class="math inline">D\times D</span> <strong>covariance matrix</strong></li>
+</ul>
+<p>The covariance matrix controls both the spread and relationships between dimensions. <strong><a class="slide-link" href="../slides/lecture-02.html#36" target="_blank" rel="noopener">Slide 36</a></strong> shows three useful cases:</p>
+<ul>
+<li>a spherical covariance gives circular contours</li>
+<li>a diagonal covariance allows different spreads along each axis</li>
+<li>a full covariance allows the variables to vary together, producing rotated ellipses</li>
+</ul>
+<p>You do not need to memorise the multivariate Gaussian density at this point. We will give you the formula in exams, but after a while, you will end up memorizing it because we use it very often.</p>
+<hr />
+<h2 id="linear-regression-a-probabilistic-approach">Linear Regression: A Probabilistic Approach</h2>
+<p>We now return to linear regression. Recall our regression model from Lecture 1:</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}(x).\]</span></p>
+<p>We now want a <strong>probabilistic model</strong> that describes how the observed target <span class="math inline">t</span> might vary around this prediction. Indeed, a probabilistic model specifies a distribution for what data we expect to observe.</p>
+<p>To obtain this model, we will specify how we believe the observations are generated by "nature". In our dataset, a sample has <span class="math inline">(x,t)</span>. We will assume that given an input <span class="math inline">x</span>, the targets are generated by <span class="math inline">y(x;\mathbf{w}_*)</span> plus some noise. We don't know what <span class="math inline">\mathbf{w}_*</span> is but that's ok because we will learn it. For now, we have the model</p>
+<p><span class="math display">\[t
+=
+y(x;\mathbf{w})
++
+\varepsilon = 
+\mathbf{w}^{\top}\boldsymbol{\phi}(x)
++
+\varepsilon.\]</span></p>
+<p>where <span class="math inline">\varepsilon</span> represents noise that we cannot predict. Assume Gaussian noise:</p>
+<p><span class="math display">\[\varepsilon
+\sim
+\mathcal{N}(0,\sigma^2).\]</span></p>
+<p>In words (and as shown graphically on <strong><a class="slide-link" href="../slides/lecture-02.html#40" target="_blank" rel="noopener">Slide 40</a></strong>), to obtain the targets, we assume the following computations</p>
+<ol type="1">
+<li>compute the deterministic part, <span class="math inline">\mathbf{w}^{\top}\boldsymbol{\phi}(x)</span></li>
+<li>draw some noise <span class="math inline">\varepsilon</span></li>
+<li>add the noise to obtain the observed target <span class="math inline">t</span>.</li>
+</ol>
+<p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#41" target="_blank" rel="noopener">Slide 41</a></strong> makes this idea concrete. Try drawing several targets at the same input <span class="math inline">x</span>. The underlying function value stays the same, but each draw has a different noise value.</p>
+<h3 id="the-distribution-of-the-target">The Distribution of the Target</h3>
+<p>Given an input <span class="math inline">x_n</span> and weights <span class="math inline">\mathbf{w}</span>, the prediction</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\boldsymbol{\phi}(x_n)\]</span></p>
+<p>is a fixed number.</p>
+<p>Adding zero-mean Gaussian noise therefore gives</p>
+<p><span class="math display">\[\boxed{
+p(t_n\mid x_n,\mathbf{w})
+=
+\mathcal{N}
+\left(
+t_n
+\mid
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n),
+\sigma^2
+\right).
+}\]</span></p>
+<p>Notice the change in interpretation. The model is no longer saying that the target <em>is</em></p>
+<p><span class="math display">\[\mathbf{w}^{\top}\boldsymbol{\phi}(x_n).\]</span></p>
+<p>It is saying that targets are distributed <strong>around</strong> this value. The prediction gives the mean of the distribution, while <span class="math inline">\sigma^2</span> describes the variation around that mean.</p>
+<hr />
+<h3 id="maximum-likelihood-for-linear-regression">Maximum Likelihood for Linear Regression</h3>
+<p>We can now use maximum likelihood to estimate <span class="math inline">\mathbf{w}</span>, which means we maximize the log-likelihood:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}} = \operatorname*{arg\,max}_{\mathbf{w}} \log
+p(\mathcal{D}\mid\mathbf{w}).\]</span></p>
+<p>So now, we have to derive <span class="math inline">p(\mathcal{D}\mid\mathbf{w})</span>. We assume that the noise on each observation is independent so,</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mathbf{w})
+=
+\prod_{n=1}^{N}
+p(t_n\mid x_n,\mathbf{w}).\]</span></p>
+<p>Using our Gaussian model,</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mathbf{w})
+=
+\prod_{n=1}^{N}
+\mathcal{N}
+\left(
+t_n
+\mid
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n),
+\sigma^2
+\right).\]</span></p>
+<p>The log-likelihood is</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mathbf{w})
+=
+\sum_{n=1}^{N}
+\log
+\mathcal{N}
+\left(
+t_n
+\mid
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n),
+\sigma^2
+\right).\]</span></p>
+<p>Writing out the Gaussian gives</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mathbf{w})
+=
+-\frac{N}{2}\log(2\pi\sigma^2)
+-
+\frac{1}{2\sigma^2}
+\sum_{n=1}^{N}
+\left(
+t_n
+-
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n)
+\right)^2.\]</span></p>
+<p>If <span class="math inline">\sigma^2</span> is fixed, the first term is constant and the factor <span class="math inline">1/\sigma^2</span> does not affect which <span class="math inline">\mathbf{w}</span> is best.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[\operatorname*{arg\,max}_{\mathbf{w}}
+p(\mathcal{D}\mid\mathbf{w})\]</span></p>
+<p>is equivalent to</p>
+<p><span class="math display">\[\boxed{
+\operatorname*{arg\,min}_{\mathbf{w}}
+\frac{1}{2}
+\sum_{n=1}^{N}
+\left(
+t_n
+-
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n)
+\right)^2.
+}\]</span></p>
+<p>This is exactly the least-squares problem from Lecture 1!</p>
+<p>We now have an explanation for the squared-error loss:</p>
+<blockquote>
+<p><strong>Minimising squared error is equivalent to maximum likelihood when we assume independent Gaussian noise with constant variance.</strong></p>
+</blockquote>
+<p>This is an important result. The loss function is no longer something that appeared from nowhere. It follows from our assumptions about how the data was generated.</p>
+<p>The maximum-likelihood solution for <span class="math inline">\mathbf{w}</span> is therefore the same as before:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+(\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi})^{-1}
+\boldsymbol{\Phi}^{\top}\mathbf{t}.\]</span></p>
+<p>We can also estimate the noise variance:</p>
+<p><span class="math display">\[\sigma_{\mathrm{ML}}^2
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\left(
+t_n
+-
+\mathbf{w}_{\mathrm{ML}}^{\top}\boldsymbol{\phi}(x_n)
+\right)^2.\]</span></p>
+<p>So maximum likelihood gives us both the fitted function and an estimate of how much the observations vary around it.</p>
+<hr />
+<h3 id="the-noise-model-determines-the-loss">The Noise Model Determines the Loss</h3>
+<p>Gaussian noise is an assumption of our model. If the noise really is close to Gaussian, squared error is a sensible choice. If the noise has a different distribution, a different loss may be more appropriate.</p>
+<p>For example, suppose the noise follows a <strong>Laplace distribution</strong>:</p>
+<p><span class="math display">\[p(\varepsilon)
+\propto
+\exp
+\left(
+-\frac{|\varepsilon|}{b}
+\right).\]</span></p>
+<p>Taking the negative log gives a loss proportional to</p>
+<p><span class="math display">\[|\varepsilon|.\]</span></p>
+<p>For regression, maximum likelihood therefore becomes</p>
+<p><span class="math display">\[\min_{\mathbf{w}}
+\sum_n
+\left|
+t_n
+-
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n)
+\right|.\]</span></p>
+<p>This is the <strong>absolute-error loss</strong>.</p>
+<p>The interactive comparison on <strong><a class="slide-link" href="../slides/lecture-02.html#45" target="_blank" rel="noopener">Slide 45</a></strong> shows the difference. The Gaussian assigns very low probability to large residuals, so its negative log-likelihood grows quadratically. The Laplace distribution has heavier tails, so the penalty grows only linearly.</p>
+<p>This also explains why squared error is sensitive to outliers: under a Gaussian noise model, a very large residual is considered extremely unlikely.</p>
+<p>The main point is:</p>
+<blockquote>
+<p><strong>Choosing a probability model for the noise implicitly chooses a loss function.</strong></p>
+</blockquote>
+<hr />
+<h2 id="from-maximum-likelihood-to-a-bayesian-model">From Maximum Likelihood to a Bayesian Model</h2>
+<p>Maximum likelihood gives us a single estimate of the weights, <span class="math inline">\mathbf{w}_{\mathrm{ML}}.</span> But recall the overfitting problem from Lecture 1. When there is little data, many different weight vectors may explain the observations reasonably well.</p>
+<p>Maximum likelihood simply chooses the one that fits the observed data best. As such, this technique can lead to overfitting. In lecture 1, we prevented overfitting using ridge regression where we specifed a regularizer:</p>
+<p><span class="math display">\[\frac{1}{2}
+\|
+\mathbf{t}
+-
+\boldsymbol{\Phi}\mathbf{w}
+\|_2^2
++
+\frac{\lambda}{2}
+\|\mathbf{w}\|_2^2.\]</span></p>
+<p>We simply chose the second term because preferring smaller weights seemed reasonable.</p>
+<p>We can now derive this term probabilistically too.</p>
+<h3 id="a-prior-over-the-weights">A Prior Over the Weights</h3>
+<p>In a Bayesian model, we place a probability distribution over the unknown parameters.</p>
+<p>Suppose</p>
+<p><span class="math display">\[p(\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{0},
+\alpha^{-1}\mathbf{I}
+\right).\]</span></p>
+<p>This is a zero-mean Gaussian prior over the weights.</p>
+<p>Here <span class="math inline">\alpha</span> is a <strong>precision</strong>, which means inverse variance:</p>
+<p><span class="math display">\[\alpha
+=
+\frac{1}{\sigma_w^2}.\]</span></p>
+<p>The interpretation is simple:</p>
+<ul>
+<li>if the prior variance <span class="math inline">\sigma_w^2</span> is small, we believe that the weights are probably close to zero;</li>
+<li>if the prior variance is large, we allow much larger weights.</li>
+</ul>
+<p>This is exactly the kind of preference that ridge regression imposed directly.</p>
+<hr />
+<h2 id="maximum-a-posteriori-estimation">Maximum A Posteriori Estimation</h2>
+<p>Bayes' rule gives us a posterior distribution over the weights:</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D})
+=
+\frac{
+p(\mathcal{D}\mid\mathbf{w})
+p(\mathbf{w})
+}{
+p(\mathcal{D})
+}.\]</span></p>
+<p>One way to obtain a single estimate from this posterior is to choose its most probable value.</p>
+<p>This is called <strong>maximum a posteriori estimation</strong>, or MAP:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{MAP}}
+=
+\operatorname*{arg\,max}_{\mathbf{w}}
+p(\mathbf{w}\mid\mathcal{D}).\]</span></p>
+<p>Taking logarithms (just like in maximum likelihood) and substituting in the posterior distribution over the weights,</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{MAP}}
+=
+\operatorname*{arg\,max}_{\mathbf{w}}
+\left[
+\log \left(\frac{p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w})}{p(\mathcal{D})}\right)
+\right]\\
+=
+\operatorname*{arg\,max}_{\mathbf{w}}
+\left[
+\log p(\mathcal{D}\mid\mathbf{w})
++
+\log p(\mathbf{w})
+\right]\]</span></p>
+<p>Note that <span class="math inline">p(\mathcal{D})</span> can be dropped because it does not depend on <span class="math inline">\mathbf{w}</span>.</p>
+<p>Now define the noise precision</p>
+<p><span class="math display">\[\beta
+=
+\frac{1}{\sigma_\varepsilon^2}.\]</span></p>
+<p>From the Gaussian likelihood,</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mathbf{w})
+=
+-
+\frac{\beta}{2}
+\|
+\mathbf{t}
+-
+\boldsymbol{\Phi}\mathbf{w}
+\|_2^2
++
+\text{constant}.\]</span></p>
+<p>From the Gaussian prior,</p>
+<p><span class="math display">\[\log p(\mathbf{w})
+=
+-
+\frac{\alpha}{2}
+\|\mathbf{w}\|_2^2
++
+\text{constant}.\]</span></p>
+<p>Therefore, maximising the posterior is equivalent to minimising</p>
+<p><span class="math display">\[\frac{\beta}{2}
+\|
+\mathbf{t}
+-
+\boldsymbol{\Phi}\mathbf{w}
+\|_2^2
++
+\frac{\alpha}{2}
+\|\mathbf{w}\|_2^2.\]</span></p>
+<p>Divide through by <span class="math inline">\beta</span>:</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}(\mathbf{w})
+=
+\frac{1}{2}
+\|
+\mathbf{t}
+-
+\boldsymbol{\Phi}\mathbf{w}
+\|_2^2
++
+\frac{\lambda}{2}
+\|\mathbf{w}\|_2^2,
+}\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\boxed{
+\lambda
+=
+\frac{\alpha}{\beta}.
+}\]</span></p>
+<p>This is exactly ridge regression.</p>
+<p>So the two terms from Lecture 1 now both have a probabilistic explanation:</p>
+<ul>
+<li>squared error comes from the <strong>likelihood</strong></li>
+<li>the squared-weight penalty comes from the <strong>prior</strong></li>
+</ul>
+<p>In other words, the key general principle is:</p>
+<blockquote>
+<p><strong>The likelihood determines how we fit the observations. The prior determines how we regularise the parameters.</strong></p>
+</blockquote>
+<hr />
+<h3 id="the-regularization-hyperparameter-lambda">The regularization hyperparameter <span class="math inline">\lambda</span>.</h3>
+<p>Because</p>
+<p><span class="math display">\[\alpha
+=
+\frac{1}{\sigma_w^2}\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\beta
+=
+\frac{1}{\sigma_\varepsilon^2},\]</span></p>
+<p>we have</p>
+<p><span class="math display">\[\lambda
+=
+\frac{\alpha}{\beta}
+=
+\frac{\sigma_\varepsilon^2}{\sigma_w^2}.\]</span></p>
+<p>So,</p>
+<p><span class="math display">\[\boxed{
+\lambda
+=
+\frac{
+\text{noise variance}
+}{
+\text{prior weight variance}
+}.
+}\]</span></p>
+<p>This gives <span class="math inline">\lambda</span> a useful interpretation.</p>
+<p>Suppose the observations are very noisy. Then <span class="math inline">\sigma_\varepsilon^2</span> is large. We should trust the data less, so the prior has more influence and the weights are shrunk more strongly.</p>
+<p>Suppose instead that the data is very clean and our prior allows a wide range of weights. Then <span class="math inline">\lambda</span> is small, and MAP approaches ordinary least squares.</p>
+<p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#57" target="_blank" rel="noopener">Slide 57</a></strong> lets you adjust both variances and see the implied value of <span class="math inline">\lambda</span>.</p>
+<hr />
+<h1 id="point-estimates-versus-distributions-over-parameters">Point Estimates Versus Distributions Over Parameters</h1>
+<p>MLE gives us one point:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}.\]</span></p>
+<p>MAP gives us another point:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{MAP}}.\]</span></p>
+<p>MAP uses the prior and is often better behaved when data is limited, but it still throws away an important piece of information:</p>
+<blockquote>
+<p><strong>How uncertain are we about the weights?</strong></p>
+</blockquote>
+<p>To answer that question, we keep the whole posterior distribution</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D})\]</span></p>
+<p>instead of reducing it to its maximum. This is the full Bayesian approach.</p>
+<hr />
+<h2 id="bayesian-linear-regression">Bayesian Linear Regression</h2>
+<p>For our model, both the likelihood and prior are Gaussian:</p>
+<p><span class="math display">\[p(\mathbf{t}\mid\mathbf{X},\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{t}
+\mid
+\boldsymbol{\Phi}\mathbf{w},
+\beta^{-1}\mathbf{I}
+\right),\]</span></p>
+<p>and</p>
+<p><span class="math display">\[p(\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{0},
+\alpha^{-1}\mathbf{I}
+\right).\]</span></p>
+<p>When a Gaussian likelihood is combined with a Gaussian prior, the posterior over the weights is also Gaussian:</p>
+<p><span class="math display">\[\boxed{
+p(\mathbf{w}\mid\mathcal{D})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{m}_N,
+\mathbf{S}_N
+\right).
+}\]</span></p>
+<p>The posterior covariance is</p>
+<p><span class="math display">\[\boxed{
+\mathbf{S}_N^{-1}
+=
+\alpha\mathbf{I}
++
+\beta
+\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi},
+}\]</span></p>
+<p>and the posterior mean is</p>
+<p><span class="math display">\[\boxed{
+\mathbf{m}_N
+=
+\beta
+\mathbf{S}_N
+\boldsymbol{\Phi}^{\top}\mathbf{t}.
+}\]</span></p>
+<p>You do not need to derive these expressions from scratch at this point. The important part is what they mean:</p>
+<ul>
+<li><span class="math inline">\mathbf{m}_N</span> tells us where the likely weights are centred</li>
+<li><span class="math inline">\mathbf{S}_N</span> tells us how uncertain we remain about those weights</li>
+</ul>
+<p>For this Gaussian posterior, the mean and the MAP estimate are the same:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{MAP}}
+=
+\mathbf{m}_N.\]</span></p>
+<p>MAP keeps <span class="math inline">\mathbf{m}_N</span> and discards <span class="math inline">\mathbf{S}_N</span>. The full posterior keeps both.</p>
+<hr />
+<h2 id="making-predictions-with-the-posterior">Making Predictions With the Posterior</h2>
+<p>Suppose we want to predict the target at a new input <span class="math inline">x</span>. If we knew the weights exactly, we would use</p>
+<p><span class="math display">\[p(t\mid x,\mathbf{w}).\]</span></p>
+<p>But we do not know <span class="math inline">\mathbf{w}</span>. Instead, we have a posterior distribution over it.</p>
+<p>So we average over all possible weight vectors:</p>
+<p><span class="math display">\[p(t\mid x,\mathcal{D})
+=
+\int
+p(t,\mathbf{w}\mid x,\mathcal{D})
+\,d\mathbf{w}.\]</span></p>
+<p>Using the product rule,</p>
+<p><span class="math display">\[p(t\mid x,\mathcal{D})
+=
+\int
+p(t\mid x,\mathbf{w})
+p(\mathbf{w}\mid\mathcal{D})
+\,d\mathbf{w}.\]</span></p>
+<p>This is called the <strong>posterior predictive distribution</strong>.</p>
+<p>Conceptually,</p>
+<blockquote>
+<p>every plausible <span class="math inline">\mathbf{w}</span> makes a prediction, and we average those predictions according to how plausible that <span class="math inline">\mathbf{w}</span> is.</p>
+</blockquote>
+<p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-02.html#62" target="_blank" rel="noopener">Slide 62</a></strong> shows this idea directly. Each line corresponds to a different weight vector drawn from the posterior. Near data points, these functions tend to agree. Far from the data, they can disagree substantially.</p>
+<hr />
+<h2 id="two-sources-of-predictive-uncertainty">Two Sources of Predictive Uncertainty</h2>
+<p>For Bayesian linear regression, the posterior predictive distribution is Gaussian:</p>
+<p><span class="math display">\[p(t\mid x,\mathcal{D})
+=
+\mathcal{N}
+\left(
+t
+\mid
+\mathbf{m}_N^\top\boldsymbol{\phi}(x),
+\sigma^2(x)
+\right),\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\boxed{
+\sigma^2(x)
+=
+\underbrace{
+\beta^{-1}
+}_{\text{aleatoric}}
++
+\underbrace{
+\boldsymbol{\phi}(x)^\top
+\mathbf{S}_N
+\boldsymbol{\phi}(x)
+}_{\text{epistemic}}.
+}\]</span></p>
+<p>The two terms have different meanings.</p>
+<h3 id="aleatoric-uncertainty">Aleatoric Uncertainty</h3>
+<p>The first term,</p>
+<p><span class="math display">\[\beta^{-1}
+=
+\sigma_\varepsilon^2,\]</span></p>
+<p>is the noise in the observations themselves. Even if we knew the correct weights perfectly, two otherwise identical examples could still have different targets.</p>
+<p>This is called <strong>aleatoric uncertainty</strong>. More data does <strong>not</strong> make it disappear because it represents randomness in the world rather than ignorance in the model.</p>
+<h3 id="epistemic-uncertainty">Epistemic Uncertainty</h3>
+<p>The second term,</p>
+<p><span class="math display">\[\boldsymbol{\phi}(x)^\top
+\mathbf{S}_N
+\boldsymbol{\phi}(x),\]</span></p>
+<p>comes from uncertainty about the weights.</p>
+<p>This is called <strong>epistemic uncertainty</strong>. If we have a lot of useful data near some input, many possible weight vectors are ruled out and this term becomes small. If we have little relevant data, many different weight vectors remain plausible and this term can be large. More data can therefore reduce epistemic uncertainty.</p>
+<hr />
+<h2 id="mle-map-and-the-full-posterior">MLE, MAP, and the Full Posterior</h2>
+<p>It is useful to compare the three approaches directly.</p>
+<h3 id="maximum-likelihood">Maximum Likelihood</h3>
+<p>MLE chooses</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+\operatorname*{arg\,max}_{\mathbf{w}}
+p(\mathcal{D}\mid\mathbf{w}).\]</span></p>
+<p>It uses the data only and returns one set of weights.</p>
+<h3 id="maximum-a-posteriori">Maximum A Posteriori</h3>
+<p>MAP chooses</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{MAP}}
+=
+\operatorname*{arg\,max}_{\mathbf{w}}
+p(\mathbf{w}\mid\mathcal{D}).\]</span></p>
+<p>It combines the likelihood and prior, but still returns only one set of weights.</p>
+<h3 id="full-bayesian-inference">Full Bayesian Inference</h3>
+<p>Full Bayesian inference retains</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D}).\]</span></p>
+<p>It therefore represents uncertainty about the weights and can include this uncertainty when making predictions.</p>
+<p>Use <strong><a class="slide-link" href="../slides/lecture-02.html#64" target="_blank" rel="noopener">Slide 64</a></strong> to compare all three. With little data, MLE can fit quite aggressively. MAP is constrained by the prior. The full posterior additionally shows a wide uncertainty band where the data does not determine the function well.</p>
+<p>As more data is added, the three approaches become increasingly similar and the posterior uncertainty becomes smaller.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>In this lecture, we used probability to explain several choices that appeared somewhat arbitrary in Lecture 1.</p>
+<p>We first reviewed the basic probability machinery:</p>
+<ul>
+<li>the <strong>sum rule</strong> removes variables by summing or integrating them out</li>
+<li>the <strong>product rule</strong> relates joint and conditional probabilities</li>
+<li><strong>Bayes' rule</strong> follows from these rules and tells us how data updates beliefs</li>
+<li><strong>independence</strong> allows large joint distributions to factor into simpler terms</li>
+</ul>
+<p>We then introduced <strong>maximum likelihood estimation</strong>:</p>
+<p><span class="math display">\[\theta_{\mathrm{ML}}
+=
+\operatorname*{arg\,max}_{\theta}
+p(\mathcal{D}\mid\theta).\]</span></p>
+<p>For linear regression, assuming</p>
+<p><span class="math display">\[t_n
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n)
++
+\varepsilon_n\]</span></p>
+<p>with independent Gaussian noise</p>
+<p><span class="math display">\[\varepsilon_n
+\sim
+\mathcal{N}(0,\sigma^2)\]</span></p>
+<p>leads directly to squared-error loss:</p>
+<p><span class="math display">\[\frac{1}{2}
+\sum_n
+\left(
+t_n
+-
+\mathbf{w}^{\top}\boldsymbol{\phi}(x_n)
+\right)^2.\]</span></p>
+<p>So <strong>Gaussian noise gives least squares</strong>.</p>
+<p>We then placed a Gaussian prior on the weights:</p>
+<p><span class="math display">\[p(\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{0},
+\alpha^{-1}\mathbf{I}
+\right).\]</span></p>
+<p>MAP estimation then gives</p>
+<p><span class="math display">\[\frac{1}{2}
+\|
+\mathbf{t}
+-
+\boldsymbol{\Phi}\mathbf{w}
+\|_2^2
++
+\frac{\lambda}{2}
+\|\mathbf{w}\|_2^2,\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\lambda
+=
+\frac{\alpha}{\beta}
+=
+\frac{\sigma_\varepsilon^2}{\sigma_w^2}.\]</span></p>
+<p>So <strong>a Gaussian prior gives ridge regression</strong>.</p>
+<p>Finally, instead of reducing the posterior to a single MAP estimate, we kept the complete distribution</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D}).\]</span></p>
+<p>This gave us a posterior predictive distribution whose uncertainty has two components:</p>
+<p><span class="math display">\[\sigma^2(x)
+=
+\underbrace{\beta^{-1}}_{\text{aleatoric}}
++
+\underbrace{
+\boldsymbol{\phi}(x)^\top
+\mathbf{S}_N
+\boldsymbol{\phi}(x)
+}_{\text{epistemic}}.\]</span></p>
+<p>Aleatoric uncertainty is noise in the observations and does not disappear with more data. Epistemic uncertainty reflects what the model does not yet know and can decrease as more data is collected.</p>
+<p>The main lesson is:</p>
+<blockquote>
+<p><strong>A probabilistic model connects assumptions about how data is generated to the loss, the regulariser, and the uncertainty in our predictions.</strong></p>
+</blockquote>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>

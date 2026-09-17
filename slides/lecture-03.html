@@ -4363,6 +4363,18 @@ addEventListener('beforeprint',preparePrint);
 addEventListener('afterprint',restorePrint);
 if(/[?&]print/.test(location.search)) preparePrint();
 
+/* Deep links: lecture-03.html#21 opens the deck on slide 21 with the whole slide revealed,
+   and a link to another number while the deck is open goes there. The course notes link to
+   slides this way. Anything that is not a slide number is ignored. */
+function goToHash(){
+  const m=/^#(\d+)$/.exec(location.hash);
+  if(!m) return;
+  const n=+m[1];
+  if(n>=1 && n<=SLIDES.length && n-1!==idx) go(n-1);
+}
+addEventListener('hashchange',goToHash);
+goToHash();
+
 </script>
 </body>
 </html>

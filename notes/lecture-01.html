@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 1 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 1: Introduction to Machine Learning and Regression I">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-01.html" target="_blank" rel="noopener">Lecture 1 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<article>
+<h1 id="lecture-1-introduction-to-machine-learning-and-regression-i">Lecture 1: Introduction to Machine Learning and Regression I</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In this lecture, we introduce <strong>machine learning</strong> and study our first machine learning problem: <strong>regression</strong>.</p>
+<p>Machine learning is about building computer programs that improve their behaviour using data. Instead of writing down every rule ourselves, we provide examples and choose a model that can learn useful patterns from those examples.</p>
+<p>We will focus on <strong>supervised learning</strong>, where each training example contains an input and a desired output. In a regression problem, the desired output is a number. For example, we might want to predict the price of a house from its size, or predict a person's height from other measurements.</p>
+<p>Our first model will be <strong>linear regression</strong>. The basic idea is simple: choose a line, or more generally a <em>linear model</em>, that makes predictions close to the observed data. This raises several important questions that will appear throughout the course:</p>
+<ol type="1">
+<li>How do we represent a model?</li>
+<li>How do we measure whether a model is good?</li>
+<li>How do we choose the model's parameters from data?</li>
+<li>Does fitting the training data well mean that the model has learned something useful?</li>
+</ol>
+<p>These questions are much more important than linear regression itself. Most machine learning methods can be understood as different answers to the same questions.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ul>
+<li>explain what we mean by machine learning</li>
+<li>distinguish between supervised and unsupervised learning</li>
+<li>distinguish regression from classification</li>
+<li>identify the inputs, targets, model, parameters, and predictions in a supervised learning problem</li>
+</ul>
+<p>Specifically for regression, you should be able to:</p>
+<ul>
+<li>write down a simple linear regression model</li>
+<li>explain why squared error is a reasonable loss for regression</li>
+<li>express linear regression using vectors and matrices</li>
+<li>explain how basis functions allow linear models to represent nonlinear relationships</li>
+<li>explain the difference between training error and test error, and what overfitting is.</li>
+<li>explain how regularisation can reduce overfitting</li>
+</ul>
+<p>To achieve these objectives, we will first discuss what it means for a machine to learn from data. We will then formulate supervised learning more precisely, introduce regression, and use linear regression to see how a complete learning problem is constructed and solved. Finally, we will see what goes wrong when our models become too flexible, and introduce regularisation as one way to address the problem.</p>
+<hr />
+<h1 id="what-is-machine-learning">What Is Machine Learning?</h1>
+<p>Suppose we want a computer to predict the price of an apartment.</p>
+<p>One approach is to write rules:</p>
+<blockquote>
+<p>Start with $500,000. Add $100,000 if it is near an MRT station. Add $1,000 per square metre. Subtract $50,000 if the building is old...</p>
+</blockquote>
+<p>This quickly becomes difficult. There may be many factors, and we may not know how strongly each factor matters.</p>
+<p>A machine learning approach is <em>different</em>. We collect examples of apartments for which we know both:</p>
+<ul>
+<li>information about the apartment, such as its size, age, and location; and</li>
+<li>the price at which it was sold.</li>
+</ul>
+<p>We then use these examples to learn a prediction rule.</p>
+<p>A useful working definition is:</p>
+<blockquote>
+<p><strong>Machine learning is the study of algorithms that learn useful patterns or decision rules from data.</strong></p>
+</blockquote>
+<p>The word <strong>learn</strong> is important. The program is not simply storing the answers we gave it. We want it to extract a pattern that also works for examples that it has not seen before. This ability to work on new examples is called <strong>generalization</strong>.</p>
+<h3 id="a-recurring-picture">A recurring picture</h3>
+<p>A typical machine learning setup has three important ingredients:</p>
+<ul>
+<li><strong>Data</strong> gives us examples of the problem.</li>
+<li>A <strong>model</strong> describes the kinds of prediction "rules" we are willing to consider.</li>
+<li>A <strong>loss</strong> function defines how bad a particular model is.</li>
+</ul>
+<p>A <strong>learning algorithm</strong> chooses a particular model using the data, typically using the loss function. The learned model is then used to make predictions.</p>
+<p>Do not mix up the model and the learning algorithm. For example, a straight line is a model. Least squares is a method for choosing which straight line to use.</p>
+<p><a class="slide-link" href="../slides/lecture-01.html#5" target="_blank" rel="noopener">Slides 5-9</a> give several examples of this idea. The data can look very different, from images to stock prices to robot motion, but the underlying question is similar: <strong>what useful pattern can we learn from the data?</strong></p>
+<hr />
+<h1 id="learning-from-examples">Learning From Examples</h1>
+<p>A single supervised learning example usually contains an <strong>input</strong> and a <strong>target</strong>. We write an example as <span class="math inline">(\mathbf{x}, t)</span>.</p>
+<p>Here:</p>
+<ul>
+<li><span class="math inline">\mathbf{x}</span> is the <strong>input</strong>, also called the feature vector;</li>
+<li><span class="math inline">t</span> is the <strong>target</strong>, which is the value we would like to predict.</li>
+</ul>
+<p>For example, for an apartment,</p>
+<p><span class="math display">\[\mathbf{x}
+=
+\begin{bmatrix}
+\text{floor area}\\
+\text{age}\\
+\text{distance to MRT}
+\end{bmatrix},
+\qquad
+t = \text{sale price}.\]</span></p>
+<p>A <strong>feature</strong> is simply a measurable piece of information that we give to the model.</p>
+<p>If we have <span class="math inline">N</span> examples, our training dataset can be written as</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(\mathbf{x}_1,t_1),\ldots,(\mathbf{x}_N,t_N)\}
+=
+\{(\mathbf{x}_n,t_n)\}_{n=1}^N.\]</span></p>
+<p>The subscript tells us which example we are talking about.</p>
+<p>For the regression derivations in the slides, we write <span class="math inline">y(\mathbf{x};\mathbf{w})</span> for the model's prediction.</p>
+<hr />
+<h1 id="types-of-machine-learning-problems">Types of Machine Learning Problems</h1>
+<p><a class="slide-link" href="../slides/lecture-01.html#10" target="_blank" rel="noopener">Slide 10</a> shows a useful high-level picture of the machine learning landscape where there are three main areas: Supervised Learning, Unsupervised Learning, and Reinforcement Learning.</p>
+<h2 id="supervised-learning">Supervised learning</h2>
+<p>In <strong>supervised learning</strong>, every training input comes with a target:</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(\mathbf{x}_n,t_n)\}_{n=1}^N.\]</span></p>
+<p>Two important supervised learning problems are <strong>classification</strong> and <strong>regression</strong>.</p>
+<h3 id="classification">Classification</h3>
+<p>In classification, the target is a discrete category. Examples include:</p>
+<ul>
+<li>spam or not spam</li>
+<li>cat, dog, or bird</li>
+<li>benign or malignant</li>
+<li>pedestrian, cyclist, or car</li>
+</ul>
+<h3 id="regression">Regression</h3>
+<p>In regression, the target is a numerical quantity. Examples include:</p>
+<ul>
+<li>tomorrow's electricity demand</li>
+<li>the selling price of a house</li>
+<li>temperature</li>
+<li>the amount of solar radiation</li>
+</ul>
+<p>We will study regression in this lecture.</p>
+<h2 id="unsupervised-learning">Unsupervised learning</h2>
+<p>In <strong>unsupervised learning</strong>, we have inputs but no supplied targets:</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{\mathbf{x}_n\}_{n=1}^N.\]</span></p>
+<p>We may instead want to discover useful structure in the data, such as groups of similar examples or a simpler representation of complicated data.</p>
+<h2 id="reinforcement-learning">Reinforcement learning</h2>
+<p><a class="slide-link" href="../slides/lecture-01.html#10" target="_blank" rel="noopener">Slide 10</a> also shows <strong>reinforcement learning</strong>. Here an agent interacts with an environment and learns from rewards rather than being given the correct answer for every input. We will not study reinforcement learning in depth in this course, but many of the same ideas about models, data, objectives, and optimisation still apply.</p>
+<hr />
+<h1 id="regression-learning-a-relationship-from-data">Regression: Learning a Relationship From Data</h1>
+<p><a class="slide-link" href="../slides/lecture-01.html#16" target="_blank" rel="noopener">Slide 16</a> shows examples of regression in real data. In both examples, we observe noisy measurements and believe that there is some underlying relationship that we would like to understand or predict.</p>
+<p>Suppose for simplicity that both the input and target are numbers. Our data might look like</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(x_1,t_1),\ldots,(x_N,t_N)\}.\]</span></p>
+<p>We want to learn a function</p>
+<p><span class="math display">\[y(x)\]</span></p>
+<p>that predicts the target when given a new input <span class="math inline">x</span>.</p>
+<p>There are now three questions to answer.</p>
+<ol type="1">
+<li>What data do we have? These are the observed pairs <span class="math inline">(x_n,t_n)</span>.</li>
+<li>What model do we use? We need to choose a family of functions that we are willing to consider.</li>
+<li>What loss do we use? We need a numerical measure of how well or badly a model fits the observations.</li>
+</ol>
+<p>These are the <strong>data, model, and loss</strong> ingredients shown on <a class="slide-link" href="../slides/lecture-01.html#17" target="_blank" rel="noopener">Slide 17</a>. Keep these three questions in mind throughout the course.</p>
+<h2 id="linear-regression">Linear Regression</h2>
+<p>We begin with perhaps the simplest useful regression model: a straight line.</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+w_0+w_1x.\]</span></p>
+<p>The quantities <span class="math inline">w_0</span> and <span class="math inline">w_1</span> are the <strong>parameters</strong> of the model.</p>
+<ul>
+<li><span class="math inline">w_0</span> controls the intercept.</li>
+<li><span class="math inline">w_1</span> controls the slope.</li>
+</ul>
+<p>Different choices of <span class="math inline">\mathbf{w}=(w_0,w_1)</span> give us different lines. So, the learning problem is: <strong>Which line should we choose?</strong></p>
+<p>Before introducing any equations for the loss, try the activity on <strong><a class="slide-link" href="../slides/lecture-01.html#18" target="_blank" rel="noopener">Slide 18</a></strong>. It shows the same data together with three candidate lines.</p>
+<p>Ask yourself:</p>
+<ul>
+<li>Which line looks best?</li>
+<li>Why does it look better?</li>
+<li>How could we turn that judgement into a number?</li>
+</ul>
+<p>The purpose of a loss function is to answer the last question.</p>
+<h3 id="measuring-error-with-squared-loss">Measuring Error With Squared Loss</h3>
+<p>Suppose the observed target for input <span class="math inline">x_n</span> is <span class="math inline">t_n</span>. The model predicts</p>
+<p><span class="math display">\[y(x_n;\mathbf{w}).\]</span></p>
+<p>The difference between the prediction and target is</p>
+<p><span class="math display">\[y(x_n;\mathbf{w})-t_n.\]</span></p>
+<p>We would like these differences to be small.</p>
+<p>A common choice is the <strong>sum of squared errors</strong>:</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\sum_{n=1}^{N}
+\left(
+y(x_n;\mathbf{w})-t_n
+\right)^2.\]</span></p>
+<p>The factor <span class="math inline">\frac{1}{2}</span> does not change which model is best. It is included because it makes the derivatives slightly simpler.</p>
+<p>You might ask, "why square the error?" First, positive and negative errors cannot cancel:</p>
+<p><span class="math display">\[(+2)^2+(-2)^2=8,\]</span></p>
+<p>rather than zero.</p>
+<p>Second, a large error receives a larger penalty. For example,</p>
+<p><span class="math display">\[4^2=16\]</span></p>
+<p>is four times larger than</p>
+<p><span class="math display">\[2^2=4.\]</span></p>
+<p>This means that we want to penalize large deviations more. Least squares is particularly sensitive to large errors and we will see the consequences shortly.</p>
+<p><a class="slide-link" href="../slides/lecture-01.html#19" target="_blank" rel="noopener">Slide 19</a> connects the equation directly to the picture: the loss is measuring the squared vertical distances between the observed points and the line.</p>
+<h3 id="least-squares-regression">Least-Squares Regression</h3>
+<p>The learning algorithm chooses the parameters that minimise the loss:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+\operatorname*{arg\,min}_{\mathbf{w}}
+E(\mathbf{w}).\]</span></p>
+<p>The notation <span class="math inline">\operatorname*{arg\,min}</span> means the value of the argument that makes the expression as small as possible. Because our loss is a sum of squared errors, this method is called <strong>least squares</strong>. For the straight-line model,</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+w_0+w_1x,\]</span></p>
+<p>least squares searches across all possible values of <span class="math inline">w_0</span> and <span class="math inline">w_1</span> and chooses the pair giving the smallest total squared error.</p>
+<p>This is our first example of a general pattern in machine learning:</p>
+<ol type="1">
+<li>specify a model;</li>
+<li>specify a loss;</li>
+<li>optimise the loss with respect to the model parameters.</li>
+</ol>
+<h3 id="writing-linear-regression-with-vectors">Writing Linear Regression With Vectors</h3>
+<p>The vector form of the model is useful because it extends immediately to many input features. For a single scalar input <span class="math inline">x_n</span>, we first add a constant <span class="math inline">1</span>:</p>
+<p><span class="math display">\[\mathbf{x}_n
+=
+\begin{bmatrix}
+1\\
+x_n
+\end{bmatrix}.\]</span></p>
+<p>We also write</p>
+<p><span class="math display">\[\mathbf{w}
+=
+\begin{bmatrix}
+w_0\\
+w_1
+\end{bmatrix}.\]</span></p>
+<p>The prediction is then</p>
+<p><span class="math display">\[y_n
+=
+\mathbf{w}^{\top}\mathbf{x}_n.\]</span></p>
+<p>Expanding the dot product gives</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\mathbf{x}_n
+=
+w_0+w_1x_n,\]</span></p>
+<p>so nothing has changed. We have simply written the same line in a more compact form.</p>
+<p>The squared-error loss becomes</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\sum_{n=1}^{N}
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n-t_n
+\right)^2.\]</span></p>
+<p>Now stack all the inputs into a <strong>design matrix</strong>:</p>
+<p><span class="math display">\[\mathbf{X}
+=
+\begin{bmatrix}
+\mathbf{x}_1^\top\\
+\vdots\\
+\mathbf{x}_N^\top
+\end{bmatrix},\]</span></p>
+<p>and the targets into a vector:</p>
+<p><span class="math display">\[\mathbf{t}
+=
+\begin{bmatrix}
+t_1\\
+\vdots\\
+t_N
+\end{bmatrix}.\]</span></p>
+<p>The loss can now be written as</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+(\mathbf{t}-\mathbf{X}\mathbf{w})^\top
+(\mathbf{t}-\mathbf{X}\mathbf{w}).\]</span></p>
+<p>This is simply the sum of squared errors written using matrices.</p>
+<h3 id="deriving-the-least-squares-solution">Deriving the Least-Squares Solution</h3>
+<p><a class="slide-link" href="../slides/lecture-01.html#20" target="_blank" rel="noopener">Slide 20</a> derives the solution step by step.</p>
+<p>We begin with</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+(\mathbf{t}-\mathbf{X}\mathbf{w})^\top
+(\mathbf{t}-\mathbf{X}\mathbf{w}).\]</span></p>
+<p>Expanding gives</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\left(
+\mathbf{t}^\top\mathbf{t}
+-
+2\mathbf{w}^\top\mathbf{X}^\top\mathbf{t}
++
+\mathbf{w}^\top\mathbf{X}^\top\mathbf{X}\mathbf{w}
+\right).\]</span></p>
+<p>Differentiate with respect to <span class="math inline">\mathbf{w}</span>:</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}E
+=
+\mathbf{X}^\top\mathbf{X}\mathbf{w}
+-
+\mathbf{X}^\top\mathbf{t}.\]</span></p>
+<p>At a minimum, the gradient is zero:</p>
+<p><span class="math display">\[\mathbf{X}^\top\mathbf{X}\mathbf{w}
+=
+\mathbf{X}^\top\mathbf{t}.\]</span></p>
+<p>These are called the <strong>normal equations</strong>.</p>
+<p>If <span class="math inline">\mathbf{X}^\top\mathbf{X}</span> is invertible, then</p>
+<p><span class="math display">\[\boxed{
+\mathbf{w}_{\mathrm{ML}}
+=
+(\mathbf{X}^\top\mathbf{X})^{-1}
+\mathbf{X}^\top\mathbf{t}
+}\]</span></p>
+<p>is the least-squares solution.</p>
+<p>You should understand the steps in this derivation, but the larger idea is more important:</p>
+<blockquote>
+<p>We converted "find the best line" into an optimisation problem, differentiated the loss, and solved the resulting equation.</p>
+</blockquote>
+<p>This basic strategy appears repeatedly in machine learning.</p>
+<h3 id="a-geometric-view-of-least-squares">A Geometric View of Least Squares</h3>
+<p><a class="slide-link" href="../slides/lecture-01.html#21" target="_blank" rel="noopener">Slide 21</a> gives another way to understand the normal equations. The prediction vector</p>
+<p><span class="math display">\[\mathbf{X}\mathbf{w}\]</span></p>
+<p>can only lie in the space generated by the columns of <span class="math inline">\mathbf{X}</span>.</p>
+<p>The target vector <span class="math inline">\mathbf{t}</span> usually does not lie exactly inside this space.</p>
+<p>Least squares therefore chooses the point <span class="math inline">\mathbf{X}\mathbf{w}</span> that is closest to <span class="math inline">\mathbf{t}</span>.</p>
+<p>At that closest point, the residual</p>
+<p><span class="math display">\[\mathbf{t}-\mathbf{X}\mathbf{w}\]</span></p>
+<p>is perpendicular to the space spanned by the columns of <span class="math inline">\mathbf{X}</span>.</p>
+<p>Therefore,</p>
+<p><span class="math display">\[\mathbf{X}^\top
+(\mathbf{t}-\mathbf{X}\mathbf{w})
+=
+\mathbf{0}.\]</span></p>
+<p>Rearranging gives</p>
+<p><span class="math display">\[\mathbf{X}^\top\mathbf{X}\mathbf{w}
+=
+\mathbf{X}^\top\mathbf{t},\]</span></p>
+<p>which is exactly the normal equation we obtained using calculus.</p>
+<p>So there are two views of the same result:</p>
+<ul>
+<li><strong>calculus:</strong> set the gradient to zero;</li>
+<li><strong>geometry:</strong> project the target onto the space of predictions the model can represent.</li>
+</ul>
+<p>If the geometric picture is unfamiliar, that's ok: the key point is simply that least squares finds the closest prediction that the model is capable of making.</p>
+<h3 id="squared-error-and-outliers">Squared Error and Outliers</h3>
+<p>Squared error has an important consequence. Suppose one measurement is very far from all the others. Because its error is squared, that one point can contribute a large fraction of the total loss. The least-squares solution may then move significantly towards it.</p>
+<p>Use the interactive plot on <strong><a class="slide-link" href="../slides/lecture-01.html#24" target="_blank" rel="noopener">Slide 24</a></strong>:</p>
+<ul>
+<li>drag the red point up and down;</li>
+<li>watch how the fitted line changes;</li>
+<li>observe that the residual of that one point can dominate the total loss.</li>
+</ul>
+<p>The important lesson is that a loss function does not merely measure performance. It also determines what the learning algorithm pays attention to.</p>
+<p>Squared error treats large deviations as especially important. This can be useful, but it also makes least squares sensitive to unusual or corrupted observations.</p>
+<hr />
+<h2 id="nonlinear-regression-via-basis-functions">Nonlinear Regression via Basis Functions</h2>
+<p>A straight line cannot represent every relationship. Suppose instead that the data follows a curved pattern. One approach is to transform the input using <strong>basis functions</strong>. For example, we can use polynomial features:</p>
+<p><span class="math display">\[\boldsymbol{\phi}(x)
+=
+\begin{bmatrix}
+1\\
+x\\
+x^2\\
+x^3\\
+\vdots\\
+x^{M-1}
+\end{bmatrix}.\]</span></p>
+<p>Our model becomes</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}(x).\]</span></p>
+<p>For a polynomial model,</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+w_0+w_1x+w_2x^2+\cdots+w_{M-1}x^{M-1}.\]</span></p>
+<p>This is nonlinear as a function of <span class="math inline">x</span>, but it is still <strong>linear in the parameters</strong> <span class="math inline">w_i</span>. This distinction is <strong>important</strong> (please take note of it!).The parameters still enter the equation as</p>
+<p><span class="math display">\[w_i\phi_i(x),\]</span></p>
+<p>so all the least-squares mathematics remains almost <em>unchanged</em>. The difference is that instead of the original design matrix <span class="math inline">\mathbf{X}</span>, we construct a <strong>feature matrix</strong></p>
+<p><span class="math display">\[\boldsymbol{\Phi}.\]</span></p>
+<p>The solution becomes</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+(\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi})^{-1}
+\boldsymbol{\Phi}^{\top}\mathbf{t}.\]</span></p>
+<p>It is just the same as the least squares solution except we replace <span class="math inline">\mathbf{X}</span> with <span class="math inline">\boldsymbol{\Phi}</span>.</p>
+<p><strong><a class="slide-link" href="../slides/lecture-01.html#27" target="_blank" rel="noopener">Slide 27</a></strong> lets you switch between several basis functions:</p>
+<ul>
+<li>polynomial</li>
+<li>squared exponential</li>
+<li>sigmoid</li>
+</ul>
+<p>Try each option and notice that changing the basis changes the shapes that the model can represent, even though the solver itself has not changed.</p>
+<p>This is a useful example of separating the pieces of a machine learning method:</p>
+<ul>
+<li>the <strong>data</strong> stays the same;</li>
+<li>the <strong>loss</strong> stays the same;</li>
+<li>the <strong>model representation</strong> changes.</li>
+</ul>
+<h2 id="overfitting">Overfitting</h2>
+<p>Suppose we fit polynomial models of increasing order:</p>
+<ul>
+<li>A first-order polynomial is a straight line.</li>
+<li>A second-order polynomial can bend once.</li>
+<li>Higher-order polynomials can represent increasingly complicated shapes.</li>
+</ul>
+<p>It is tempting to conclude that if a more flexible model fits the data better, then it must be a better model.</p>
+<p>Unfortunately, this is <strong>not true</strong>. Before continuing, consider the three possible plots on <strong><a class="slide-link" href="../slides/lecture-01.html#29" target="_blank" rel="noopener">Slide 29</a></strong>. As polynomial order increases, what do you expect to happen to:</p>
+<ul>
+<li>training error?</li>
+<li>error on new data?</li>
+</ul>
+<p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-01.html#30" target="_blank" rel="noopener">Slide 30</a></strong> lets you answer this directly. Move the polynomial-order slider while initially keeping regularisation at <span class="math inline">\lambda=0</span>.</p>
+<p>You should observe two different behaviours.</p>
+<ul>
+<li><strong>Training error</strong> generally decreases as the model becomes more flexible. Why? This happens because a more flexible model has more ways to fit the examples it has already seen.</li>
+<li><strong>Test error</strong> initially decreases, but eventually begins to increase. A very flexible model starts fitting accidental details of the training data rather than only the underlying pattern.</li>
+</ul>
+<p>This is <strong>overfitting</strong>, which is a key problem in machine learning.</p>
+<p>In particular, a <strong>training set</strong> contains the examples used to fit the model. A <strong>test set</strong> contains examples that were not used when fitting the model. The performance of models on both of these sets is shown clearly on <strong><a class="slide-link" href="../slides/lecture-01.html#31" target="_blank" rel="noopener">Slide 31</a></strong>.</p>
+<p>As model capacity increases:</p>
+<ul>
+<li>training error continues to fall;</li>
+<li>test error falls at first;</li>
+<li>eventually test error rises again.</li>
+</ul>
+<p>The model has started to overfit when improving the fit to the training data makes predictions on new data worse. This leads to one of the central lessons of machine learning:</p>
+<blockquote>
+<p><strong>Training error is not generalisation (or test) error.</strong></p>
+</blockquote>
+<p>A model with almost zero training error may still be a poor model.</p>
+<p>The opposite problem of overfitting is <strong>underfitting</strong>. A model underfits when it is too simple to represent an important pattern in the data. For example, a straight line may underfit data that has a strongly curved relationship. There is therefore a balance:</p>
+<ul>
+<li>too little flexibility leads to underfitting;</li>
+<li>too much flexibility can lead to overfitting.</li>
+</ul>
+<h3 id="why-does-overfitting-happen">Why Does Overfitting Happen?</h3>
+<p>Overfitting happens because the model is optimized and can end up fitting "noise". <a class="slide-link" href="../slides/lecture-01.html#33" target="_blank" rel="noopener">Slides 33</a> and <a class="slide-link" href="../slides/lecture-01.html#34" target="_blank" rel="noopener">34</a> give an intuitive explanation: imagine many people sit for an exam and you hire the candidate with the highest score. Suppose an exam score depends on both</p>
+<ul>
+<li>the person's true ability; and</li>
+<li>some luck on that particular exam.</li>
+</ul>
+<p>If you have only a few candidates, the top scorer may well be the genuinely strongest candidate.</p>
+<p>But if you <em>search</em> across a very large number of candidates, there are many more chances for somebody to receive an unusually lucky score. The highest observed score therefore tends to come from someone who is both good <strong>and lucky</strong>.</p>
+<p>The same effect happens when we choose a model. Suppose the measured training error of a model <span class="math inline">h</span> is</p>
+<p><span class="math display">\[\widehat{E}(h)
+=
+E(h)+\varepsilon(h),\]</span></p>
+<p>where</p>
+<ul>
+<li><span class="math inline">E(h)</span> is its true generalisation error;</li>
+<li><span class="math inline">\varepsilon(h)</span> represents noise in our estimate.</li>
+</ul>
+<p>For any one fixed model, suppose</p>
+<p><span class="math display">\[\mathbb{E}[\varepsilon(h)]=0.\]</span></p>
+<p>Our estimate is not systematically too high or too low.</p>
+<p>But we do <em>not</em> choose a random model. We search across many models and select the one with the smallest observed error:</p>
+<p><span class="math display">\[\widehat{h}
+=
+\operatorname*{arg\,min}_{h\in\mathcal{H}}
+\left(
+E(h)+\varepsilon(h)
+\right).\]</span></p>
+<p>Here <span class="math inline">\mathcal{H}</span> is the set of models we are considering.</p>
+<p>The optimisation process can select a model partly because its estimate happened to be unusually lucky. This is sometimes called the <strong>optimiser's curse</strong>. The key idea is:</p>
+<blockquote>
+<p>The more possibilities we search, the more opportunities there are to fit accidental properties of the training data.</p>
+</blockquote>
+<p>The interactive hiring example on <strong><a class="slide-link" href="../slides/lecture-01.html#33" target="_blank" rel="noopener">Slide 33</a></strong> makes this effect concrete. Increase the number of candidates and the amount of luck in the exam score and observe what happens.</p>
+<h3 id="what-overfitting-looks-like-in-polynomial-regression">What Overfitting Looks Like in Polynomial Regression</h3>
+<p>In high-order polynomial regression, an overfitted curve often becomes extremely wiggly. <a class="slide-link" href="../slides/lecture-01.html#35" target="_blank" rel="noopener">Slide 35</a> reveals that these wiggly curves tend to require very large parameter values. For example,</p>
+<p><span class="math display">\[y(x)
+=
+w_0+w_1x+w_2x^2+\cdots\]</span></p>
+<p>may contain large positive and negative coefficients that nearly cancel each other.The curve can then bend sharply enough to pass through almost every training point.</p>
+<p>If you use the polynomial-order slider on <strong><a class="slide-link" href="../slides/lecture-01.html#35" target="_blank" rel="noopener">Slide 35</a></strong>, you will observe that as the order increases:</p>
+<ul>
+<li>the curve becomes more complicated;</li>
+<li>the largest <span class="math inline">|w_i|</span> can become very large;</li>
+<li>the overall size of the weight vector grows.</li>
+</ul>
+<p>This suggests a possible way to control the problem. We intentionally prefer models that fit the data well <strong>without using extremely large weights</strong>. This is the idea behind <strong>regularisation</strong>, which we will discuss next.</p>
+<h2 id="regularisation">Regularisation</h2>
+<p>Regularisation adds an extra preference to the learning problem. Instead of minimising only the data-fitting error</p>
+<p><span class="math display">\[E(\mathbf{w}),\]</span></p>
+<p>we minimise</p>
+<p><span class="math display">\[\widetilde{E}(\mathbf{w})
+=
+E(\mathbf{w})
++
+\frac{\lambda}{2}
+\|\mathbf{w}\|_2^2.\]</span></p>
+<p>The additional term</p>
+<p><span class="math display">\[\frac{\lambda}{2}
+\|\mathbf{w}\|_2^2\]</span></p>
+<p>penalises large weights.</p>
+<p>Here,</p>
+<p><span class="math display">\[\|\mathbf{w}\|_2^2
+=
+\mathbf{w}^{\top}\mathbf{w}
+=
+\sum_i w_i^2.\]</span></p>
+<p>The parameter <span class="math inline">\lambda</span> controls the strength of the penalty:</p>
+<ul>
+<li>If <span class="math inline">\lambda=0</span>, we recover ordinary least squares.</li>
+<li>If <span class="math inline">\lambda</span> is small, we mostly fit the data, but slightly prefer smaller weights.</li>
+<li>If <span class="math inline">\lambda</span> is very large, the penalty dominates, forcing the weights close to zero. The model may then become too simple and underfit.</li>
+</ul>
+<p>Regularisation therefore introduces another trade-off. This preference for some solutions over others is an example of an <strong>inductive bias</strong>: an assumption or preference that helps us choose between models that could fit the observed data.</p>
+<h3 id="ridge-regression">Ridge Regression</h3>
+<p>Adding a squared-weight penalty to linear regression gives <strong>ridge regression</strong>, also called <span class="math inline">L_2</span> regularisation or weight decay. For basis-function regression,</p>
+<p><span class="math display">\[\widetilde{E}(\mathbf{w})
+=
+\frac{1}{2}
+(\mathbf{t}-\boldsymbol{\Phi}\mathbf{w})^\top
+(\mathbf{t}-\boldsymbol{\Phi}\mathbf{w})
++
+\frac{\lambda}{2}
+\mathbf{w}^{\top}\mathbf{w}.\]</span></p>
+<p>Differentiate:</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}
+\widetilde{E}
+=
+\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi}\mathbf{w}
+-
+\boldsymbol{\Phi}^{\top}\mathbf{t}
++
+\lambda\mathbf{w}.\]</span></p>
+<p>Set the gradient to zero:</p>
+<p><span class="math display">\[(\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi}
++
+\lambda\mathbf{I})
+\mathbf{w}
+=
+\boldsymbol{\Phi}^{\top}\mathbf{t}.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\boxed{
+\mathbf{w}_{\mathrm{RR}}
+=
+(\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi}
++
+\lambda\mathbf{I})^{-1}
+\boldsymbol{\Phi}^{\top}\mathbf{t}
+}\]</span></p>
+<p>Compare this with ordinary least squares:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+(\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi})^{-1}
+\boldsymbol{\Phi}^{\top}\mathbf{t}.\]</span></p>
+<p>The only difference is the extra <span class="math inline">\lambda\mathbf{I}</span> A relatively small change to the objective gives a useful change to the solution.</p>
+<h3 id="what-does-the-regulariser-actually-do">What Does the Regulariser Actually Do?</h3>
+<p><a class="slide-link" href="../slides/lecture-01.html#38" target="_blank" rel="noopener">Slides 38</a> and <a class="slide-link" href="../slides/lecture-01.html#39" target="_blank" rel="noopener">39</a> give a simple one-dimensional example. Suppose</p>
+<p><span class="math display">\[y=wx.\]</span></p>
+<p>Without regularisation, the squared-error loss is a bowl-shaped function of <span class="math inline">w</span>. Its minimum gives the least-squares estimate. The regularisation term</p>
+<p><span class="math display">\[\frac{\lambda}{2}w^2\]</span></p>
+<p>is another bowl, but one whose minimum is at zero.</p>
+<p>The total objective is the sum of the two. As <span class="math inline">\lambda</span> increases, the minimum of the combined objective moves towards zero. This is called <strong>shrinkage</strong>. Use the slider on <strong><a class="slide-link" href="../slides/lecture-01.html#39" target="_blank" rel="noopener">Slide 39</a></strong> and watch what happens to the fitted <span class="math inline">w</span>.</p>
+<h4 id="regularisation-also-helps-the-linear-algebra">Regularisation Also Helps the Linear Algebra</h4>
+<p>Interestingly, regularisation is useful for another reason. Recall the least-squares solution:</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+(\mathbf{X}^{\top}\mathbf{X})^{-1}
+\mathbf{X}^{\top}\mathbf{t}.\]</span></p>
+<p>This expression requires <span class="math inline">\mathbf{X}^{\top}\mathbf{X}</span> to be invertible and <a class="slide-link" href="../slides/lecture-01.html#37" target="_blank" rel="noopener">Slide 37</a> gives two cases where this can fail:</p>
+<ul>
+<li><strong>Redundant features.</strong> Suppose we include both "height in centimetres" and "height in inches". One feature is an exact multiple of the other, so the two columns do not provide independent information.</li>
+<li><strong>More features than observations.</strong> Suppose we have more model parameters than training examples. There may then be many different parameter vectors that fit all the data exactly.</li>
+</ul>
+<p>Ridge regression instead uses</p>
+<p><span class="math display">\[\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi}
++
+\lambda\mathbf{I}.\]</span></p>
+<p>For <span class="math inline">\lambda&gt;0</span>, adding <span class="math inline">\lambda\mathbf{I}</span> makes the matrix invertible. So regularisation can help both:</p>
+<ul>
+<li><strong>statistically</strong>, by controlling overfitting</li>
+<li><strong>numerically</strong>, by making the optimisation problem better behaved.</li>
+</ul>
+<h2 id="the-cost-of-the-closed-form-solution">The Cost of the Closed-Form Solution</h2>
+<p>So far, our approach to linear regression has been to write down a formula and compute the answer <em>analytically</em> (we use the derived formula without any gradient descent or other numerical method).</p>
+<p>The problem is that this formula becomes expensive when the dataset or number of features is large. Suppose</p>
+<ul>
+<li><span class="math inline">N</span> is the number of training examples;</li>
+<li><span class="math inline">M</span> is the number of features.</li>
+</ul>
+<p>To construct <span class="math inline">\mathbf{X}^{\top}\mathbf{X}</span>, we require roughly <span class="math inline">O(NM^2)</span> operations. Solving the resulting <span class="math inline">M\times M</span> system costs roughly <span class="math inline">O(M^3)</span></p>
+<p>We also need to store the design matrix, containing <span class="math inline">NM</span> numbers.</p>
+<p>For a small problem, this is completely manageable. For millions of examples and thousands of features, both computation and memory become serious problems. <a class="slide-link" href="../slides/lecture-01.html#40" target="_blank" rel="noopener">Slide 40</a> gives concrete examples.</p>
+<p>This motivates a different approach (which you should be familiar with): instead of solving for the exact answer in one large calculation, gradually improve the parameters using the gradient.</p>
+<h2 id="gradient-descent">Gradient Descent</h2>
+<p>First, let us derive the gradient of the loss. Recall that the loss is</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\sum_{n=1}^{N}
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n-t_n
+\right)^2.\]</span></p>
+<p>Consider one training example. Its contribution to the gradient is</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}
+\frac{1}{2}
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n-t_n
+\right)^2.\]</span></p>
+<p>Using the chain rule,</p>
+<p><span class="math display">\[=
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n-t_n
+\right)
+\nabla_{\mathbf{w}}
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n
+\right).\]</span></p>
+<p>Since</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n
+\right)
+=
+\mathbf{x}_n,\]</span></p>
+<p>we get</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}
+E
+=
+\sum_{n=1}^{N}
+(y_n-t_n)\mathbf{x}_n,\]</span></p>
+<p>where</p>
+<p><span class="math display">\[y_n
+=
+\mathbf{w}^{\top}\mathbf{x}_n.\]</span></p>
+<p>Or, in matrix form,</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}E
+=
+\mathbf{X}^{\top}
+(\mathbf{X}\mathbf{w}-\mathbf{t}).\]</span></p>
+<p>There is a simple way to remember the structure:</p>
+<blockquote>
+<p><strong>prediction error × input</strong></p>
+</blockquote>
+<p>Each training example pushes the parameters in proportion to its prediction error and its input features. This same form also occurs for classification (next week)</p>
+<p>Once we can compute a gradient, we can update the parameters iteratively:</p>
+<p><span class="math display">\[\mathbf{w}
+\leftarrow
+\mathbf{w}
+-
+\eta\nabla_{\mathbf{w}}E.\]</span></p>
+<p>Here <span class="math inline">\eta</span> is the <strong>learning rate</strong>, which controls the size of each update.</p>
+<p>Using all <span class="math inline">N</span> examples to compute one update gives <strong>full gradient descent</strong>.</p>
+<p>For linear regression, one full-gradient update costs roughly</p>
+<p><span class="math display">\[O(NM).\]</span></p>
+<p>This can already be much cheaper than forming and solving the normal equations. We can go further and use only a small subset of examples, called a <strong>minibatch</strong> <span class="math inline">\mathcal{B}</span>:</p>
+<p><span class="math display">\[\mathbf{w}
+\leftarrow
+\mathbf{w}
+-
+\eta
+\sum_{n\in\mathcal{B}}
+(y_n-t_n)\mathbf{x}_n.\]</span></p>
+<p>If the minibatch contains <span class="math inline">B</span> examples, one update costs roughly</p>
+<p><span class="math display">\[O(BM).\]</span></p>
+<p>This is the basic idea behind <strong>stochastic gradient descent</strong>. There is a trade-off:</p>
+<ul>
+<li>using fewer examples makes each update cheaper;</li>
+<li>but each update is a noisier estimate of the direction we should move.</li>
+</ul>
+<p>We will study gradient-based optimisation more carefully later. For now, the important point is that closed-form solutions are convenient for small problems, but iterative methods scale much better.</p>
+<h2 id="the-bigger-picture">The Bigger Picture</h2>
+<p>We began with a straight line, but we have already encountered many of the central ideas in machine learning. Let's quickly revisit each one below:</p>
+<h4 id="data">Data</h4>
+<p>We observe examples</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(\mathbf{x}_n,t_n)\}_{n=1}^N.\]</span></p>
+<h4 id="model">Model</h4>
+<p>We choose a family of prediction functions such as</p>
+<p><span class="math display">\[y(\mathbf{x};\mathbf{w})
+=
+\mathbf{w}^{\top}\mathbf{x}.\]</span></p>
+<p>Changing the features or basis functions changes what the model can represent.</p>
+<h4 id="loss">Loss</h4>
+<p>We define what counts as a good model. For least squares,</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\sum_n
+(y_n-t_n)^2.\]</span></p>
+<h4 id="optimisation">Optimisation</h4>
+<p>We choose parameters that minimise the objective. Sometimes this gives a direct analytic solution. For larger or more complicated problems, we instead use iterative optimisation.</p>
+<h4 id="generalisation">Generalisation</h4>
+<p>Finally, we ask whether the learned model works on data that was not used to fit it. This last step is very important. A model is not useful simply because it remembers its training examples well. We would like to apply the model on unseen data.</p>
+<h2 id="summary">Summary</h2>
+<p>In this lecture, we introduced machine learning as the problem of learning useful patterns or prediction rules from data. A useful way to organise a machine learning method is through three ingredients:</p>
+<ol type="1">
+<li><strong>Data</strong>: what examples do we observe?</li>
+<li><strong>Model</strong>: what family of functions are we willing to consider?</li>
+<li><strong>Loss</strong>: what does it mean for one model to be better than another?</li>
+</ol>
+<p>We studied these ideas through linear regression. Given a linear model</p>
+<p><span class="math display">\[y(\mathbf{x};\mathbf{w})
+=
+\mathbf{w}^{\top}\mathbf{x},\]</span></p>
+<p>we measured prediction quality using squared error:</p>
+<p><span class="math display">\[E(\mathbf{w})
+=
+\frac{1}{2}
+\sum_{n=1}^{N}
+\left(
+\mathbf{w}^{\top}\mathbf{x}_n-t_n
+\right)^2.\]</span></p>
+<p>Minimising this loss gives the normal equations</p>
+<p><span class="math display">\[\mathbf{X}^{\top}\mathbf{X}\mathbf{w}
+=
+\mathbf{X}^{\top}\mathbf{t},\]</span></p>
+<p>and, when the required inverse exists,</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}}
+=
+(\mathbf{X}^{\top}\mathbf{X})^{-1}
+\mathbf{X}^{\top}\mathbf{t}.\]</span></p>
+<p>We then extended the same method to nonlinear relationships using <strong>basis functions</strong>:</p>
+<p><span class="math display">\[y(x;\mathbf{w})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}(x).\]</span></p>
+<p>This showed that a model can be nonlinear in its input while remaining linear in its parameters.</p>
+<p>Increasing model flexibility usually reduces training error, but eventually a flexible model can begin fitting noise. This is <strong>overfitting</strong>. The central lesson is that <strong>training error is not generalisation or test error.</strong></p>
+<p>Regularisation gives us one way to control overfitting. Ridge regression adds a penalty on large parameter values:</p>
+<p><span class="math display">\[\widetilde{E}(\mathbf{w})
+=
+E(\mathbf{w})
++
+\frac{\lambda}{2}
+\|\mathbf{w}\|_2^2.\]</span></p>
+<p>Its solution is</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{RR}}
+=
+(\boldsymbol{\Phi}^{\top}\boldsymbol{\Phi}
++
+\lambda\mathbf{I})^{-1}
+\boldsymbol{\Phi}^{\top}\mathbf{t}.\]</span></p>
+<p>Finally, we saw that direct analytic solutions become costly for very large datasets. This motivates iterative optimisation using gradients, where each example contributes a term with the simple form</p>
+<p><span class="math display">\[\text{prediction error}\times\text{input}.\]</span></p>
+<p>These ideas recur throughout the rest of the course. The models will become more complicated, but the main questions remain the same:</p>
+<ul>
+<li>What data do we have?</li>
+<li>What model should we use?</li>
+<li>What loss should we optimise?</li>
+<li>How should we optimise it?</li>
+<li>And, most importantly, will the result generalise to new data?</li>
+</ul>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>

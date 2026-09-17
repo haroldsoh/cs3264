@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 4 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 4: Introduction to Generative Models and Naive Bayes">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-04.html" target="_blank" rel="noopener">Lecture 4 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<article>
+<h1 id="lecture-4-introduction-to-generative-models-and-naive-bayes">Lecture 4: Introduction to Generative Models and Naive Bayes</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In Lecture 3, we learnt logistic regression, which models the probability of a label given the input:</p>
+<p><span class="math display">\[p(t\mid\mathbf{x}).\]</span></p>
+<p>This is a <strong>discriminative model</strong>. It focuses directly on the prediction we want to make. It does not try to model where the input <span class="math inline">\mathbf{x}</span> came from.</p>
+<p>In this lecture, we take a different approach. A <strong>generative model</strong> describes how the entire dataset could have been generated. For classification, we will model the joint distribution</p>
+<p><span class="math display">\[p(\mathbf{x},t)
+=
+p(t)\,p(\mathbf{x}\mid t).\]</span></p>
+<p>The generative story is: first choose a class <span class="math inline">t</span>, then generate the features <span class="math inline">\mathbf{x}</span> from a distribution associated with that class. Once we have this model, we use Bayes' rule to obtain <span class="math inline">p(t\mid\mathbf{x})</span> and classify a new example.</p>
+<p>Our main example will be <strong>Naive Bayes</strong>. The important idea behind Naive Bayes is independence assumptions can make the learning problem easier. Specifically, we assume that the features are independent <strong>given the class</strong>,</p>
+<p><span class="math display">\[p(\mathbf{x}\mid t)
+=
+\prod_m p(x^m\mid t).\]</span></p>
+<p>A complicated distribution over a whole input vector can be broken into many small distributions. The likelihood also breaks into separate pieces, so each part can be learnt on its own using simple counts, means, and variances.</p>
+<p>This simplicity has benefits, but it comes from an assumption. If the features are strongly related even after we know the class, Naive Bayes can count the same evidence more than once and become overconfident. This is an example of a recurring machine learning trade-off: stronger assumptions can make learning easier, especially with limited data, but they can also make the model systematically wrong.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, the main things you should be able to do are:</p>
+<ul>
+<li>explain the difference between a discriminative model and a generative model</li>
+<li>use Bayes' rule to obtain <span class="math inline">p(t\mid\mathbf{x})</span> from <span class="math inline">p(t)</span> and <span class="math inline">p(\mathbf{x}\mid t)</span></li>
+<li>explain the conditional independence assumption used by Naive Bayes</li>
+<li>explain why this assumption makes Naive Bayes easy to learn</li>
+<li>derive the maximum-likelihood estimates for the class probabilities, feature means, and feature variances in Gaussian Naive Bayes</li>
+</ul>
+<p>In addition, you should be able to:</p>
+<ul>
+<li>explain how model structure can split one large learning problem into smaller independent problems</li>
+<li>use a generative model when some features are missing</li>
+<li>explain how a prior leads to pseudo-counts and Laplace smoothing</li>
+<li>explain why correlated or duplicated features can cause problems for Naive Bayes</li>
+<li>describe some of the main trade-offs between generative and discriminative models</li>
+</ul>
+<p>To achieve these learning objectives, we will start by comparing discriminative and generative modelling. We will then build a simple generative classifier and see why a direct model of <span class="math inline">p(\mathbf{x}\mid t)</span> quickly becomes difficult. Naive Bayes will solve this problem by <em>imposing structure</em> on the distribution. We will then see how this structure makes learning and prediction simple, before considering the benefits and costs of the assumptions we made.</p>
+<hr />
+<h2 id="discriminative-and-generative-models">Discriminative and Generative Models</h2>
+<p>Suppose our data is</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(\mathbf{x}_n,t_n)\}_{n=1}^{N},\]</span></p>
+<p>where <span class="math inline">\mathbf{x}_n</span> contains the features and <span class="math inline">t_n</span> is the class label.</p>
+<p>There are two different ways we could build a probabilistic classifier.</p>
+<p>A <strong>discriminative model</strong> directly models the probability of the label given the features:</p>
+<p><span class="math display">\[p(t\mid\mathbf{x}).\]</span></p>
+<p>Logistic regression is an example. We give the model <span class="math inline">\mathbf{x}</span> and it directly returns a distribution over <span class="math inline">t</span>. We do not need a probability model for <span class="math inline">\mathbf{x}</span> itself.</p>
+<p>A <strong>generative model</strong> instead models the joint distribution of the features and the label:</p>
+<p><span class="math display">\[p(\mathbf{x},t).\]</span></p>
+<p>Using the product rule, we can write this as</p>
+<p><span class="math display">\[\boxed{
+p(\mathbf{x},t)
+=
+p(t)\,p(\mathbf{x}\mid t).
+}\]</span></p>
+<p>This gives us a simple story for how one labelled example is generated:</p>
+<ol type="1">
+<li>draw a class <span class="math inline">t</span> from <span class="math inline">p(t)</span></li>
+<li>draw the features <span class="math inline">\mathbf{x}</span> from <span class="math inline">p(\mathbf{x}\mid t)</span></li>
+</ol>
+<p>For example, suppose <span class="math inline">t</span> says whether a used car sells quickly. We first draw whether the car belongs to the quick-selling or slow-selling class. Once that class is known, we draw its age and mileage from the distribution for cars in that class.</p>
+<p>This is the central picture on <strong><a class="slide-link" href="../slides/lecture-04.html#13" target="_blank" rel="noopener">Slides 13-14</a></strong>. Try the sampling demonstration on <a class="slide-link" href="../slides/lecture-04.html#14" target="_blank" rel="noopener">Slide 14</a>. The model first chooses the class and then uses the corresponding feature distribution to generate the input.</p>
+<h3 id="making-a-prediction">Making a Prediction</h3>
+<p>At prediction time, we observe <span class="math inline">\mathbf{x}</span> and want to infer <span class="math inline">t</span>. The model was written in the other direction, but Bayes' rule lets us reverse it:</p>
+<p><span class="math display">\[p(t\mid\mathbf{x})
+=
+\frac{
+p(\mathbf{x}\mid t)p(t)
+}{
+p(\mathbf{x})
+}.\]</span></p>
+<p>For classification, the denominator can be obtained by summing over the possible classes:</p>
+<p><span class="math display">\[p(\mathbf{x})
+=
+\sum_{t'}
+p(\mathbf{x}\mid t')p(t').\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\boxed{
+p(t\mid\mathbf{x})
+=
+\frac{
+p(\mathbf{x}\mid t)p(t)
+}{
+\sum_{t'}
+p(\mathbf{x}\mid t')p(t')
+}.
+}\]</span></p>
+<p>The two quantities we need are therefore:</p>
+<ul>
+<li>the <strong>class prior</strong> <span class="math inline">p(t)</span>, which says how common each class is</li>
+<li>the <strong>class-conditional distribution</strong> <span class="math inline">p(\mathbf{x}\mid t)</span>, which says what inputs from that class tend to look like</li>
+</ul>
+<p>The interactive example on <strong><a class="slide-link" href="../slides/lecture-04.html#15" target="_blank" rel="noopener">Slides 15-16</a></strong> shows this idea. Each class gives the new input a score through <span class="math inline">p(\mathbf{x}\mid t)</span>, we weight that score by how common the class is, and then normalise.</p>
+<h3 id="why-model-more-than-we-need">Why Model More Than We Need?</h3>
+<p>A discriminative model seems to have the easier job. If we only care about predicting <span class="math inline">t</span>, why model <span class="math inline">\mathbf{x}</span> at all?</p>
+<p>The answer is that modelling the joint distribution gives us more than a classifier. Because we have a model for the input, we can also ask questions such as:</p>
+<ul>
+<li>What does a typical example from class <span class="math inline">t</span> look like?</li>
+<li>Is this input very unusual under the model?</li>
+</ul>
+<p>We can also:</p>
+<ul>
+<li>generate a new example</li>
+<li>handle missing features</li>
+</ul>
+<p>We will see examples later in the lecture. The cost is that modelling <span class="math inline">p(\mathbf{x}\mid t)</span> is a harder task than modelling only the boundary between classes. A bad model of the inputs can therefore give us bad predictions.</p>
+<p>This is the first major distinction to remember:</p>
+<blockquote>
+<p><strong>A discriminative model directly models the prediction. A generative model models how the data is produced and obtains the prediction using Bayes' rule.</strong></p>
+</blockquote>
+<hr />
+<h2 id="naive-bayes-giving-the-model-useful-structure">Naive Bayes: Giving the Model Useful Structure</h2>
+<p>Recall that our model comprises two parts: the class prior <span class="math inline">p(t)</span> and the class-conditional distribution <span class="math inline">p(\mathbf{x}\mid t)</span>. The class prior is easy to specify: we use a Bernoulli distribution if there are only two classes. If we have more classes, we use the Categorical distribution.</p>
+<p>The tricky part is the class-conditional distribution</p>
+<p><span class="math display">\[p(\mathbf{x}\mid t).\]</span></p>
+<p>This is where the main idea of Naive Bayes appears.</p>
+<p>Suppose <span class="math inline">\mathbf{x}</span> contains <span class="math inline">M</span> features:</p>
+<p><span class="math display">\[\mathbf{x}
+=
+(x^1,\ldots,x^M).\]</span></p>
+<p>In principle, we could try to learn a full joint distribution</p>
+<p><span class="math display">\[p(x^1,\ldots,x^M\mid t).\]</span></p>
+<p>The problem is that a general joint distribution can be very complicated. We need to describe not only each feature separately, but also how every feature varies with every other feature. The number of quantities we need to estimate can grow very quickly with <span class="math inline">M</span>.</p>
+<p><strong><a class="slide-link" href="../slides/lecture-04.html#22" target="_blank" rel="noopener">Slide 22</a></strong> makes this problem concrete by increasing the number of features. A flexible joint model quickly has many more parameters than we can reliably estimate from the available data.</p>
+<h3 id="the-naive-assumption">The Naive Assumption</h3>
+<p>Naive Bayes makes a strong simplifying assumption:</p>
+<blockquote>
+<p><strong>Given the class, the features are independent.</strong></p>
+</blockquote>
+<p>Mathematically,</p>
+<p><span class="math display">\[\boxed{
+p(\mathbf{x}\mid t)
+=
+\prod_{m=1}^{M}
+p(x^m\mid t).
+}\]</span></p>
+<p>This is called <strong>conditional independence</strong>. It does not say that the features must be independent when we look at the whole dataset. For example, age and mileage may be related overall. The assumption says that <strong>once the class is known</strong>, the model treats the remaining relationship between age and mileage as unimportant (so the features are independent).</p>
+<p>Use the interactive plot on <strong><a class="slide-link" href="../slides/lecture-04.html#23" target="_blank" rel="noopener">Slide 23</a></strong> to compare the Naive Bayes model with a full joint model. The full model can represent correlations within a class. The Naive Bayes model cannot.</p>
+<p>At first this may look like we have just made the model worse. But the assumption gives us something very valuable: a complicated high-dimensional distribution has become a collection of one-dimensional distributions.</p>
+<p>Instead of learning</p>
+<p><span class="math display">\[p(x^1,\ldots,x^M\mid t),\]</span></p>
+<p>we learn</p>
+<p><span class="math display">\[p(x^1\mid t),\quad
+p(x^2\mid t),\quad
+\ldots,\quad
+p(x^M\mid t).\]</span></p>
+<p>Each feature can now be handled separately. To make this idea concreate, let's examine the example that uses Gaussians.</p>
+<h3 id="gaussian-naive-bayes">Gaussian Naive Bayes</h3>
+<p>For continuous features such as age and mileage, a simple choice is to model each feature with a Gaussian:</p>
+<p><span class="math display">\[p(x^m\mid t=k)
+=
+\mathcal{N}
+\left(
+x^m
+\mid
+\mu_k^m,
+v_k^m
+\right).\]</span></p>
+<p>The Naive Bayes class-conditional becomes</p>
+<p><span class="math display">\[\boxed{
+p(\mathbf{x}\mid t=k)
+=
+\prod_{m=1}^{M}
+\mathcal{N}
+\left(
+x^m
+\mid
+\mu_k^m,
+v_k^m
+\right).
+}\]</span></p>
+<p>Each class has its own mean and variance for each feature. The complete model for a class is therefore built from many small pieces.</p>
+<p>A useful way to think about the model is as a set of <strong>blocks</strong>:</p>
+<ul>
+<li>one block for the class prior <span class="math inline">p(t)</span></li>
+<li>one block for <span class="math inline">p(\mathbf{x}\mid t=0)</span></li>
+<li>one block for <span class="math inline">p(\mathbf{x}\mid t=1)</span></li>
+<li>and, inside each class block, one small distribution for each feature</li>
+</ul>
+<p>This block view becomes important when we learn the model. See the block picture at the beginning of Lecture 5 (<strong><a class="slide-link" href="../slides/lecture-05.html#4" target="_blank" rel="noopener">Slides 4-7</a></strong>).</p>
+<hr />
+<h2 id="learning-naive-bayes">Learning Naive Bayes</h2>
+<p>The structure we chose for the model also determines how we learn the model's parameters <span class="math inline">\boldsymbol{\theta}</span>. As in the previous lectures, let us start with maximum likelihood,</p>
+<p><span class="math display">\[\boldsymbol{\theta}_{\mathrm{ML}} = \operatorname*{arg\,max}_{\boldsymbol{\theta}} \log
+p(\mathcal{D}\mid\boldsymbol{\theta}).\]</span></p>
+<p>The first step is to derive the likelihood from our model above. For a labelled example <span class="math inline">(\mathbf{x}_n,t_n)</span>,</p>
+<p><span class="math display">\[p(\mathbf{x}_n,t_n)
+=
+p(t_n)\,p(\mathbf{x}_n\mid t_n).\]</span></p>
+<p>Assuming that the training examples are independent, the likelihood is</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\boldsymbol{\theta})
+=
+\prod_{n=1}^{N}
+p(t_n\mid\boldsymbol{\theta})
+p(\mathbf{x}_n\mid t_n,\boldsymbol{\theta})\]</span></p>
+<p>With the Naive Bayes factorisation,</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\boldsymbol{\theta})
+=
+\prod_{n=1}^{N}
+p(t_n)
+\prod_{m=1}^{M}
+p(x_n^m\mid t_n).\]</span></p>
+<p>Take logarithms:</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\boldsymbol{\theta})
+=
+\sum_{n=1}^{N}
+\log p(t_n)
++
+\sum_{n=1}^{N}
+\sum_{m=1}^{M}
+\log p(x_n^m\mid t_n).\]</span></p>
+<p>This equation is the main reason Naive Bayes is easy to learn. The log-likelihood has split into separate pieces.</p>
+<p>The parameters of the class prior appear only in the first term. The parameters for feature 1 in class 0 appear only in the terms involving feature 1 and class 0. The parameters for feature 2 in class 1 appear somewhere else. We do not have one large coupled optimisation problem. We have many small problems that can be solved independently. <strong><a class="slide-link" href="../slides/lecture-04.html#24" target="_blank" rel="noopener">Slides 24-27</a></strong> derive this explicitly. (Note: You should take the time to understand this part well.)</p>
+<p>Putting aside all the algebra, the important result is the structure:</p>
+<blockquote>
+<p><strong>A factorised model gives a factorised learning problem.</strong></p>
+</blockquote>
+<p>Factorized here means that the model is split into "pieces". This gives the model a useful kind of <strong>modularity</strong>. This is the main idea. By making conditional independence assumptions, one hard problem has become several easy ones.</p>
+<p>Furthermore, if a new class is introduced, we can fit a new class-conditional distribution for that class rather than redesign the whole model. We must also update the class prior, and the final decision boundaries can move because Bayes' rule now normalises over more classes, but the old class-conditional blocks do not have to be relearned.</p>
+<p>The broader lesson is:</p>
+<blockquote>
+<p><strong>The way we factor a probability distribution determines which dependencies the model represents and which parameter-learning problems are coupled together.</strong></p>
+</blockquote>
+<p>Naive Bayes chooses an especially simple factorisation. That is why it is easy to learn.</p>
+<h3 id="learning-the-class-prior">Learning the Class Prior</h3>
+<p>For binary classification, let</p>
+<p><span class="math display">\[\pi
+=
+p(t=1).\]</span></p>
+<p>If <span class="math inline">N_1</span> training examples have <span class="math inline">t=1</span> and <span class="math inline">N_0</span> have <span class="math inline">t=0</span>, maximum likelihood gives</p>
+<p><span class="math display">\[\boxed{
+\hat{\pi}
+=
+\frac{N_1}{N_0+N_1}.
+}\]</span></p>
+<p>So the estimated class probability is simply the fraction of training examples in that class.</p>
+<p>For <span class="math inline">K</span> classes, if <span class="math inline">N_k</span> examples belong to class <span class="math inline">k</span>,</p>
+<p><span class="math display">\[\boxed{
+\hat{\pi}_k
+=
+\frac{N_k}{N}.
+}\]</span></p>
+<p>Learning is just counting.</p>
+<h3 id="learning-the-feature-distributions">Learning the Feature Distributions</h3>
+<p>Now consider feature <span class="math inline">m</span> in class <span class="math inline">k</span>. Only examples belonging to class <span class="math inline">k</span> contribute to the likelihood for its parameters.</p>
+<p>If the feature is Gaussian, maximum likelihood gives</p>
+<p><span class="math display">\[\boxed{
+\hat{\mu}_k^m
+=
+\frac{1}{N_k}
+\sum_{n:t_n=k}
+x_n^m
+}\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\boxed{
+\hat{v}_k^m
+=
+\frac{1}{N_k}
+\sum_{n:t_n=k}
+\left(
+x_n^m-\hat{\mu}_k^m
+\right)^2.
+}\]</span></p>
+<p>These are simply the sample mean and the maximum-likelihood sample variance computed using examples from that class.</p>
+<p>So training Gaussian Naive Bayes consists of:</p>
+<ol type="1">
+<li>count how many examples belong to each class</li>
+<li>separate the examples by class</li>
+<li>for each feature in each class, compute a mean and variance</li>
+</ol>
+<p>There is no gradient descent and no iterative optimisation. <strong><a class="slide-link" href="../slides/lecture-04.html#26" target="_blank" rel="noopener">Slides 26-28</a></strong> show that the entire fit can be done using counts and averages. This outcome is a direct consequence of how we structured the model.</p>
+<hr />
+<h2 id="prediction-with-the-fitted-model">Prediction With the Fitted Model</h2>
+<p>Once the model has been fitted, classification uses Bayes' rule.</p>
+<p>For class <span class="math inline">k</span>,</p>
+<p><span class="math display">\[p(t=k\mid\mathbf{x})
+=
+\frac{
+p(t=k)p(\mathbf{x}\mid t=k)
+}{
+\sum_j
+p(t=j)p(\mathbf{x}\mid t=j)
+}.\]</span></p>
+<p>Under Gaussian Naive Bayes,</p>
+<p><span class="math display">\[\boxed{
+p(t=k\mid\mathbf{x})
+=
+\frac{
+\pi_k
+\prod_m
+\mathcal{N}(x^m\mid\mu_k^m,v_k^m)
+}{
+\sum_j
+\pi_j
+\prod_m
+\mathcal{N}(x^m\mid\mu_j^m,v_j^m)
+}.
+}\]</span></p>
+<p>The interactive example on <strong><a class="slide-link" href="../slides/lecture-04.html#30" target="_blank" rel="noopener">Slide 30</a></strong> lets you move a new car around and watch how this calculation is performed.</p>
+<h3 id="practical-note-work-in-log-space">Practical Note: Work in Log Space</h3>
+<p>As we have already learnt in previous lectures, products of many probabilities or densities can become extremely small. In code, we therefore usually work with logarithms.</p>
+<p>Define a class score</p>
+<p><span class="math display">\[s_k
+=
+\log \pi_k
++
+\sum_m
+\log p(x^m\mid t=k).\]</span></p>
+<p>We can then exponentiate and normalise the scores at the end:</p>
+<p><span class="math display">\[p(t=k\mid\mathbf{x})
+=
+\frac{e^{s_k}}
+{\sum_j e^{s_j}}.\]</span></p>
+<p>For numerical stability, subtract the largest score before exponentiating, just as we did for softmax in Lecture 3.</p>
+<p>The computation is therefore simple: each feature contributes one piece of evidence, those pieces are added in log space, the class prior is added, and the final class scores are normalised.</p>
+<hr />
+<h2 id="more-than-two-classes-and-constrained-probabilities">More Than Two Classes and Constrained Probabilities</h2>
+<p>For <span class="math inline">K</span> classes, the class prior is a <strong>categorical distribution</strong>:</p>
+<p><span class="math display">\[p(\mathbf{t}\mid\boldsymbol{\pi})
+=
+\prod_{k=1}^{K}
+\pi_k^{t_k},\]</span></p>
+<p>where <span class="math inline">\mathbf{t}</span> is one-hot and</p>
+<p><span class="math display">\[\pi_k\geq 0,
+\qquad
+\sum_{k=1}^{K}\pi_k=1.\]</span></p>
+<p>If <span class="math inline">N_k</span> training examples belong to class <span class="math inline">k</span>, the part of the negative log-likelihood involving the prior is</p>
+<p><span class="math display">\[-\sum_{k=1}^{K}
+N_k\log\pi_k.\]</span></p>
+<p>We want to minimise this subject to</p>
+<p><span class="math display">\[\sum_k\pi_k=1.\]</span></p>
+<p>This is a <strong>constrained optimisation</strong> problem. A standard tool for this is the <strong>Lagrangian</strong>. We introduce a new variable <span class="math inline">\lambda</span> and write</p>
+<p><span class="math display">\[\widetilde{\mathcal{L}}
+=
+-\sum_k N_k\log\pi_k
++
+\lambda
+\left(
+\sum_k\pi_k-1
+\right).\]</span></p>
+<p>Differentiate with respect to each <span class="math inline">\pi_k</span>:</p>
+<p><span class="math display">\[-\frac{N_k}{\pi_k}
++
+\lambda
+=
+0.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\pi_k
+=
+\frac{N_k}{\lambda}.\]</span></p>
+<p>The constraint gives</p>
+<p><span class="math display">\[\sum_k\pi_k
+=
+\frac{\sum_k N_k}{\lambda}
+=
+\frac{N}{\lambda}
+=
+1,\]</span></p>
+<p>so <span class="math inline">\lambda=N</span> and</p>
+<p><span class="math display">\[\boxed{
+\hat{\pi}_k
+=
+\frac{N_k}{N}.
+}\]</span></p>
+<p>This is the answer we would probably have guessed: estimate a class probability by its observed fraction. The purpose of the derivation is to introduce the Lagrangian as a general method for handling equality constraints. The geometric intuition and a fuller derivation are given on <strong><a class="slide-link" href="../slides/lecture-04.html#36" target="_blank" rel="noopener">Slides 36-44</a></strong>.</p>
+<hr />
+<h2 id="bayesian-learning-priors-pseudo-counts-and-smoothing">Bayesian Learning: Priors, Pseudo-Counts, and Smoothing</h2>
+<p>Maximum likelihood can become too confident when data is scarce. For example, if a class does not appear at all in a small dataset, maximum likelihood assigns it probability zero.</p>
+<p>We can use the same MAP idea from Lectures 2 and 3. For the categorical probabilities <span class="math inline">\boldsymbol{\pi}</span>, a useful prior is the <strong>Dirichlet distribution</strong>.</p>
+<p>The slides use a pseudo-count form of the Dirichlet prior:</p>
+<p><span class="math display">\[p(\boldsymbol{\pi})
+\propto
+\prod_{k=1}^{K}
+\pi_k^{\alpha_k},\]</span></p>
+<p>where <span class="math inline">\alpha_k\geq 0</span> acts like an additional count for class <span class="math inline">k</span>.</p>
+<p>The likelihood contributes a factor</p>
+<p><span class="math display">\[\prod_k \pi_k^{N_k},\]</span></p>
+<p>so the posterior contains</p>
+<p><span class="math display">\[\prod_k
+\pi_k^{N_k+\alpha_k}.\]</span></p>
+<p>The real counts and the pseudo-counts simply add. The MAP estimate becomes</p>
+<p><span class="math display">\[\boxed{
+\hat{\pi}_{k,\mathrm{MAP}}
+=
+\frac{
+N_k+\alpha_k
+}{
+N+\sum_j\alpha_j
+}.
+}\]</span></p>
+<p>This is another example of model structure making Bayesian updating easy. The prior and likelihood have matching forms, so the posterior has the same form. Such a prior is called a <strong>conjugate prior</strong>.</p>
+<p>The interpretation is simple. When there is little data, the pseudo-counts matter. As <span class="math inline">N</span> becomes large, the real counts dominate and the prior has less influence.</p>
+<hr />
+<h2 id="naive-bayes-for-text">Naive Bayes for Text</h2>
+<p>Historically, Naive Bayes became especially well known as a text classifier because the same factorised structure works naturally with words.</p>
+<p>Suppose we fix a vocabulary of <span class="math inline">M</span> words and represent an email using one feature per word</p>
+<p><span class="math display">\[p(\mathbf{x}\mid t)
+=
+\prod_m p(x^m\mid t),\]</span></p>
+<p>Note that the individual feature distributions need <em>not</em> be Gaussian.</p>
+<p>If <span class="math inline">x^m</span> only records whether word <span class="math inline">m</span> appears, we can use a Bernoulli distribution:</p>
+<p><span class="math display">\[x^m
+\sim
+\mathrm{Bern}(\mu_t^m).\]</span></p>
+<p>If we care about how many times each word appears, we can instead use a multinomial model. The overall Naive Bayes idea does not change. Only the small distribution inside each block changes.</p>
+<p>This is another useful lesson:</p>
+<blockquote>
+<p><strong>The factorisation tells us how the pieces connect. We can often change the distribution used inside a piece without changing the rest of the model.</strong></p>
+</blockquote>
+<h3 id="the-zero-count-problem">The Zero-Count Problem</h3>
+<p>Suppose the word <em>meeting</em> never appeared in any spam email in the training set. Maximum likelihood then gives</p>
+<p><span class="math display">\[p(\text{meeting present}\mid\text{spam})=0.\]</span></p>
+<p>But the Naive Bayes class-conditional is a product. One zero factor makes the whole product zero:</p>
+<p><span class="math display">\[p(\mathbf{x}\mid\text{spam})
+=
+\prod_m p(x^m\mid\text{spam})
+=
+0.\]</span></p>
+<p>No matter how strongly every other word suggests spam, the model now says that the email cannot be spam.</p>
+<p>The problem is not that the word is necessarily impossible in spam. We simply did not see it in our small training set.</p>
+<h3 id="laplace-smoothing">Laplace Smoothing</h3>
+<p>Again, the solution is a prior. For a binary feature, let <span class="math inline">c_t^m</span> be the number of class-<span class="math inline">t</span> examples in which word <span class="math inline">m</span> appears, and let <span class="math inline">N_t</span> be the number of examples in that class.</p>
+<p>With equal pseudo-count <span class="math inline">a</span> for presence and absence, the MAP estimate is</p>
+<p><span class="math display">\[\boxed{
+\hat{\mu}_t^m
+=
+\frac{
+c_t^m+a
+}{
+N_t+2a
+}.
+}\]</span></p>
+<p>The common choice <span class="math inline">a=1</span> is called <strong>Laplace smoothing</strong> or add-one smoothing.</p>
+<p>A count of zero now becomes</p>
+<p><span class="math display">\[\frac{1}{N_t+2}\]</span></p>
+<p>rather than zero. The model treats an unseen event as unlikely rather than impossible.</p>
+<p>The sequence on <strong><a class="slide-link" href="../slides/lecture-04.html#52" target="_blank" rel="noopener">Slides 52-56</a></strong> shows the zero-count problem and how smoothing changes the prediction.</p>
+<p>The important point is that smoothing is the same MAP idea we have used before:</p>
+<blockquote>
+<p><strong>MLE uses the observed counts. MAP uses the observed counts plus prior pseudo-counts.</strong></p>
+</blockquote>
+<hr />
+<h2 id="what-a-generative-model-buys-us">What a Generative Model Buys Us</h2>
+<p>Because a generative model represents the joint distribution, it supports questions that a conditional classifier does not answer directly.</p>
+<h3 id="missing-features">Missing Features</h3>
+<p>Suppose a car's age is known but its mileage is missing. We want</p>
+<p><span class="math display">\[p(t\mid x^{\mathrm{age}}).\]</span></p>
+<p>From the joint model, we can integrate the missing feature out:</p>
+<p><span class="math display">\[p(t,x^{\mathrm{age}})
+=
+\int
+p(t,x^{\mathrm{age}},x^{\mathrm{mile}})
+\,dx^{\mathrm{mile}}.\]</span></p>
+<p>Under Naive Bayes,</p>
+<p><span class="math display">\[p(t,x^{\mathrm{age}},x^{\mathrm{mile}})
+=
+p(t)
+p(x^{\mathrm{age}}\mid t)
+p(x^{\mathrm{mile}}\mid t).\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[p(t,x^{\mathrm{age}})
+=
+p(t)
+p(x^{\mathrm{age}}\mid t)
+\underbrace{
+\int
+p(x^{\mathrm{mile}}\mid t)
+\,dx^{\mathrm{mile}}
+}_{1}.\]</span></p>
+<p>The missing feature simply disappears:</p>
+<p><span class="math display">\[\boxed{
+p(t\mid x^{\mathrm{age}})
+\propto
+p(t)
+p(x^{\mathrm{age}}\mid t).
+}\]</span></p>
+<p><strong><a class="slide-link" href="../slides/lecture-04.html#59" target="_blank" rel="noopener">Slide 59</a></strong> lets you remove features and see this happen. Under the Naive Bayes factorisation, a missing feature costs us one factor.</p>
+<h3 id="generating-new-data">Generating New Data</h3>
+<p>We can also run the model in the forward direction:</p>
+<ol type="1">
+<li>draw a class from <span class="math inline">p(t)</span></li>
+<li>draw each feature from its class-conditional distribution</li>
+</ol>
+<p>This generates a new synthetic example. <strong><a class="slide-link" href="../slides/lecture-04.html#60" target="_blank" rel="noopener">Slide 60</a></strong> demonstrates this directly.</p>
+<p>The generated examples from Gaussian Naive Bayes may not be very realistic because the model is simple, but the principle is the same one used by much richer generative models (like VAEs, GANs, and Diffusion Models): specify a distribution over data, fit it, then sample from it.</p>
+<hr />
+<h2 id="what-the-naive-assumption-costs">What the Naive Assumption Costs</h2>
+<p>The ease of learning came from the conditional independence assumption. If that assumption is badly wrong, the model can make systematic mistakes.</p>
+<p>Suppose we duplicate a feature. Let <span class="math inline">x^2</span> be an exact copy of <span class="math inline">x^1</span>. The duplicate contains no new information.</p>
+<p>Naive Bayes nevertheless writes</p>
+<p><span class="math display">\[p(x^1,x^2\mid t)
+=
+p(x^1\mid t)p(x^2\mid t).\]</span></p>
+<p>It therefore treats the same evidence as if it arrived twice. A class favoured by that feature receives the same piece of evidence two times.</p>
+<p>This is demonstrated on <strong><a class="slide-link" href="../slides/lecture-04.html#61" target="_blank" rel="noopener">Slide 61</a></strong>. Adding a duplicate of mileage changes the posterior even though we gave the model no new information.</p>
+<p>More generally, strongly correlated features can cause Naive Bayes to <strong>double-count evidence</strong>. The predicted class may still be correct, but the probabilities can become too extreme.</p>
+<p>This gives us the basic trade-off:</p>
+<ul>
+<li>the independence assumption reduces the number of parameters and makes learning easy</li>
+<li>the same assumption prevents the model from representing some real relationships between features</li>
+</ul>
+<hr />
+<h2 id="generative-and-discriminative-models-revisited">Generative and Discriminative Models Revisited</h2>
+<p>We can now compare Naive Bayes with logistic regression more clearly.</p>
+<p>Logistic regression directly models</p>
+<p><span class="math display">\[p(t\mid\mathbf{x}).\]</span></p>
+<p>It spends its modelling capacity on the relationship needed for classification. It does not need to explain the full distribution of inputs.</p>
+<p>Naive Bayes models</p>
+<p><span class="math display">\[p(t)
+\quad\text{and}\quad
+p(\mathbf{x}\mid t),\]</span></p>
+<p>and obtains <span class="math inline">p(t\mid\mathbf{x})</span> using Bayes' rule. It solves a harder modelling problem, but its assumptions break that problem into small pieces.</p>
+<p>This can be particularly useful when data is limited. The assumptions restrict the possible models, so there is less to estimate. With enough data, however, incorrect assumptions about <span class="math inline">p(\mathbf{x}\mid t)</span> can become a limitation.</p>
+<p>There is also an interesting connection between the two classifiers. For Gaussian Naive Bayes, the log-odds are</p>
+<p><span class="math display">\[\log
+\frac{
+p(t=1\mid\mathbf{x})
+}{
+p(t=0\mid\mathbf{x})
+}
+=
+\log
+\frac{\pi_1}{\pi_0}
++
+\sum_m
+\log
+\frac{
+\mathcal{N}(x^m\mid\mu_1^m,v_1^m)
+}{
+\mathcal{N}(x^m\mid\mu_0^m,v_0^m)
+}.\]</span></p>
+<p>In general, this contains quadratic terms in the features. If the two classes use the same variance for each feature, those quadratic terms cancel and the log-odds become linear in <span class="math inline">\mathbf{x}</span>:</p>
+<p><span class="math display">\[\log
+\frac{
+p(t=1\mid\mathbf{x})
+}{
+p(t=0\mid\mathbf{x})
+}
+=
+w_0+\mathbf{w}^{\top}\mathbf{x}.\]</span></p>
+<p>That is exactly the form assumed by logistic regression! This means that generative and discriminative training can sometimes lead to the same <em>form</em> of classifier even though they learn it in different ways. Logistic regression fits the boundary directly. Naive Bayes first fits the class distributions and obtains the boundary from them. <strong><a class="slide-link" href="../slides/lecture-04.html#32" target="_blank" rel="noopener">Slide 32</a></strong> shows this connection and Tutorial 3 explores this more deeply.</p>
+<hr />
+<h2 id="a-broader-view-of-generative-models">A Broader View of Generative Models</h2>
+<p>Naive Bayes is a very simple generative model, but it introduces ideas that appear in much larger models.</p>
+<p>The model is built by specifying a sequence of random choices:</p>
+<p><span class="math display">\[t
+\sim
+p(t),
+\qquad
+\mathbf{x}
+\sim
+p(\mathbf{x}\mid t).\]</span></p>
+<p>We can make the story richer by adding more variables or by making the parameters of one distribution depend on a function.</p>
+<p>For example, we might introduce another variable <span class="math inline">z</span>:</p>
+<p><span class="math display">\[t
+\sim
+p(t),
+\qquad
+z
+\sim
+p(z\mid t),
+\qquad
+\mathbf{x}
+\sim
+p(\mathbf{x}\mid z).\]</span></p>
+<p>If <span class="math inline">z</span> is not observed, it is called a <strong>latent variable</strong>. Learning then requires us to account for possible values of <span class="math inline">z</span> rather than simply fitting each block from labelled data.</p>
+<p>Modern generative models use much richer versions of this idea. Variational autoencoders introduce continuous latent variables and neural networks. Diffusion models define a multi-step stochastic process. Language models factor a sequence into conditional token distributions.</p>
+<p>We won't cover the details of these models yet. For now, the key connection is:</p>
+<blockquote>
+<p><strong>A generative model describes a process that assigns probabilities to data and can be run to produce data. The main modelling decision is how to factor and parameterise that process.</strong></p>
+</blockquote>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>In this lecture, we discussed two different ways to build a classifier.</p>
+<p>A <strong>discriminative model</strong> directly models</p>
+<p><span class="math display">\[p(t\mid\mathbf{x}).\]</span></p>
+<p>A <strong>generative model</strong> models the joint distribution</p>
+<p><span class="math display">\[p(\mathbf{x},t)
+=
+p(t)p(\mathbf{x}\mid t),\]</span></p>
+<p>and obtains the classifier using Bayes' rule:</p>
+<p><span class="math display">\[p(t\mid\mathbf{x})
+=
+\frac{
+p(\mathbf{x}\mid t)p(t)
+}{
+\sum_{t'}
+p(\mathbf{x}\mid t')p(t')
+}.\]</span></p>
+<p>Naive Bayes makes the conditional independence assumption</p>
+<p><span class="math display">\[\boxed{
+p(\mathbf{x}\mid t)
+=
+\prod_m
+p(x^m\mid t).
+}\]</span></p>
+<p>This assumption is the central modelling step in the lecture. It replaces one difficult high-dimensional distribution with many simple per-feature distributions.</p>
+<p>The same factorisation makes learning easy. The log-likelihood separates into pieces, so each part of the model can be learnt independently. For Gaussian Naive Bayes,</p>
+<p><span class="math display">\[\hat{\pi}_k
+=
+\frac{N_k}{N},\]</span></p>
+<p><span class="math display">\[\hat{\mu}_k^m
+=
+\frac{1}{N_k}
+\sum_{n:t_n=k}
+x_n^m,\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\hat{v}_k^m
+=
+\frac{1}{N_k}
+\sum_{n:t_n=k}
+(x_n^m-\hat{\mu}_k^m)^2.\]</span></p>
+<p>Training is therefore mostly counting and averaging.</p>
+<p>This modular structure also makes other operations simple. Missing features can be integrated out, adding a class means adding another class-conditional block, and different types of features can use different simple distributions.</p>
+<p>But the simplification has a cost. If features are related within a class, Naive Bayes ignores those relationships. Correlated or duplicated features can therefore be counted as independent pieces of evidence and make the model overconfident.</p>
+<p>Priors give us another way to make the model more robust when data is scarce. For class probabilities, a Dirichlet prior acts like extra counts. For binary word features, this gives the smoothed estimate</p>
+<p><span class="math display">\[\hat{\mu}_t^m
+=
+\frac{
+c_t^m+a
+}{
+N_t+2a
+},\]</span></p>
+<p>which avoids assigning zero probability simply because an event was not seen in a small dataset.</p>
+<p>The main ideas to take away are:</p>
+<ol type="1">
+<li>Generative and discriminative models answer the classification problem in different ways.</li>
+<li>The factorisation of a probabilistic model is a modelling assumption.</li>
+<li>Good structure can turn one difficult learning problem into many simple ones.</li>
+<li>The assumptions that make learning easy can also become a source of error when they are wrong.</li>
+</ol>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>

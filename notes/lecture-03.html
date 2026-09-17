@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 3 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 3: Linear Classification">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-03.html" target="_blank" rel="noopener">Lecture 3 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<article>
+<h1 id="lecture-3-linear-classification">Lecture 3: Linear Classification</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In the previous lectures, we studied regression, where the target is a number. In this lecture, the target is a discrete <strong>label</strong>.</p>
+<p>The main idea from Lecture 2 still applies: <strong>choose a probability distribution that matches the kind of target we want to model, and derive the loss from that distribution</strong>. For binary classification, the target takes one of two values, so we use a <strong>Bernoulli distribution</strong>. We will connect this distribution to our linear model using <strong>sigmoid function</strong>. Then we will see that maximum likelihood gives us the familiar <strong>cross-entropy loss</strong>.</p>
+<p>Unlike linear regression, logistic regression does not have a closed-form solution for its weights. We will therefore use gradient-based optimisation. We will also see that a probability is not yet a decision: the threshold used to convert a probability into an action should depend on the costs of different mistakes. Finally, we will extend the same probabilistic recipe to multiple classes using the <strong>categorical distribution</strong> and <strong>softmax</strong>.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, the main things you should be able to do are:</p>
+<ul>
+<li>explain why least-squares regression is generally inappropriate for classification and describe the geometry of a linear decision boundary</li>
+<li>explain how the Bernoulli distribution and sigmoid function give a probabilistic model for binary labels</li>
+<li>derive the binary cross-entropy loss from maximum likelihood</li>
+<li>derive the gradient of logistic regression and explain why there is no closed-form solution</li>
+</ul>
+<p>In addition, you should be able to:</p>
+<ul>
+<li>explain the connection between the linear score and log-odds</li>
+<li>explain what happens to maximum likelihood on perfectly separable data</li>
+<li>explain why Bayesian logistic regression requires approximate inference</li>
+<li>determine the threshold based on the costs of false positives and false negatives.</li>
+<li>extend binary logistic regression to multiple classes using the categorical distribution and softmax</li>
+</ul>
+<p>We will first see why simply applying least squares to labels is unsatisfactory. We will then build a probabilistic model for binary labels and derive logistic regression from it. After discussing decisions and optimisation, we will revisit the Bayesian framework. Finally, we will extend the model to more than two classes.</p>
+<hr />
+<h2 id="from-regression-to-classification">From Regression to Classification</h2>
+<p>Suppose we have a dataset</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(\mathbf{x}_n,t_n)\}_{n=1}^{N}.\]</span></p>
+<p>For regression, the target <span class="math inline">t_n</span> could be any real number. In binary classification, the target instead takes one of two values:</p>
+<p><span class="math display">\[t_n \in \{0,1\}.\]</span></p>
+<p>The values 0 and 1 are discrete <strong>labels</strong>.</p>
+<p>We would like to learn a model that, given a new input <span class="math inline">\mathbf{x}</span>, tells us how likely each label is. For binary classification, we model</p>
+<p><span class="math display">\[p(t=1\mid\mathbf{x}).\]</span></p>
+<p>Once we know this probability, the other probability is simply</p>
+<p><span class="math display">\[p(t=0\mid\mathbf{x})=1-p(t=1\mid\mathbf{x}).\]</span></p>
+<h3 id="why-not-use-least-squares">Why Not Use Least Squares?</h3>
+<p>One possibility is to code the two classes numerically and apply the regression machinery from Lecture 1. For example, we could use targets <span class="math inline">t\in\{-1,+1\}</span> and fit</p>
+<p><span class="math display">\[y(\mathbf{x})=\mathbf{w}^{\top}\mathbf{x}\]</span></p>
+<p>using squared error. We could then classify a point according to whether <span class="math inline">y(\mathbf{x})</span> is positive or negative.</p>
+<p>This can sometimes work. The first example on <strong><a class="slide-link" href="../slides/lecture-03.html#12" target="_blank" rel="noopener">Slides 12-13</a></strong> shows a case where the least-squares boundary separates the two classes correctly. However, the problem becomes clear on <strong><a class="slide-link" href="../slides/lecture-03.html#14" target="_blank" rel="noopener">Slides 14-16</a></strong>. Adding several new examples that are already far on the correct side of the boundary can make the fitted boundary <em>worse</em>.</p>
+<p>The reason is that squared error does not understand the idea of being "correct enough". Suppose an example has target <span class="math inline">t=-1</span>, but the linear model predicts <span class="math inline">y=-4.5</span>. The point is classified correctly, but squared error is large,</p>
+<p><span class="math display">\[(-4.5-(-1))^2 = 12.25.\]</span></p>
+<p>The optimisation therefore tries to pull this prediction back towards <span class="math inline">-1</span>, even if doing so rotates the boundary and harms examples near the decision boundary. For classification, once a point is confidently on the correct side, we generally do not want to penalise it simply for being far from the numerical label we happened to assign.</p>
+<p>There is also a second problem. The linear score</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\mathbf{x}\]</span></p>
+<p>can take any real value. A score of <span class="math inline">1.4</span> or <span class="math inline">-0.3</span> is not directly interpretable as the probability of a class. If we want a probabilistic classifier, we need an output between 0 and 1.</p>
+<p>So we need a model designed for <strong>labels</strong>, rather than treating labels as ordinary real numbers.</p>
+<hr />
+<h2 id="linear-decision-boundaries">Linear Decision Boundaries</h2>
+<p>Before making the model probabilistic, it is useful to understand the <em>geometry</em> of a linear classifier.</p>
+<p>Consider two input features and a linear score</p>
+<p><span class="math display">\[y(\mathbf{x})
+=
+w_0+w_1x_1+w_2x_2.\]</span></p>
+<p>The <strong>decision boundary</strong> is where the score is zero:</p>
+<p><span class="math display">\[w_0+w_1x_1+w_2x_2=0.\]</span></p>
+<p>In two dimensions, this is a straight line. In <span class="math inline">D</span> dimensions, it is a <span class="math inline">(D-1)</span>-dimensional <strong>hyperplane</strong>.</p>
+<p>The weight vector</p>
+<p><span class="math display">\[\mathbf{w}
+=
+\begin{bmatrix}
+w_1\\
+w_2
+\end{bmatrix}\]</span></p>
+<p>is <em>perpendicular</em> to the boundary (see <strong><a class="slide-link" href="../slides/lecture-03.html#21" target="_blank" rel="noopener">Slide 21</a></strong>). Its direction determines the orientation of the boundary, while the bias <span class="math inline">w_0</span> shifts the boundary. If we multiply all the weights and the bias by the same positive constant, the decision boundary does not move. The scores become larger in magnitude, but the decision boundary remains in the same place.</p>
+<p>The interactive plots on <strong><a class="slide-link" href="../slides/lecture-03.html#21" target="_blank" rel="noopener">Slides 21-22</a></strong> are useful for seeing these effects. Change the direction of <span class="math inline">\mathbf{w}</span> and the boundary rotates. Change the bias and the boundary is translated.</p>
+<p>This geometry will remain unchanged when we make the classifier probabilistic. We will transform the linear score into a probability, but the boundary will still correspond to a linear equation in the features.</p>
+<hr />
+<h2 id="building-a-probabilistic-model-for-binary-labels">Building a Probabilistic Model for Binary Labels</h2>
+<p>In Lecture 2, we modelled a regression target by specifying how the target was generated. We will use the same strategy here.</p>
+<p>For binary classification, a useful generative story is:</p>
+<ol type="1">
+<li>use the input <span class="math inline">\mathbf{x}</span> to compute a real-valued score</li>
+<li>convert that score into a probability <span class="math inline">\mu(\mathbf{x})</span></li>
+<li>draw the observed label from a distribution with that probability</li>
+</ol>
+<p>The random part is no longer additive Gaussian noise. Instead, the label itself is a random draw from a two-outcome distribution.</p>
+<h3 id="the-bernoulli-distribution">The Bernoulli Distribution</h3>
+<p>The appropriate distribution for a single binary outcome is the <strong>Bernoulli distribution</strong>. If <span class="math inline">t\in\{0,1\}</span>, then</p>
+<p><span class="math display">\[\mathrm{Bern}(t\mid\mu)
+=
+\mu^t(1-\mu)^{1-t},\]</span></p>
+<p>where</p>
+<p><span class="math display">\[0\leq \mu \leq 1.\]</span></p>
+<p>The parameter <span class="math inline">\mu</span> is the probability that <span class="math inline">t=1</span>:</p>
+<p><span class="math display">\[p(t=1)=\mu,
+\qquad
+p(t=0)=1-\mu.\]</span></p>
+<p>The Bernoulli formula works because the exponents act like switches. If <span class="math inline">t=1</span>, then</p>
+<p><span class="math display">\[\mu^1(1-\mu)^0=\mu.\]</span></p>
+<p>If <span class="math inline">t=0</span>, then</p>
+<p><span class="math display">\[\mu^0(1-\mu)^1=1-\mu.\]</span></p>
+<p>Our task now is to construct a value of <span class="math inline">\mu</span> from the input <span class="math inline">\mathbf{x}</span>.</p>
+<h3 id="from-a-linear-score-to-a-probability">From a Linear Score to a Probability</h3>
+<p>The linear model gives us</p>
+<p><span class="math display">\[a
+=
+\mathbf{w}^{\top}\mathbf{x},\]</span></p>
+<p>which can be any real number. But the Bernoulli distribution needs a parameter between 0 and 1. We transform the score using the <strong>sigmoid function</strong>, also called the logistic function:</p>
+<p><span class="math display">\[\sigma(a)
+=
+\frac{1}{1+e^{-a}}.\]</span></p>
+<p>The sigmoid has several useful properties:</p>
+<ul>
+<li>its output is always between 0 and 1</li>
+<li>it is monotonically increasing, so larger scores still mean a larger probability of class 1</li>
+<li><span class="math inline">\sigma(0)=0.5</span></li>
+<li>very negative scores approach 0 and very positive scores approach 1</li>
+</ul>
+<p>We define</p>
+<p><span class="math display">\[\mu(\mathbf{x})
+=
+\sigma(\mathbf{w}^{\top}\mathbf{x}).\]</span></p>
+<p>Our probabilistic classifier is therefore</p>
+<p><span class="math display">\[\boxed{
+p(t\mid\mathbf{x},\mathbf{w})
+=
+\mathrm{Bern}\left(t\mid\sigma(\mathbf{w}^{\top}\mathbf{x})\right).
+}\]</span></p>
+<p>This model is called <strong>logistic regression</strong>. Despite the name, it is a classification model.</p>
+<p>The full generative story is now</p>
+<p><span class="math display">\[\mathbf{x}
+\longrightarrow
+\mathbf{w}^{\top}\mathbf{x}
+\longrightarrow
+\sigma(\mathbf{w}^{\top}\mathbf{x})
+\longrightarrow
+\text{Bernoulli draw }t.\]</span></p>
+<p>The interactive plots on <strong><a class="slide-link" href="../slides/lecture-03.html#26" target="_blank" rel="noopener">Slides 26</a> and <a class="slide-link" href="../slides/lecture-03.html#29" target="_blank" rel="noopener">29</a></strong> show these two steps separately: the sigmoid maps the score to a probability, and the Bernoulli draw produces the observed label.</p>
+<h3 id="why-the-sigmoid-log-odds">Why the Sigmoid? Log-Odds</h3>
+<p>The sigmoid also has a useful interpretation. Let</p>
+<p><span class="math display">\[y
+=
+\sigma(a).\]</span></p>
+<p>Solving for <span class="math inline">a</span> gives</p>
+<p><span class="math display">\[a
+=
+\log\frac{y}{1-y}.\]</span></p>
+<p>The ratio</p>
+<p><span class="math display">\[\frac{y}{1-y}\]</span></p>
+<p>is called the <strong>odds</strong>, and its logarithm is the <strong>log-odds</strong> or <strong>logit</strong>. Therefore logistic regression assumes</p>
+<p><span class="math display">\[\boxed{
+\log\frac{p(t=1\mid\mathbf{x})}
+{p(t=0\mid\mathbf{x})}
+=
+\mathbf{w}^{\top}\mathbf{x}.
+}\]</span></p>
+<p>So logistic regression is a model in which the <strong>log-odds are linear in the features</strong>.</p>
+<p>The boundary <span class="math inline">p(t=1\mid\mathbf{x})=0.5</span> occurs when the odds are 1 (the log-odds are zero). To learn more about odds and log odds, view <a href="https://www.youtube.com/watch?v=ARfXDSkQf1Y">this StatQuest Youtube video</a></p>
+<hr />
+<h2 id="learning-logistic-regression">Learning Logistic Regression</h2>
+<p>We now have a probabilistic model. The next question is how to learn the weights <span class="math inline">\mathbf{w}</span> from data.</p>
+<p>As in Lecture 2, we can use <strong>maximum likelihood</strong>,</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{ML}} = \operatorname*{arg\,max}_{\mathbf{w}} \log
+p(\mathcal{D}\mid\mathbf{w}).\]</span></p>
+<p>But our likelihood function <span class="math inline">p(\mathcal{D}\mid\mathbf{w})</span> has changed since our probabilistic model is different. Here, for each training example,</p>
+<p><span class="math display">\[y_n
+=
+\sigma(\mathbf{w}^{\top}\mathbf{x}_n)\]</span></p>
+<p>is the model's predicted probability that <span class="math inline">t_n=1</span>. The probability of observing <span class="math inline">t_n</span> is</p>
+<p><span class="math display">\[p(t_n\mid\mathbf{x}_n,\mathbf{w})
+=
+y_n^{t_n}(1-y_n)^{1-t_n}.\]</span></p>
+<p>Assuming the observations are independent, the likelihood of the dataset is</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mathbf{w})
+=
+\prod_{n=1}^{N}
+y_n^{t_n}(1-y_n)^{1-t_n}.\]</span></p>
+<p>As an exercise, compare this likelihood against the one that we derived for linear regression.</p>
+<h3 id="cross-entropy-from-maximum-likelihood">Cross-Entropy From Maximum Likelihood</h3>
+<p>We maximise the log-likelihood:</p>
+<p><span class="math display">\[\log p(\mathcal{D}\mid\mathbf{w})
+=
+\sum_{n=1}^{N}
+\left[
+t_n\log y_n
++
+(1-t_n)\log(1-y_n)
+\right].\]</span></p>
+<p>Equivalently, we minimise the negative log-likelihood:</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}(\mathbf{w})
+=
+-\sum_{n=1}^{N}
+\left[
+t_n\log y_n
++
+(1-t_n)\log(1-y_n)
+\right].
+}\]</span></p>
+<p>This is the <strong>binary cross-entropy loss</strong>.</p>
+<p>The important point is that, just like squared error in Lecture 2, cross-entropy was not chosen arbitrarily. It follows from the probability model:</p>
+<p><span class="math display">\[\boxed{
+\text{Bernoulli target model}
+\quad\Longrightarrow\quad
+\text{binary cross-entropy}.
+}\]</span></p>
+<p>For a single example, if <span class="math inline">t=1</span>, the loss becomes</p>
+<p><span class="math display">\[-\log y.\]</span></p>
+<p>If <span class="math inline">t=0</span>, it becomes</p>
+<p><span class="math display">\[-\log(1-y).\]</span></p>
+<p>A correct and confident prediction has very small loss. A confidently wrong prediction has a very large loss. Unlike squared error applied to numerical class labels, cross-entropy does <strong>not</strong> penalise a correct prediction simply because it is very confident. The interactive plot on <strong><a class="slide-link" href="../slides/lecture-03.html#37" target="_blank" rel="noopener">Slide 37</a></strong> shows the shape of this loss for each class.</p>
+<h3 id="adding-a-prior-map-and-regularisation">Adding a Prior: MAP and Regularisation</h3>
+<p>As before, we can place a Gaussian prior on the weights:</p>
+<p><span class="math display">\[p(\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{0},
+\alpha^{-1}\mathbf{I}
+\right).\]</span></p>
+<p>Maximum a posteriori estimation maximises</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D})
+\propto
+p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w}).\]</span></p>
+<p>Taking the negative log gives</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}_{\mathrm{MAP}}(\mathbf{w})
+=
+-\sum_{n=1}^{N}
+\left[
+t_n\log y_n
++
+(1-t_n)\log(1-y_n)
+\right]
++
+\frac{\alpha}{2}\|\mathbf{w}\|_2^2.
+}\]</span></p>
+<p>The likelihood has changed from Gaussian to Bernoulli, so the data-fitting term has changed from squared error to cross-entropy. The <strong>prior has not changed</strong>, so the <span class="math inline">L_2</span> regulariser is the same type of penalty we saw for ridge regression.</p>
+<p>We again see the same principle we mentioned in Lecture 2:</p>
+<blockquote>
+<p><strong>The likelihood determines how we fit the observations. The prior determines how we regularise the parameters.</strong></p>
+</blockquote>
+<h2 id="fitting-logistic-regression">Fitting Logistic Regression</h2>
+<p>For linear regression, setting the gradient to zero led to the normal equations and a closed-form solution. Logistic regression is different.</p>
+<p>Recall that</p>
+<p><span class="math display">\[y_n
+=
+\sigma(\mathbf{w}^{\top}\mathbf{x}_n)\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\mathcal{L}
+=
+-\sum_n
+\left[
+t_n\log y_n
++
+(1-t_n)\log(1-y_n)
+\right].\]</span></p>
+<p>The derivative of the sigmoid is</p>
+<p><span class="math display">\[\sigma'(a)
+=
+\sigma(a)(1-\sigma(a)).\]</span></p>
+<p>Using the chain rule, the gradient of the cross-entropy loss simplifies to</p>
+<p><span class="math display">\[\boxed{
+\nabla_{\mathbf{w}}\mathcal{L}
+=
+\sum_{n=1}^{N}
+(y_n-t_n)\mathbf{x}_n.
+}\]</span></p>
+<p>This is a useful result. It has exactly the same form as the gradient for least-squares linear regression:</p>
+<p><span class="math display">\[\text{gradient}
+=
+\sum_n
+(\text{prediction}-\text{target})
+\times
+\text{input}.\]</span></p>
+<p>The difference is in how the prediction is produced. For linear regression,</p>
+<p><span class="math display">\[y_n
+=
+\mathbf{w}^{\top}\mathbf{x}_n,\]</span></p>
+<p>while for logistic regression,</p>
+<p><span class="math display">\[y_n
+=
+\sigma(\mathbf{w}^{\top}\mathbf{x}_n).\]</span></p>
+<p>This simple gradient is not an accident. The Bernoulli likelihood and sigmoid are a matched pair, just as the Gaussian model and identity output are naturally matched for regression.</p>
+<h3 id="why-there-is-no-closed-form">Why There Is No Closed Form</h3>
+<p>Setting the gradient to zero gives</p>
+<p><span class="math display">\[\sum_{n=1}^{N}
+\left(
+\sigma(\mathbf{w}^{\top}\mathbf{x}_n)-t_n
+\right)
+\mathbf{x}_n
+=
+0.\]</span></p>
+<p>The weights now appear inside the exponential in the sigmoid and inside every term of the sum. Unlike the normal equations, we cannot rearrange this expression to isolate <span class="math inline">\mathbf{w}</span>.</p>
+<p>Therefore logistic regression does not have a closed-form solution in general. We instead use iterative optimisation such as <strong>gradient descent</strong>:</p>
+<p><span class="math display">\[\boxed{
+\mathbf{w}
+\leftarrow
+\mathbf{w}
+-
+\eta
+\nabla_{\mathbf{w}}\mathcal{L},
+}\]</span></p>
+<p>where <span class="math inline">\eta</span> is the learning rate. <strong><a class="slide-link" href="../slides/lecture-03.html#51" target="_blank" rel="noopener">Slides 51-52</a></strong> show how individual examples contribute to the update and how repeated updates move the decision boundary.</p>
+<p>With a Gaussian prior, the MAP gradient becomes</p>
+<p><span class="math display">\[\boxed{
+\nabla_{\mathbf{w}}\mathcal{L}_{\mathrm{MAP}}
+=
+\sum_n
+(y_n-t_n)\mathbf{x}_n
++
+\alpha\mathbf{w}.
+}\]</span></p>
+<p>The additional <span class="math inline">\alpha\mathbf{w}</span> term pulls the weights towards zero.</p>
+<h3 id="a-historical-aside-the-perceptron">A Historical Aside: The Perceptron</h3>
+<p>The <strong>perceptron</strong> is an earlier linear classification algorithm. You may have encountered this method before. It uses a hard threshold instead of a sigmoid and updates the weights when an example is misclassified. In one common notation,</p>
+<p><span class="math display">\[\mathbf{w}
+\leftarrow
+\mathbf{w}
++
+\eta(t_n-y_n)\mathbf{x}_n.\]</span></p>
+<p>The update again has the form <em>error times input</em>. For linearly separable data, the perceptron is guaranteed to eventually find a separating hyperplane. However, a single linear boundary cannot represent problems such as XOR. We will later overcome this limitation by composing multiple nonlinear units in neural networks.</p>
+<hr />
+<h2 id="perfectly-separable-data-and-maximum-likelihood">Perfectly Separable Data and Maximum Likelihood</h2>
+<p>Logistic regression has an interesting issue when the training data is perfectly linearly separable ("linearly separable" means that we can draw a linear boundary that splits the data perfectly into the two classes.)</p>
+<p>Suppose some weight vector <span class="math inline">\mathbf{w}</span> correctly separates all the examples. Multiplying it by a positive constant <span class="math inline">c</span> does not change the decision boundary:</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\mathbf{x}=0\]</span></p>
+<p>and</p>
+<p><span class="math display">\[(c\mathbf{w})^{\top}\mathbf{x}=0\]</span></p>
+<p>have exactly the same boundary (the same zero set).</p>
+<p>However, increasing <span class="math inline">c</span> makes the predicted probabilities more extreme. Points on the positive side move closer to probability 1 and points on the negative side move closer to probability 0. The cross-entropy therefore keeps decreasing as</p>
+<p><span class="math display">\[\|\mathbf{w}\|\rightarrow\infty.\]</span></p>
+<p>For perfectly separable data, plain maximum likelihood therefore has <strong>no finite maximum</strong>. The likelihood approaches its maximum as the weights keep growing!</p>
+<p>The Gaussian prior fixes this problem. The MAP objective contains</p>
+<p><span class="math display">\[\frac{\alpha}{2}\|\mathbf{w}\|^2,\]</span></p>
+<p>which becomes increasingly expensive as the weights grow. The likelihood pushes the weights outward while the prior pulls them back towards zero. The two effects balance at a finite solution. <strong><a class="slide-link" href="../slides/lecture-03.html#53" target="_blank" rel="noopener">Slides 53-54</a></strong> visualize this behaviour.</p>
+<p>This gives another reason to regularise logistic regression, beyond the usual concern about overfitting.</p>
+<hr />
+<h2 id="nonlinear-decision-boundaries">Nonlinear Decision Boundaries</h2>
+<p>Logistic regression is linear in its input features, but the same basis-function trick from Lecture 1 still applies.</p>
+<p>Instead of using the original input <span class="math inline">\mathbf{x}</span>, define transformed features</p>
+<p><span class="math display">\[\boldsymbol{\phi}(\mathbf{x}).\]</span></p>
+<p>Then use</p>
+<p><span class="math display">\[p(t=1\mid\mathbf{x})
+=
+\sigma
+\left(
+\mathbf{w}^{\top}
+\boldsymbol{\phi}(\mathbf{x})
+\right).\]</span></p>
+<p>The decision boundary is</p>
+<p><span class="math display">\[\mathbf{w}^{\top}
+\boldsymbol{\phi}(\mathbf{x})
+=
+0.\]</span></p>
+<p>This is a hyperplane in feature space, but it can correspond to a curved boundary in the original input space.</p>
+<p>For example, suppose</p>
+<p><span class="math display">\[\boldsymbol{\phi}(\mathbf{x})
+=
+\begin{bmatrix}
+x_1\\
+x_2\\
+x_1^2+x_2^2
+\end{bmatrix}.\]</span></p>
+<p>A linear boundary in this three-dimensional feature space can produce a circular boundary in the original two-dimensional space. The interactive demonstration on <strong><a class="slide-link" href="../slides/lecture-03.html#56" target="_blank" rel="noopener">Slide 56</a></strong> shows this lifting idea geometrically.</p>
+<p>So once again, "linear" means <strong>linear in the parameters and transformed features</strong>, not necessarily a straight boundary in the original variables.</p>
+<hr />
+<h2 id="bayesian-logistic-regression">Bayesian Logistic Regression</h2>
+<p><strong>Note: This part is challenging and may require several re-reads.</strong></p>
+<p>Recall that MLE and MAP both return a single weight vector. As in Lecture 2, we may instead want a distribution over plausible weights so that we can represent uncertainty about the decision boundary.</p>
+<p>Using the same Gaussian prior,</p>
+<p><span class="math display">\[p(\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{0},
+\alpha^{-1}\mathbf{I}
+\right),\]</span></p>
+<p>Bayes' rule gives</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D})
+\propto
+p(\mathcal{D}\mid\mathbf{w})p(\mathbf{w}).\]</span></p>
+<p>For linear regression in Lecture 2, the likelihood and prior were both Gaussian. Their product therefore produced another Gaussian posterior, and we could calculate it exactly.</p>
+<p>For logistic regression, the likelihood contains sigmoids:</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mathbf{w})
+=
+\prod_n
+y_n^{t_n}(1-y_n)^{1-t_n},\]</span></p>
+<p>where</p>
+<p><span class="math display">\[y_n
+=
+\sigma(\mathbf{w}^{\top}\mathbf{x}_n).\]</span></p>
+<p>Multiplying this likelihood by a Gaussian prior does <strong>not</strong> give a standard distribution. The posterior has no convenient closed form. This is our first example in the course where Bayesian inference requires an approximation. In practice, Bayesian inference typically requires approximation and we will study more a complex approximation later called variational inference.</p>
+<h3 id="the-laplace-approximation">The Laplace Approximation</h3>
+<p>One common approximation is the <strong>Laplace approximation</strong>. The idea is simple: near its maximum, a smooth log-posterior often looks approximately quadratic (think of an upside down bowl). A quadratic log-density corresponds to a Gaussian distribution (see <strong><a class="slide-link" href="../slides/lecture-03.html#63" target="_blank" rel="noopener">Slide 63</a></strong>).</p>
+<p>We therefore approximate</p>
+<p><span class="math display">\[p(\mathbf{w}\mid\mathcal{D})\]</span></p>
+<p>with a Normal distribution</p>
+<p><span class="math display">\[q(\mathbf{w})
+=
+\mathcal{N}
+\left(
+\mathbf{w}
+\mid
+\mathbf{w}_{\mathrm{MAP}},
+\mathbf{S}
+\right).\]</span></p>
+<p>The Gaussian is centred at the MAP estimate. Its covariance is determined by the local curvature of the negative log-posterior. For logistic regression,</p>
+<p><span class="math display">\[\boxed{
+\mathbf{S}^{-1}
+=
+\alpha\mathbf{I}
++
+\sum_{n=1}^{N}
+y_n(1-y_n)
+\mathbf{x}_n\mathbf{x}_n^{\top},
+}\]</span></p>
+<p>where the probabilities <span class="math inline">y_n</span> are evaluated at <span class="math inline">\mathbf{w}_{\mathrm{MAP}}</span>.</p>
+<p>You do not need to memorise this expression. The important idea is that <span class="math inline">\mathbf{S}</span> describes how much the posterior is concentrated around the MAP solution. A sharply curved posterior gives small uncertainty in the weights; a broad posterior gives larger uncertainty.</p>
+<p>The factor</p>
+<p><span class="math display">\[y_n(1-y_n)\]</span></p>
+<p>is largest near <span class="math inline">y_n=0.5</span>. Thus, examples near the decision boundary contribute strongly to the local curvature because they are the examples for which the model remains most sensitive to changes in the boundary.</p>
+<h3 id="bayesian-prediction">Bayesian Prediction</h3>
+<p>For a new input <span class="math inline">\mathbf{x}</span>, the Bayesian predictive probability is</p>
+<p><span class="math display">\[p(t=1\mid\mathbf{x},\mathcal{D})
+=
+\int
+\sigma(\mathbf{w}^{\top}\mathbf{x})
+p(\mathbf{w}\mid\mathcal{D})
+\,d\mathbf{w}.\]</span></p>
+<p>With the Laplace approximation, we replace the true posterior by <span class="math inline">q(\mathbf{w})</span>. We can then approximate the integral by drawing weight vectors</p>
+<p><span class="math display">\[\mathbf{w}^{(s)}
+\sim
+q(\mathbf{w})\]</span></p>
+<p>and averaging their predictions:</p>
+<p><span class="math display">\[\boxed{
+p(t=1\mid\mathbf{x},\mathcal{D})
+\approx
+\frac{1}{S}
+\sum_{s=1}^{S}
+\sigma
+\left(
+(\mathbf{w}^{(s)})^{\top}\mathbf{x}
+\right).
+}\]</span></p>
+<p>Each sampled weight vector corresponds to a different decision boundary. Near regions with plenty of data, these boundaries tend to agree. Far away from the observed data, they may disagree substantially. <strong><a class="slide-link" href="../slides/lecture-03.html#64" target="_blank" rel="noopener">Slides 64-65</a></strong> show this effect.</p>
+<p>This is the same idea as Bayesian linear regression: instead of pretending that one fitted parameter vector is certainly correct, we average predictions over many plausible parameter values.</p>
+<hr />
+<h2 id="from-probabilities-to-decisions">From Probabilities to Decisions</h2>
+<p>Logistic regression gives us a probability</p>
+<p><span class="math display">\[y
+=
+p(t=1\mid\mathbf{x}).\]</span></p>
+<p>A probability is not yet a decision. To take an action, we must decide how large <span class="math inline">y</span> needs to be before we predict class 1.</p>
+<p>A common rule is</p>
+<p><span class="math display">\[\hat{t}
+=
+\begin{cases}
+1, &amp; y&gt;0.5,\\
+0, &amp; y\leq 0.5.
+\end{cases}\]</span></p>
+<p>The threshold <span class="math inline">0.5</span> is appropriate when the two types of mistakes have equal consequences. In many applications, they do not.</p>
+<h3 id="choosing-a-threshold-from-costs">Choosing a Threshold From Costs</h3>
+<p>Suppose class 1 means that a car will sell quickly. If we buy the car but it does not sell, suppose the cost is <span class="math inline">C_{\mathrm{FP}}</span>. If instead we pass on the car but it would have sold, the missed opportunity costs <span class="math inline">C_{\mathrm{FN}}</span>.</p>
+<p>If the model says</p>
+<p><span class="math display">\[y=p(t=1\mid\mathbf{x}),\]</span></p>
+<p>then the expected cost of predicting class 1 is</p>
+<p><span class="math display">\[(1-y)C_{\mathrm{FP}},\]</span></p>
+<p>while the expected cost of predicting class 0 is</p>
+<p><span class="math display">\[yC_{\mathrm{FN}}.\]</span></p>
+<p>We should choose class 1 when</p>
+<p><span class="math display">\[(1-y)C_{\mathrm{FP}}
+&lt;
+yC_{\mathrm{FN}}.\]</span></p>
+<p>Solving gives</p>
+<p><span class="math display">\[\boxed{
+y
+&gt;
+\frac{C_{\mathrm{FP}}}
+{C_{\mathrm{FP}}+C_{\mathrm{FN}}}.
+}\]</span></p>
+<p>For the example in the slides, where an unsold purchase costs about $800 and missing a quick seller costs about $500,</p>
+<p><span class="math display">\[y
+&gt;
+\frac{800}{800+500}
+\approx
+0.615.\]</span></p>
+<p>So the correct threshold is above 0.5. The model has not changed at all; only the <strong>decision rule</strong> has changed.</p>
+<p>This distinction is important:</p>
+<blockquote>
+<p><strong>The model estimates probabilities. The decision rule determines what we do with them.</strong></p>
+</blockquote>
+<h3 id="roc-curves">ROC Curves</h3>
+<p>Changing the threshold changes the kinds of mistakes the classifier makes. A lower threshold predicts class 1 more often, increasing both true positives and false positives. A higher threshold predicts class 1 less often, decreasing both.</p>
+<p>The <strong>true positive rate</strong> is</p>
+<p><span class="math display">\[\mathrm{TPR}
+=
+\frac{\mathrm{TP}}
+{\mathrm{TP}+\mathrm{FN}},\]</span></p>
+<p>and the <strong>false positive rate</strong> is</p>
+<p><span class="math display">\[\mathrm{FPR}
+=
+\frac{\mathrm{FP}}
+{\mathrm{FP}+\mathrm{TN}}.\]</span></p>
+<p>An <strong>ROC curve</strong> plots TPR against FPR as the classification threshold is swept from one extreme to the other. Choosing a threshold corresponds to choosing a point on this curve. The interactive plot on <strong><a class="slide-link" href="../slides/lecture-03.html#43" target="_blank" rel="noopener">Slide 43</a></strong> shows this directly. The <strong>area under the ROC curve</strong>, or AUC, summarizes the ranking quality of the classifier across all thresholds.</p>
+<hr />
+<h2 id="extension-more-than-two-classes">Extension: More Than Two Classes</h2>
+<p>So far, we have assumed that the target has two possible values. Suppose instead that each example belongs to one of <span class="math inline">K</span> classes.</p>
+<p>For example, a used car might be classified as</p>
+<ul>
+<li>sells quickly</li>
+<li>sells slowly</li>
+<li>does not sell</li>
+</ul>
+<p>We represent the target using a <strong>one-hot vector</strong>. If the second class is correct,</p>
+<p><span class="math display">\[\mathbf{t}
+=
+\begin{bmatrix}
+0\\
+1\\
+0
+\end{bmatrix}.\]</span></p>
+<p>Exactly one element is 1 and the rest are 0.</p>
+<h3 id="the-categorical-distribution">The Categorical Distribution</h3>
+<p>The multi-class generalisation of the Bernoulli distribution is the <strong>categorical distribution</strong>. Let</p>
+<p><span class="math display">\[\boldsymbol{\mu}
+=
+\begin{bmatrix}
+\mu_1\\
+\vdots\\
+\mu_K
+\end{bmatrix},\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\mu_k\geq 0,
+\qquad
+\sum_{k=1}^{K}\mu_k=1.\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[\boxed{
+p(\mathbf{t}\mid\boldsymbol{\mu})
+=
+\prod_{k=1}^{K}
+\mu_k^{t_k}.
+}\]</span></p>
+<p>Because the target is one-hot, every exponent except one is zero. The probability therefore reduces to the probability assigned to the true class.</p>
+<p>For <span class="math inline">K=2</span>, this reduces to the Bernoulli distribution.</p>
+<h3 id="softmax-from-scores-to-probabilities">Softmax: From Scores to Probabilities</h3>
+<p>For <span class="math inline">K</span> classes, we use one linear score per class:</p>
+<p><span class="math display">\[a_k
+=
+\mathbf{w}_k^{\top}\mathbf{x}.\]</span></p>
+<p>These scores can take any real values. We need to convert them into <span class="math inline">K</span> non-negative probabilities that add to one. The <strong>softmax function</strong> does this:</p>
+<p><span class="math display">\[\boxed{
+y_k
+=
+\frac{\exp(a_k)}
+{\sum_{j=1}^{K}\exp(a_j)}.
+}\]</span></p>
+<p>The exponential makes every value positive and the denominator normalises the outputs so that</p>
+<p><span class="math display">\[\sum_{k=1}^{K}y_k=1.\]</span></p>
+<p>A larger score gives a larger probability, so the ordering of the scores is preserved.</p>
+<p>Softmax is the natural multi-class extension of the sigmoid. With two classes,</p>
+<p><span class="math display">\[y_1
+=
+\frac{e^{a_1}}
+{e^{a_1}+e^{a_2}}
+=
+\frac{1}
+{1+e^{-(a_1-a_2)}}
+=
+\sigma(a_1-a_2).\]</span></p>
+<p>So the binary classifier is a special case of the multi-class model.</p>
+<p>A practical detail is that softmax should usually be computed after subtracting the largest score:</p>
+<p><span class="math display">\[z_k
+=
+a_k-\max_j a_j.\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[y_k
+=
+\frac{e^{z_k}}
+{\sum_j e^{z_j}}.\]</span></p>
+<p>This gives exactly the same probabilities but avoids numerical overflow when the scores are large.</p>
+<h3 id="categorical-cross-entropy">Categorical Cross-Entropy</h3>
+<p>To learn parameters of the cateogical, we do the usual and perform maximum likelihood. For one data point,</p>
+<p><span class="math display">\[p(\mathbf{t}\mid\mathbf{x})
+=
+\prod_{k=1}^{K}
+y_k^{t_k}.\]</span></p>
+<p>Assuming independent training examples, the likelihood is</p>
+<p><span class="math display">\[p(\mathcal{D}\mid\mathbf{W})
+=
+\prod_{n=1}^{N}
+\prod_{k=1}^{K}
+y_{nk}^{t_{nk}}.\]</span></p>
+<p>Taking the negative log gives</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}
+=
+-\sum_{n=1}^{N}
+\sum_{k=1}^{K}
+t_{nk}\log y_{nk}.
+}\]</span></p>
+<p>This is the <strong>categorical cross-entropy loss</strong>. Exercise: derive the above step-by-step to get more practice on obtaining a loss via maximum likelihood.</p>
+<p>Because each target vector is one-hot, the inner sum keeps only one term:</p>
+<p><span class="math display">\[\mathcal{L}_n
+=
+-\log y_{n,k^*},\]</span></p>
+<p>where <span class="math inline">k^*</span> is the true class. Thus, training penalises the model according to the probability it assigned to the class that actually occurred.</p>
+<p>The overall pattern is now clear:</p>
+<p><span class="math display">\[\boxed{
+\begin{array}{ccc}
+\text{Gaussian} &amp; \longrightarrow &amp; \text{squared error}\\
+\text{Bernoulli} &amp; \longrightarrow &amp; \text{binary cross-entropy}\\
+\text{Categorical} &amp; \longrightarrow &amp; \text{categorical cross-entropy}
+\end{array}
+}\]</span></p>
+<p>In each case, the loss comes from the negative log-likelihood of the target distribution.</p>
+<hr />
+<h2 id="multi-class-and-multi-label-classification">Multi-Class and Multi-Label Classification</h2>
+<p>It is important to distinguish two problems that are sometimes confused.</p>
+<h3 id="multi-class-classification">Multi-Class Classification</h3>
+<p>In <strong>multi-class classification</strong>, exactly one of <span class="math inline">K</span> classes is correct. Examples include:</p>
+<ul>
+<li>sedan, SUV, or hatchback</li>
+<li>cat, dog, or bird</li>
+<li>sells quickly, sells slowly, or does not sell</li>
+</ul>
+<p>The classes compete with one another. We therefore use one softmax over all classes so that their probabilities sum to one.</p>
+<h3 id="multi-label-classification">Multi-Label Classification</h3>
+<p>In <strong>multi-label classification</strong>, several labels may be true simultaneously. A car listing could be</p>
+<ul>
+<li>accident-free</li>
+<li>negotiable</li>
+<li>export-ready</li>
+</ul>
+<p>at the same time. These are not competing alternatives.</p>
+<p>A common model uses <span class="math inline">K</span> independent sigmoid outputs:</p>
+<p><span class="math display">\[y_k
+=
+\sigma(\mathbf{w}_k^{\top}\mathbf{x}),\]</span></p>
+<p>one for each label. Each output has its own Bernoulli likelihood and binary cross-entropy loss. The total loss is the sum over labels.</p>
+<p>Using a softmax for this problem would be wrong because increasing the probability of one label would necessarily decrease the probabilities of the others. In a multi-label problem, the labels do not have to compete.</p>
+<hr />
+<h2 id="connection-to-language-models">Connection to Language Models</h2>
+<p>A language model's next-token prediction can be viewed as a very large multi-class classification problem.</p>
+<p>Suppose the model converts the context into a representation <span class="math inline">\mathbf{h}</span>. A linear output layer produces one score for every token in the vocabulary:</p>
+<p><span class="math display">\[\mathbf{a}
+=
+\mathbf{W}\mathbf{h}.\]</span></p>
+<p>A softmax then gives</p>
+<p><span class="math display">\[p(\text{token }k\mid\text{context})
+=
+\frac{\exp(a_k)}
+{\sum_j\exp(a_j)}.\]</span></p>
+<p>The training loss for the next token is categorical cross-entropy, exactly as derived above:</p>
+<p><span class="math display">\[-\log p(\text{token that actually came next}\mid\text{context}).\]</span></p>
+<p>The vocabulary may contain tens or hundreds of thousands of tokens, but the probabilistic structure is unchanged.</p>
+<h3 id="temperature">Temperature</h3>
+<p>At generation time, the softmax is often modified using a <strong>temperature</strong> <span class="math inline">T</span>:</p>
+<p><span class="math display">\[y_k
+=
+\frac{\exp(a_k/T)}
+{\sum_j\exp(a_j/T)}.\]</span></p>
+<p>When <span class="math inline">T&lt;1</span>, differences between scores are magnified and the distribution becomes sharper. As <span class="math inline">T\rightarrow 0</span>, probability concentrates near the largest score.</p>
+<p>When <span class="math inline">T&gt;1</span>, differences between scores are reduced and the distribution becomes flatter. Lower-probability alternatives therefore receive more probability mass.</p>
+<p>Temperature changes how a model samples from its scores; it does not retrain the underlying classifier.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>In this lecture, we changed the target from a real-valued number to a label. This required us to change the probability model for the target.</p>
+<p>Applying least squares directly to numerical class labels can produce a decision boundary, but squared error has the wrong behaviour for classification: it can penalise examples for being confidently correct, and its unbounded output is not naturally a class probability.</p>
+<p>For binary classification, we instead used a Bernoulli model:</p>
+<p><span class="math display">\[p(t\mid\mathbf{x},\mathbf{w})
+=
+\mathrm{Bern}
+\left(
+t
+\mid
+\sigma(\mathbf{w}^{\top}\mathbf{x})
+\right).\]</span></p>
+<p>The sigmoid maps the real-valued linear score to a probability and makes that score equal to the log-odds:</p>
+<p><span class="math display">\[\log
+\frac{p(t=1\mid\mathbf{x})}
+{p(t=0\mid\mathbf{x})}
+=
+\mathbf{w}^{\top}\mathbf{x}.\]</span></p>
+<p>Maximum likelihood gives the binary cross-entropy loss:</p>
+<p><span class="math display">\[\mathcal{L}
+=
+-\sum_n
+\left[
+t_n\log y_n
++
+(1-t_n)\log(1-y_n)
+\right].\]</span></p>
+<p>With a Gaussian prior on the weights, MAP estimation adds the familiar <span class="math inline">L_2</span> penalty:</p>
+<p><span class="math display">\[\mathcal{L}_{\mathrm{MAP}}
+=
+\mathcal{L}
++
+\frac{\alpha}{2}\|\mathbf{w}\|_2^2.\]</span></p>
+<p>Unlike least-squares regression, logistic regression has no closed-form solution. Its gradient is</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}\mathcal{L}
+=
+\sum_n
+(y_n-t_n)\mathbf{x}_n,\]</span></p>
+<p>so we fit the model using iterative optimisation such as gradient descent. On perfectly separable data, unregularised maximum likelihood drives the weights towards infinite magnitude; a prior or regulariser gives a finite solution.</p>
+<p>If we retain a posterior distribution over the weights rather than a single MAP estimate, logistic regression becomes Bayesian. The posterior is no longer available in closed form, so methods such as the Laplace approximation are needed to approximate it and average predictions over plausible decision boundaries.</p>
+<p>We also learnt that a probability is not yet a decision. A classification threshold should reflect the costs of different errors. If the false-positive and false-negative costs are <span class="math inline">C_{\mathrm{FP}}</span> and <span class="math inline">C_{\mathrm{FN}}</span>, then the cost-minimising rule predicts class 1 when</p>
+<p><span class="math display">\[p(t=1\mid\mathbf{x})
+&gt;
+\frac{C_{\mathrm{FP}}}
+{C_{\mathrm{FP}}+C_{\mathrm{FN}}}.\]</span></p>
+<p>Finally, for more than two mutually exclusive classes, we use a categorical distribution with softmax probabilities:</p>
+<p><span class="math display">\[y_k
+=
+\frac{\exp(a_k)}
+{\sum_j\exp(a_j)},\]</span></p>
+<p>which gives categorical cross-entropy:</p>
+<p><span class="math display">\[\mathcal{L}
+=
+-\sum_n\sum_k
+t_{nk}\log y_{nk}.\]</span></p>
+<p>The main pattern from Lecture 2 therefore continues to hold:</p>
+<blockquote>
+<p><strong>Choose a probability distribution that matches the target, and the loss follows from the negative log-likelihood.</strong></p>
+</blockquote>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>

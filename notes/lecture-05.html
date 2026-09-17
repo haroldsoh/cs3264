@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 5 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 5: Overfitting and Bias-Variance">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-05.html" target="_blank" rel="noopener">Lecture 5 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<article>
+<h1 id="lecture-5-overfitting-and-bias-variance">Lecture 5: Overfitting and Bias-Variance</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In the previous lectures, we focused mainly on how to define and fit a model. This lecture (and the next one) asks a different question:</p>
+<blockquote>
+<p><strong>Once we fit a model, why should it work on new data?</strong></p>
+</blockquote>
+<p>A model can fit its training data extremely well and still make poor predictions on examples it has never seen. The quantity we really care about is therefore the <strong>test or generalisation error</strong>, not the training error.</p>
+<p>For squared loss, the key idea is that the expected generalisation error can be split into three parts:</p>
+<p><span class="math display">\[\boxed{
+\text{generalisation error}
+=
+(\text{bias})^2
++
+\text{variance}
++
+\text{noise}.
+}\]</span></p>
+<p>These three terms describe different ways a prediction can be wrong. <strong>Bias</strong> measures whether the model is systematically wrong on average. <strong>Variance</strong> measures how much the fitted model changes when we train on a different dataset. <strong>Noise</strong> is variation in the target that remains even if we knew the best possible prediction.</p>
+<p>This decomposition helps us understand <strong>underfitting</strong> and <strong>overfitting</strong>. A model that is too simple often has high bias. A model that is very flexible can have low bias but high variance because it reacts strongly to the particular sample it was trained on.</p>
+<p>The second half of the lecture asks how we choose a model or a hyperparameter such as polynomial degree. Training error cannot do this because it usually prefers the most flexible model. We therefore hold out data for <strong>validation</strong> or use <strong>cross-validation</strong>. We will also see a simple mathematical reason why validation can work: with enough held-out examples, the validation errors of a fixed set of candidate models are likely to be close to their true risks.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, the main things you should be able to do are:</p>
+<ul>
+<li>explain the difference between training error and generalisation error</li>
+<li>explain why the fitted model should be viewed as random when the training dataset is random</li>
+<li>define the average prediction <span class="math inline">\bar{y}(x)</span> and the average target <span class="math inline">\bar{t}(x)</span></li>
+<li>explain what bias, variance, and noise mean</li>
+<li>derive the bias-variance-noise decomposition for squared loss</li>
+<li>explain underfitting and overfitting using bias and variance and how model complexity, regularisation, and additional data affect bias and variance</li>
+</ul>
+<p>In addition, you should be able to:</p>
+<ul>
+<li>explain how validation and <span class="math inline">K</span>-fold cross-validation are used to choose model hyperparameters</li>
+<li>explain why the bias-variance decomposition is an explanatory tool rather than something we usually compute directly</li>
+<li>state Hoeffding's inequality for an average of bounded independent variables</li>
+<li>use a union bound to control the validation errors of a finite set of candidate models</li>
+<li>interpret the resulting guarantee for model selection</li>
+</ul>
+<p>We will first build an intuitive picture using many possible training datasets. We will then derive the bias-variance decomposition. Then we will use it to understand underfitting and overfitting. Finally, we will discuss model selection and cross-validation.</p>
+<hr />
+<h2 id="from-model-fitting-to-generalisation">From Model Fitting to Generalisation</h2>
+<p>We've seen from earlier lectures that a richer model can represent more patterns, but more freedom is not automatically better. With limited data, a flexible model may adapt not only to the underlying pattern but also to accidental details of the training set.</p>
+<p>This is the problem we first saw with high-order polynomial regression in Lecture 1. As the polynomial degree increased, the training error kept falling. The error on held-out data eventually started to rise.</p>
+<p>At the time, we called this <strong>overfitting</strong>. We will now develop a more precise way to think about what is happening.</p>
+<hr />
+<h2 id="training-error-and-generalisation-error">Training Error and Generalisation Error</h2>
+<p>Suppose our fitted model is written as</p>
+<p><span class="math display">\[y(x,\mathcal{D}),\]</span></p>
+<p>where <span class="math inline">\mathcal{D}</span> is the training dataset. Writing the dependence on <span class="math inline">\mathcal{D}</span> explicitly is important because a different dataset would generally produce a different fitted model.</p>
+<p>The <strong>training error</strong> is computed on the data we used to fit the model. For squared loss,</p>
+<p><span class="math display">\[\frac{1}{N}
+\sum_{n=1}^{N}
+\left(
+y(x_n,\mathcal{D})-t_n
+\right)^2.\]</span></p>
+<p>This quantity is easy to compute, but it is not what we ultimately care about. We want the model to work on a new example drawn from the same underlying population.</p>
+<p>For a fixed fitted model, the <strong>generalisation error</strong> is</p>
+<p><span class="math display">\[\boxed{
+R(\mathcal{D})
+=
+\mathbb{E}_{p(x,t)}
+\left[
+\left(
+y(x,\mathcal{D})-t
+\right)^2
+\right].
+}\]</span></p>
+<p>The expectation means that we average the loss over possible future inputs and targets from the data distribution <span class="math inline">p(x,t)</span>.</p>
+<p>The key problem is that we do not know <span class="math inline">p(x,t)</span>, so we cannot normally calculate this expectation exactly. We only have a finite dataset sampled from it.</p>
+<p>This is why low training error alone tells us very little about whether the model has learnt a useful pattern.</p>
+<hr />
+<h2 id="the-training-dataset-is-random">The Training Dataset Is Random</h2>
+<p>To understand generalisation, imagine repeating the entire learning process many times.</p>
+<p>Each time:</p>
+<ol type="1">
+<li>draw a new training dataset <span class="math inline">\mathcal{D}</span></li>
+<li>fit the model using exactly the same learning algorithm</li>
+<li>look at the prediction at some fixed input <span class="math inline">x</span></li>
+</ol>
+<p>Because each dataset is different, the fitted model is different. Therefore</p>
+<p><span class="math display">\[y(x,\mathcal{D})\]</span></p>
+<p>is itself a random quantity when we think across possible training datasets.</p>
+<p>Use the interactive plot on <strong><a class="slide-link" href="../slides/lecture-05.html#18" target="_blank" rel="noopener">Slide 18</a></strong>. Keep the model degree fixed and repeatedly sample a new dataset. Each dataset produces a different fitted polynomial. With a simple model, the fitted curves may be fairly similar. With a very flexible model and little data, they can look completely different.</p>
+<p>This is the central picture behind <strong>variance</strong>.</p>
+<hr />
+<h2 id="two-important-averages">Two Important Averages</h2>
+<p>There are two different kinds of randomness in this lecture, and therefore two different averages. Keeping them separate is the main difficulty in the derivation.</p>
+<h3 id="the-average-target">The Average Target</h3>
+<p>At a fixed input <span class="math inline">x</span>, the target may still be random. For example,</p>
+<p><span class="math display">\[t
+=
+h(x)+\varepsilon,\]</span></p>
+<p>where <span class="math inline">\varepsilon</span> represents noise.</p>
+<p>Define</p>
+<p><span class="math display">\[\boxed{
+\bar{t}(x)
+=
+\mathbb{E}_{p(t\mid x)}[t].
+}\]</span></p>
+<p>This is the average target at input <span class="math inline">x</span>. If the noise has zero mean, <span class="math inline">\bar{t}(x)</span> is the underlying function <span class="math inline">h(x)</span>.</p>
+<h3 id="the-average-model">The Average Model</h3>
+<p>Now imagine repeatedly drawing a training dataset and fitting the model. Define</p>
+<p><span class="math display">\[\boxed{
+\bar{y}(x)
+=
+\mathbb{E}_{p(\mathcal{D})}
+\left[
+y(x,\mathcal{D})
+\right].
+}\]</span></p>
+<p>This is the average prediction over all possible training datasets.</p>
+<p>The average model is mainly a <strong>thinking tool</strong>. In a real problem we only have one training dataset, so we cannot actually average over every dataset we might have received.</p>
+<p>The interactive plots on <strong><a class="slide-link" href="../slides/lecture-05.html#18" target="_blank" rel="noopener">Slides 18-19</a></strong> make these two ideas concrete. At a fixed <span class="math inline">x</span>, each possible training set gives one fitted prediction. Their average is <span class="math inline">\bar{y}(x)</span>. Separately, repeated targets at the same <span class="math inline">x</span> vary around <span class="math inline">\bar{t}(x)</span> because of noise.</p>
+<hr />
+<h2 id="bias-variance-and-noise">Bias, Variance, and Noise</h2>
+<p>We can now define the three sources of test error.</p>
+<h3 id="bias">Bias</h3>
+<p>The <strong>bias</strong> at input <span class="math inline">x</span> is the difference between the average model and the average target:</p>
+<p><span class="math display">\[\boxed{
+\operatorname{bias}(x)
+=
+\bar{y}(x)-\bar{t}(x).
+}\]</span></p>
+<p>If this quantity is large, then even after averaging over many possible training datasets, the model is systematically wrong.</p>
+<p>A common reason is that the model family is too restrictive. For example, if the true relationship is curved but our model is always a straight line, the average fitted line cannot reproduce the true relationship.</p>
+<p>Bias therefore reflects a limitation of the model family and learning procedure.</p>
+<h3 id="variance">Variance</h3>
+<p>The <strong>variance</strong> measures how much the fitted prediction changes from one training dataset to another:</p>
+<p><span class="math display">\[\boxed{
+\operatorname{var}(x)
+=
+\mathbb{E}_{p(\mathcal{D})}
+\left[
+\left(
+y(x,\mathcal{D})-\bar{y}(x)
+\right)^2
+\right].
+}\]</span></p>
+<p>A model has high variance if small changes in the training sample can lead to very different predictions.</p>
+<p>Flexible models trained on small datasets often have high variance because they have enough freedom to react strongly to the particular noise in that dataset.</p>
+<h3 id="noise">Noise</h3>
+<p>Even if we knew the average target <span class="math inline">\bar{t}(x)</span> exactly, the observed target <span class="math inline">t</span> could still differ from it. The <strong>noise</strong> at <span class="math inline">x</span> is</p>
+<p><span class="math display">\[\boxed{
+\mathbb{E}_{p(t\mid x)}
+\left[
+\left(
+t-\bar{t}(x)
+\right)^2
+\right].
+}\]</span></p>
+<p>This part comes from the data-generating process itself. It does not depend on which model we fit.</p>
+<p>In the simple model</p>
+<p><span class="math display">\[t=h(x)+\varepsilon,
+\qquad
+\varepsilon\sim\mathcal{N}(0,\sigma^2),\]</span></p>
+<p>the noise term is <span class="math inline">\sigma^2</span>.</p>
+<hr />
+<h2 id="the-bias-variance-decomposition">The Bias-Variance Decomposition</h2>
+<p>We now derive the result formally. The derivation is longer than the idea, but not especially difficult.</p>
+<p>We will use the same trick twice: <strong>add and subtract an average, then expand the square</strong>.</p>
+<p>We want the expected squared prediction error, averaged over future examples and over the random training dataset:</p>
+<p><span class="math display">\[\mathbb{E}_{p(x,t)}
+\mathbb{E}_{p(\mathcal{D})}
+\left[
+\left(
+y(x,\mathcal{D})-t
+\right)^2
+\right].\]</span></p>
+<h3 id="first-split-variance">First Split: Variance</h3>
+<p>Add and subtract the average model <span class="math inline">\bar{y}(x)</span>:</p>
+<p><span class="math display">\[y-t
+=
+\left(
+y-\bar{y}
+\right)
++
+\left(
+\bar{y}-t
+\right).\]</span></p>
+<p>Squaring gives</p>
+<p><span class="math display">\[(y-t)^2
+=
+(y-\bar{y})^2
++
+(\bar{y}-t)^2
++
+2(y-\bar{y})(\bar{y}-t).\]</span></p>
+<p>Now average over datasets. The cross term disappears because</p>
+<p><span class="math display">\[\mathbb{E}_{p(\mathcal{D})}
+\left[
+y(x,\mathcal{D})-\bar{y}(x)
+\right]
+=
+0.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\mathbb{E}
+\left[
+(y-t)^2
+\right]
+=
+\underbrace{
+\mathbb{E}_{p(x)}
+\mathbb{E}_{p(\mathcal{D})}
+\left[
+(y-\bar{y})^2
+\right]
+}_{\text{variance}}
++
+\mathbb{E}_{p(x,t)}
+\left[
+(\bar{y}-t)^2
+\right].\]</span></p>
+<p>The first term is the variance. The second term still mixes together systematic model error and target noise.</p>
+<h3 id="second-split-bias-and-noise">Second Split: Bias and Noise</h3>
+<p>Now add and subtract the average target <span class="math inline">\bar{t}(x)</span>:</p>
+<p><span class="math display">\[\bar{y}-t
+=
+\left(
+\bar{y}-\bar{t}
+\right)
++
+\left(
+\bar{t}-t
+\right).\]</span></p>
+<p>Expand the square again:</p>
+<p><span class="math display">\[(\bar{y}-t)^2
+=
+(\bar{y}-\bar{t})^2
++
+(\bar{t}-t)^2
++
+2(\bar{y}-\bar{t})(\bar{t}-t).\]</span></p>
+<p>The cross term again disappears because</p>
+<p><span class="math display">\[\mathbb{E}_{p(t\mid x)}
+\left[
+\bar{t}(x)-t
+\right]
+=
+0.\]</span></p>
+<p>Putting the two splits together gives</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathbb{E}
+\left[
+(y(x,\mathcal{D})-t)^2
+\right]
+&amp;=
+\underbrace{
+\mathbb{E}_{p(x)}
+\left[
+\left(
+\bar{y}(x)-\bar{t}(x)
+\right)^2
+\right]
+}_{(\text{bias})^2}
+\\
+&amp;\quad+
+\underbrace{
+\mathbb{E}_{p(x)}
+\mathbb{E}_{p(\mathcal{D})}
+\left[
+\left(
+y(x,\mathcal{D})-\bar{y}(x)
+\right)^2
+\right]
+}_{\text{variance}}
+\\
+&amp;\quad+
+\underbrace{
+\mathbb{E}_{p(x)}
+\mathbb{E}_{p(t\mid x)}
+\left[
+\left(
+\bar{t}(x)-t
+\right)^2
+\right]
+}_{\text{noise}}.
+\end{aligned}
+}\]</span></p>
+<p>In short,</p>
+<p><span class="math display">\[\boxed{
+\text{generalisation error}
+=
+(\text{bias})^2
++
+\text{variance}
++
+\text{noise}.
+}\]</span></p>
+<p>This is an exact identity for squared loss under the expectations above.</p>
+<hr />
+<h2 id="how-to-read-the-decomposition">How to Read the Decomposition</h2>
+<p>The decomposition is useful because the three terms respond differently to modelling choices.</p>
+<h3 id="simple-models">Simple Models</h3>
+<p>A very simple model may not be able to represent the true relationship.</p>
+<p>For example, if the true function is sinusoidal and we fit a straight line, the fitted line will miss the curve in roughly the same way no matter which training sample we draw.</p>
+<p>This gives:</p>
+<ul>
+<li><strong>high bias</strong></li>
+<li><strong>low variance</strong></li>
+</ul>
+<p>This is the typical picture of <strong>underfitting</strong>.</p>
+<p>Adding more training data cannot make a straight line become a sine curve. More data can tell us very precisely which straight line is best, but the model family itself is still too limited.</p>
+<h3 id="flexible-models">Flexible Models</h3>
+<p>A very flexible model may be able to represent the true function, so its average prediction can have low bias.</p>
+<p>However, with limited data, different samples may produce very different fitted models. The model has enough freedom to chase accidental fluctuations in each sample.</p>
+<p>This gives:</p>
+<ul>
+<li><strong>low bias</strong></li>
+<li><strong>high variance</strong></li>
+</ul>
+<p>This is the typical picture of <strong>overfitting</strong>.</p>
+<p>Unlike high bias, high variance can often be reduced by collecting more data. With more observations, individual sampling accidents have less influence on the fitted model.</p>
+<p>The interactive comparison on <strong><a class="slide-link" href="../slides/lecture-05.html#26" target="_blank" rel="noopener">Slides 26-30</a></strong> shows these effects with polynomial regression. A low-degree polynomial has a stable but systematically wrong fit. A high-degree polynomial can track the truth well on average but varies strongly from dataset to dataset.</p>
+<hr />
+<h2 id="model-complexity-and-the-bias-variance-trade-off">Model Complexity and the Bias-Variance Trade-Off</h2>
+<p>As we make a model more flexible, bias often decreases because the model family can represent more functions. At the same time, variance often increases because the fitted model has more freedom to react to the training sample. Noise remains unchanged because it belongs to the data-generating process, not the model.</p>
+<p>The sum can therefore have a minimum at an intermediate level of model complexity.</p>
+<p>However, this U-shaped picture is an <strong>explanatory pattern</strong>, not a theorem saying that every modern model must behave this way. The slides make this point explicitly. What actually happens may differ depending on the model, training procedure, and data.</p>
+<h3 id="which-term-does-a-change-affect">Which Term Does a Change Affect?</h3>
+<p>The following table is a useful guide.</p>
+<table>
+<thead>
+<tr>
+<th>Change</th>
+<th style="text-align: right;">Bias<span class="math inline">^2</span></th>
+<th style="text-align: right;">Variance</th>
+<th style="text-align: right;">Noise</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>More training data</td>
+<td style="text-align: right;">roughly unchanged</td>
+<td style="text-align: right;">decreases</td>
+<td style="text-align: right;">unchanged</td>
+</tr>
+<tr>
+<td>Simpler model</td>
+<td style="text-align: right;">usually increases</td>
+<td style="text-align: right;">decreases</td>
+<td style="text-align: right;">unchanged</td>
+</tr>
+<tr>
+<td>Richer model</td>
+<td style="text-align: right;">usually decreases</td>
+<td style="text-align: right;">increases</td>
+<td style="text-align: right;">unchanged</td>
+</tr>
+<tr>
+<td>Stronger regularisation</td>
+<td style="text-align: right;">usually increases</td>
+<td style="text-align: right;">decreases</td>
+<td style="text-align: right;">unchanged</td>
+</tr>
+<tr>
+<td>Average several fitted models</td>
+<td style="text-align: right;">roughly unchanged</td>
+<td style="text-align: right;">decreases</td>
+<td style="text-align: right;">unchanged</td>
+</tr>
+</tbody>
+</table>
+<p>The word "usually" matters. These are common effects, not universal laws.</p>
+<hr />
+<h2 id="regularisation-through-the-bias-variance-lens">Regularisation Through the Bias-Variance Lens</h2>
+<p>In Lecture 1 we introduced ridge regression. In Lectures 2 and 3, we interpreted regularisation as placing a prior on the parameters. We can now give it another interpretation.</p>
+<p>Regularisation restricts the fitted model. For example,</p>
+<p><span class="math display">\[\frac{\lambda}{2}
+\|\mathbf{w}\|^2\]</span></p>
+<p>discourages large weights.</p>
+<p>This can introduce additional bias because the fitted model is no longer free to choose the parameters that best fit the training data. But the restriction can reduce variance substantially because the model becomes less sensitive to the exact training sample.</p>
+<p>This gives another way to think about why regularisation can improve generalisation:</p>
+<blockquote>
+<p><strong>Regularisation deliberately accepts some bias in exchange for lower variance.</strong></p>
+</blockquote>
+<p>The best amount of regularisation depends on the data. We therefore need a principled way to choose hyperparameters such as <span class="math inline">\lambda</span>, polynomial degree, or model size.</p>
+<hr />
+<h2 id="validation-and-cross-validation">Validation and Cross-Validation</h2>
+<p>As we have previously seen, fitting a model solely on training error usually results in overfitting. To estimate generalisation performance, we need to evaluate the model on data that was <strong>not used to fit it</strong>.</p>
+<p>A common solution is to split the available data into:</p>
+<ul>
+<li>a <strong>training set</strong>, used to fit model parameters</li>
+<li>a <strong>validation set</strong>, used to compare models or hyperparameters</li>
+</ul>
+<p>For each candidate model:</p>
+<ol type="1">
+<li>fit the parameters on the training data</li>
+<li>compute the loss on the validation data</li>
+<li>choose the candidate with the smallest validation loss</li>
+</ol>
+<p>The validation set acts as a small sample of future data. Because the model was not fitted to those examples, its performance on them gives information about generalisation.</p>
+<h3 id="k-fold-cross-validation"><span class="math inline">K</span>-Fold Cross-Validation</h3>
+<p>A single train-validation split can be wasteful when data is scarce. The answer can also depend strongly on which examples happened to be placed in the validation set.</p>
+<p>In <strong><span class="math inline">K</span>-fold cross-validation</strong>, we divide the data into <span class="math inline">K</span> parts, called folds.</p>
+<p>For each fold <span class="math inline">k</span>:</p>
+<ol type="1">
+<li>hold out fold <span class="math inline">k</span></li>
+<li>fit the model using the other <span class="math inline">K-1</span> folds</li>
+<li>measure the loss on fold <span class="math inline">k</span></li>
+</ol>
+<p>Then average the <span class="math inline">K</span> validation losses.</p>
+<p>Each example is used for validation once and for training in the other <span class="math inline">K-1</span> fits.</p>
+<p><strong><a class="slide-link" href="../slides/lecture-05.html#36" target="_blank" rel="noopener">Slides 36-38</a></strong> show this process and how cross-validation can select a polynomial degree that is close to the one with the lowest true generalisation error in the synthetic example.</p>
+<p>Cross-validation is extremely useful, but several caveats matter:</p>
+<ul>
+<li>First, it costs more computation because we fit the model multiple times.</li>
+<li>Second, the cross-validation score is still random. A different sample or a different fold assignment can give a different number.</li>
+<li>Third, once we use validation performance to <strong>choose</strong> a model, the winning validation score is no longer an unbiased description of the winner's performance. We selected the model partly because it happened to score well.</li>
+</ul>
+<p>For a final estimate of performance, we therefore keep a separate <strong>test set</strong> that is not used for fitting or model selection. We evaluate on the test set only after the model and hyperparameters have been chosen.</p>
+<hr />
+<h2 id="why-can-validation-work">Why Can Validation Work?</h2>
+<p>We now look at a simple version of model selection that we can analyse mathematically. Full <span class="math inline">K</span>-fold cross-validation is too difficult for us at the moment. Instead, suppose we have <strong>one</strong> independent validation set of <span class="math inline">V</span> examples and a fixed collection of candidate models</p>
+<p><span class="math display">\[h_0,h_1,\ldots,h_M.\]</span></p>
+<p>The candidates are fixed <strong>before</strong> we look at the validation data.</p>
+<p>For a candidate <span class="math inline">h</span>, define its true risk</p>
+<p><span class="math display">\[\boxed{
+R(h)
+=
+\mathbb{E}_{p(x,t)}
+\left[
+\ell(h(x),t)
+\right],
+}\]</span></p>
+<p>and its validation score</p>
+<p><span class="math display">\[\boxed{
+\widehat{R}(h)
+=
+\frac{1}{V}
+\sum_{i=1}^{V}
+\ell(h(x_i),t_i).
+}\]</span></p>
+<p>Assume the loss is bounded:</p>
+<p><span class="math display">\[0\leq \ell(h(x),t)\leq 1.\]</span></p>
+<p>For example, <span class="math inline">\ell</span> could be the <span class="math inline">0</span>-<span class="math inline">1</span> classification loss.</p>
+<p>The basic question is:</p>
+<blockquote>
+<p>How close is the validation score <span class="math inline">\widehat{R}(h)</span> to the true risk <span class="math inline">R(h)</span>?</p>
+</blockquote>
+<hr />
+<h2 id="hoeffdings-inequality">Hoeffding's Inequality</h2>
+<p>For a fixed candidate <span class="math inline">h</span>, the validation losses</p>
+<p><span class="math display">\[\ell(h(x_1),t_1),\ldots,\ell(h(x_V),t_V)\]</span></p>
+<p>are independent draws in <span class="math inline">[0,1]</span> (the loss is bounded between 0 and 1, inclusive), provided the validation examples are independent and were not used to fit <span class="math inline">h</span>.</p>
+<p>Their average is <span class="math inline">\widehat{R}(h)</span>, and their expectation is <span class="math inline">R(h)</span>.</p>
+<p><strong>Hoeffding's inequality</strong> tells us that</p>
+<p><span class="math display">\[\boxed{
+\Pr
+\left(
+\left|
+\widehat{R}(h)-R(h)
+\right|
+\geq
+\varepsilon
+\right)
+\leq
+2\exp
+\left(
+-2V\varepsilon^2
+\right).
+}\]</span></p>
+<p>This is a concentration result: as the number of validation examples <span class="math inline">V</span> grows, it becomes increasingly unlikely that the validation score is far from the true risk.</p>
+<p>There are two useful things to notice:</p>
+<ol type="1">
+<li>the bound only requires <strong>independent observations</strong> and a <strong>bounded loss</strong>. Notably, it does not assume that the loss is Gaussian.</li>
+<li>this is an <strong>upper bound</strong>. It can be loose, and for small <span class="math inline">V</span> or very small <span class="math inline">\varepsilon</span> the numerical bound may even exceed 1, in which case it tells us nothing useful.</li>
+</ol>
+<p>The interactive plots on <strong><a class="slide-link" href="../slides/lecture-05.html#46" target="_blank" rel="noopener">Slides 46-49</a></strong> show how the bound changes with <span class="math inline">V</span> and <span class="math inline">\varepsilon</span>.</p>
+<hr />
+<h2 id="evaluating-multiple-candidate-models">Evaluating Multiple Candidate Models</h2>
+<p>We do not use validation to evaluate only one model. We compare many candidates <span class="math inline">h_0, h_1, \dots, h_M</span> and choose the one with the lowest validation score.</p>
+<p>Even if every candidate individually has a small chance of receiving a misleading score, we care about the event that <strong>any</strong> candidate receives such a score. This is because we want to prevent the case where one lucky candidate wins based on pure luck.</p>
+<p>For candidate <span class="math inline">j</span>, define the bad event</p>
+<p><span class="math display">\[B_j
+=
+\left\{
+\left|
+\widehat{R}(h_j)-R(h_j)
+\right|
+\geq
+\varepsilon
+\right\}.\]</span></p>
+<p>Hoeffding only gives</p>
+<p><span class="math display">\[\Pr(B_j)
+\leq
+2e^{-2V\varepsilon^2}\]</span></p>
+<p>for a single candidate <span class="math inline">h_j</span>. We want to control</p>
+<p><span class="math display">\[\Pr
+\left(
+B_0\cup B_1\cup\cdots\cup B_M
+\right).\]</span></p>
+<h3 id="the-union-bound">The Union Bound</h3>
+<p>For any collection of events,</p>
+<p><span class="math display">\[\boxed{
+\Pr
+\left(
+\bigcup_j B_j
+\right)
+\leq
+\sum_j
+\Pr(B_j).
+}\]</span></p>
+<p>This is the <strong>union bound</strong>.</p>
+<p>Applying it to our <span class="math inline">M+1</span> candidate models gives</p>
+<p><span class="math display">\[\Pr
+\left(
+B_0\cup\cdots\cup B_M
+\right)
+\leq
+\sum_{j=0}^M
+\Pr(B_j).\]</span></p>
+<p>and using Hoeffding's inequality gives us, <span class="math display">\[\Pr
+\left(
+B_0\cup\cdots\cup B_M
+\right)
+\leq
+2(M+1)e^{-2V\varepsilon^2}.\]</span></p>
+<p>Set the right-hand side equal to a failure probability <span class="math inline">\delta</span>:</p>
+<p><span class="math display">\[2(M+1)e^{-2V\varepsilon^2}
+=
+\delta.\]</span></p>
+<p>Solving for <span class="math inline">\varepsilon</span> gives</p>
+<p><span class="math display">\[\boxed{
+\varepsilon
+=
+\sqrt{
+\frac{
+\ln\left(2(M+1)/\delta\right)
+}{
+2V
+}
+}.
+}\]</span></p>
+<p>Therefore, with probability at least <span class="math inline">1-\delta</span>, <strong>every</strong> validation score is within <span class="math inline">\varepsilon</span> of its true risk at the same time:</p>
+<p><span class="math display">\[\left|
+\widehat{R}(h_j)-R(h_j)
+\right|
+\leq
+\varepsilon
+\qquad
+\text{for every }j.\]</span></p>
+<p>More explicitly:</p>
+<p><span class="math display">\[\left|
+\widehat{R}(h_j)-R(h_j)
+\right|
+\leq
+\sqrt{
+\frac{
+\ln\left(2(M+1)/\delta\right)
+}{
+2V
+}
+}
+\qquad
+\text{for every }j.\]</span></p>
+<p>This is a remarkable result! It means that even though we don't know the true risk <span class="math inline">R(h_j)</span>, we can say something about how different it is from the empirical error <span class="math inline">\widehat{R}(h_j)</span>. We see that the upper bound depends on the number of models <span class="math inline">M</span>, the confidence <span class="math inline">\delta</span> and the number of samples in the validation set <span class="math inline">V</span>. Take a moment to analyse how each factor affects the upper bound. For example, what happens when we increase <span class="math inline">V</span>? Ask yourself: are the effects reasonable?</p>
+<p>Note: Despite being remarkable, the bound is <em>loose</em>; it can be significantly larger than the true difference between <span class="math inline">R(h_j)</span> and <span class="math inline">\widehat{R}(h_j)</span>.</p>
+<hr />
+<h2 id="what-this-means-for-the-model-we-select">What This Means for the Model We Select</h2>
+<p>Let</p>
+<p><span class="math display">\[\hat{\jmath}
+=
+\operatorname*{arg\,min}_j
+\widehat{R}(h_j)\]</span></p>
+<p>be the candidate selected using the validation data.</p>
+<p>Let</p>
+<p><span class="math display">\[j^*
+=
+\operatorname*{arg\,min}_j
+R(h_j)\]</span></p>
+<p>be the candidate that actually has the smallest true risk.</p>
+<p>Suppose the good event above holds, so every validation score is within <span class="math inline">\varepsilon</span> of its true risk.</p>
+<p>Then</p>
+<p><span class="math display">\[R(h_{\hat{\jmath}})
+\leq
+\widehat{R}(h_{\hat{\jmath}})
++
+\varepsilon.\]</span></p>
+<p>Because <span class="math inline">h_{\hat{\jmath}}</span> has the smallest validation score,</p>
+<p><span class="math display">\[\widehat{R}(h_{\hat{\jmath}})
+\leq
+\widehat{R}(h_{j^*}).\]</span></p>
+<p>And because the score of <span class="math inline">h_{j^*}</span> is also within <span class="math inline">\varepsilon</span> of its true risk,</p>
+<p><span class="math display">\[\widehat{R}(h_{j^*})
+\leq
+R(h_{j^*})
++
+\varepsilon.\]</span></p>
+<p>Combining the three inequalities gives</p>
+<p><span class="math display">\[\boxed{
+R(h_{\hat{\jmath}})
+\leq
+\min_j R(h_j)
++
+2\varepsilon.
+}\]</span></p>
+<p>Substituting the expression for <span class="math inline">\varepsilon</span>,</p>
+<p><span class="math display">\[\boxed{
+R(h_{\hat{\jmath}})
+\leq
+\min_j R(h_j)
++
+2
+\sqrt{
+\frac{
+\ln\left(2(M+1)/\delta\right)
+}{
+2V
+}
+}
+}\]</span></p>
+<p>with probability at least <span class="math inline">1-\delta</span>.</p>
+<p>This is another remarkable result! It says that if the validation set is large enough, the candidate selected by validation will have true risk close to the best true risk among the candidates we considered.</p>
+<p>As before, the bound also shows two useful trends:</p>
+<ul>
+<li>increasing the validation size <span class="math inline">V</span> improves the guarantee</li>
+<li>considering more candidates costs only through <span class="math inline">\ln(M+1)</span></li>
+</ul>
+<p>However, the result (and the earlier one) depend on an important condition: the candidate models must be fixed before the validation data is used to score them. If we repeatedly inspect validation results, redesign the candidates, and test again on the same validation set, we are adapting to the validation data and this simple guarantee no longer applies.</p>
+<hr />
+<h2 id="cross-validation-and-the-simple-bound">Cross-Validation and the Simple Bound</h2>
+<p>The mathematical result above is for a <strong>single independent validation set</strong>, not full <span class="math inline">K</span>-fold cross-validation.</p>
+<p>In <span class="math inline">K</span>-fold cross-validation, the training sets overlap heavily and every data point is used for training in some folds and validation in another. The resulting validation errors are therefore dependent in a more complicated way.</p>
+<p>The same intuition still motivates cross-validation: evaluate models on data not used to fit that particular model, and average over several held-out splits. But the simple Hoeffding-plus-union-bound above does not transfer directly to <span class="math inline">K</span>-fold cross-validation.</p>
+<p>For this lecture, the important lesson is:</p>
+<blockquote>
+<p><strong>Held-out data works because it gives us an independent sample of losses. With enough held-out examples, averages of those losses are likely to be close to their expectations.</strong></p>
+</blockquote>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>In this lecture, we shifted attention from fitting the model to understanding how well the fitted model should work on new data.</p>
+<p>Training error measures performance on the examples used for fitting. Generalisation error measures expected performance on a fresh example:</p>
+<p><span class="math display">\[R(\mathcal{D})
+=
+\mathbb{E}_{p(x,t)}
+\left[
+\left(
+y(x,\mathcal{D})-t
+\right)^2
+\right].\]</span></p>
+<p>Because the training dataset is itself random, the fitted model is also random. We therefore defined the <strong>average model</strong></p>
+<p><span class="math display">\[\bar{y}(x)
+=
+\mathbb{E}_{p(\mathcal{D})}
+\left[
+y(x,\mathcal{D})
+\right]\]</span></p>
+<p>and the <strong>average target</strong></p>
+<p><span class="math display">\[\bar{t}(x)
+=
+\mathbb{E}_{p(t\mid x)}[t].\]</span></p>
+<p>For squared loss, the expected generalisation error decomposes exactly as</p>
+<p><span class="math display">\[\boxed{
+\text{error}
+=
+(\text{bias})^2
++
+\text{variance}
++
+\text{noise}.
+}\]</span></p>
+<p>Bias measures the gap between the average model and the average target. Variance measures how much fitted models vary around the average model when the training dataset changes. Noise measures variation in the target itself.</p>
+<p>A model that is too simple often has high bias and low variance. A highly flexible model can have low bias but high variance. This gives us a useful way to think about underfitting and overfitting.</p>
+<p>The decomposition also helps us understand common interventions:</p>
+<ul>
+<li>more data mainly reduces variance</li>
+<li>a richer model usually reduces bias but may increase variance</li>
+<li>stronger regularisation usually increases bias but reduces variance</li>
+<li>averaging several fitted models can reduce variance</li>
+<li>noise is unaffected by all of these</li>
+</ul>
+<p>To choose model complexity, we cannot rely on training error because it rewards flexibility. Instead, we estimate performance using held-out data or cross-validation.</p>
+<p>For one independent validation set of <span class="math inline">V</span> examples and a fixed collection of <span class="math inline">M+1</span> candidate models, Hoeffding's inequality and the union bound give</p>
+<p><span class="math display">\[\varepsilon
+=
+\sqrt{
+\frac{
+\ln\left(2(M+1)/\delta\right)
+}{
+2V
+}
+}.\]</span></p>
+<p>With probability at least <span class="math inline">1-\delta</span>, every validation score is within <span class="math inline">\varepsilon</span> of its true risk, and the model selected by validation satisfies</p>
+<p><span class="math display">\[\boxed{
+R(h_{\hat{\jmath}})
+\leq
+\min_j R(h_j)
++
+2\varepsilon.
+}\]</span></p>
+<p>The main ideas to take away are:</p>
+<ol type="1">
+<li>Low training error is not the goal; low generalisation error is.</li>
+<li>Bias describes systematic error, variance describes sensitivity to the training sample, and noise comes from the data itself.</li>
+<li>Underfitting and overfitting are different problems and need different fixes</li>
+<li>Validation works by testing models on data that was not used to fit them.</li>
+<li>Model selection itself can overfit, so final performance should be measured on a separate test set.</li>
+</ol>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
