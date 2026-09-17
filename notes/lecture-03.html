@@ -24,6 +24,46 @@
 </nav>
 
 <main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h2"><a href="#from-regression-to-classification">From Regression to Classification</a></li>
+<li class="toc-h3"><a href="#why-not-use-least-squares">Why Not Use Least Squares?</a></li>
+<li class="toc-h2"><a href="#linear-decision-boundaries">Linear Decision Boundaries</a></li>
+<li class="toc-h2"><a href="#building-a-probabilistic-model-for-binary-labels">Building a Probabilistic Model for Binary Labels</a></li>
+<li class="toc-h3"><a href="#the-bernoulli-distribution">The Bernoulli Distribution</a></li>
+<li class="toc-h3"><a href="#from-a-linear-score-to-a-probability">From a Linear Score to a Probability</a></li>
+<li class="toc-h3"><a href="#why-the-sigmoid-log-odds">Why the Sigmoid? Log-Odds</a></li>
+<li class="toc-h2"><a href="#learning-logistic-regression">Learning Logistic Regression</a></li>
+<li class="toc-h3"><a href="#cross-entropy-from-maximum-likelihood">Cross-Entropy From Maximum Likelihood</a></li>
+<li class="toc-h3"><a href="#adding-a-prior-map-and-regularisation">Adding a Prior: MAP and Regularisation</a></li>
+<li class="toc-h2"><a href="#fitting-logistic-regression">Fitting Logistic Regression</a></li>
+<li class="toc-h3"><a href="#why-there-is-no-closed-form">Why There Is No Closed Form</a></li>
+<li class="toc-h3"><a href="#a-historical-aside-the-perceptron">A Historical Aside: The Perceptron</a></li>
+<li class="toc-h2"><a href="#perfectly-separable-data-and-maximum-likelihood">Perfectly Separable Data and Maximum Likelihood</a></li>
+<li class="toc-h2"><a href="#nonlinear-decision-boundaries">Nonlinear Decision Boundaries</a></li>
+<li class="toc-h2"><a href="#bayesian-logistic-regression">Bayesian Logistic Regression</a></li>
+<li class="toc-h3"><a href="#the-laplace-approximation">The Laplace Approximation</a></li>
+<li class="toc-h3"><a href="#bayesian-prediction">Bayesian Prediction</a></li>
+<li class="toc-h2"><a href="#from-probabilities-to-decisions">From Probabilities to Decisions</a></li>
+<li class="toc-h3"><a href="#choosing-a-threshold-from-costs">Choosing a Threshold From Costs</a></li>
+<li class="toc-h3"><a href="#roc-curves">ROC Curves</a></li>
+<li class="toc-h2"><a href="#extension-more-than-two-classes">Extension: More Than Two Classes</a></li>
+<li class="toc-h3"><a href="#the-categorical-distribution">The Categorical Distribution</a></li>
+<li class="toc-h3"><a href="#softmax-from-scores-to-probabilities">Softmax: From Scores to Probabilities</a></li>
+<li class="toc-h3"><a href="#categorical-cross-entropy">Categorical Cross-Entropy</a></li>
+<li class="toc-h2"><a href="#multi-class-and-multi-label-classification">Multi-Class and Multi-Label Classification</a></li>
+<li class="toc-h3"><a href="#multi-class-classification">Multi-Class Classification</a></li>
+<li class="toc-h3"><a href="#multi-label-classification">Multi-Label Classification</a></li>
+<li class="toc-h2"><a href="#connection-to-language-models">Connection to Language Models</a></li>
+<li class="toc-h3"><a href="#temperature">Temperature</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
 <article>
 <h1 id="lecture-3-linear-classification">Lecture 3: Linear Classification</h1>
 <h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
@@ -766,6 +806,36 @@ document.querySelectorAll('span.math').forEach(function(el){
   try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
   catch (e) { el.classList.add('math-error'); }
 });
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
 /* Theme: the same choice as the course page. */
 (function(){
   const root = document.documentElement, KEY = 'cs3264-theme';

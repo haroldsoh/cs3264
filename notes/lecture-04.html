@@ -24,6 +24,38 @@
 </nav>
 
 <main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h2"><a href="#discriminative-and-generative-models">Discriminative and Generative Models</a></li>
+<li class="toc-h3"><a href="#making-a-prediction">Making a Prediction</a></li>
+<li class="toc-h3"><a href="#why-model-more-than-we-need">Why Model More Than We Need?</a></li>
+<li class="toc-h2"><a href="#naive-bayes-giving-the-model-useful-structure">Naive Bayes: Giving the Model Useful Structure</a></li>
+<li class="toc-h3"><a href="#the-naive-assumption">The Naive Assumption</a></li>
+<li class="toc-h3"><a href="#gaussian-naive-bayes">Gaussian Naive Bayes</a></li>
+<li class="toc-h2"><a href="#learning-naive-bayes">Learning Naive Bayes</a></li>
+<li class="toc-h3"><a href="#learning-the-class-prior">Learning the Class Prior</a></li>
+<li class="toc-h3"><a href="#learning-the-feature-distributions">Learning the Feature Distributions</a></li>
+<li class="toc-h2"><a href="#prediction-with-the-fitted-model">Prediction With the Fitted Model</a></li>
+<li class="toc-h3"><a href="#practical-note-work-in-log-space">Practical Note: Work in Log Space</a></li>
+<li class="toc-h2"><a href="#more-than-two-classes-and-constrained-probabilities">More Than Two Classes and Constrained Probabilities</a></li>
+<li class="toc-h2"><a href="#bayesian-learning-priors-pseudo-counts-and-smoothing">Bayesian Learning: Priors, Pseudo-Counts, and Smoothing</a></li>
+<li class="toc-h2"><a href="#naive-bayes-for-text">Naive Bayes for Text</a></li>
+<li class="toc-h3"><a href="#the-zero-count-problem">The Zero-Count Problem</a></li>
+<li class="toc-h3"><a href="#laplace-smoothing">Laplace Smoothing</a></li>
+<li class="toc-h2"><a href="#what-a-generative-model-buys-us">What a Generative Model Buys Us</a></li>
+<li class="toc-h3"><a href="#missing-features">Missing Features</a></li>
+<li class="toc-h3"><a href="#generating-new-data">Generating New Data</a></li>
+<li class="toc-h2"><a href="#what-the-naive-assumption-costs">What the Naive Assumption Costs</a></li>
+<li class="toc-h2"><a href="#generative-and-discriminative-models-revisited">Generative and Discriminative Models Revisited</a></li>
+<li class="toc-h2"><a href="#a-broader-view-of-generative-models">A Broader View of Generative Models</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
 <article>
 <h1 id="lecture-4-introduction-to-generative-models-and-naive-bayes">Lecture 4: Introduction to Generative Models and Naive Bayes</h1>
 <h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
@@ -675,6 +707,36 @@ document.querySelectorAll('span.math').forEach(function(el){
   try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
   catch (e) { el.classList.add('math-error'); }
 });
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
 /* Theme: the same choice as the course page. */
 (function(){
   const root = document.documentElement, KEY = 'cs3264-theme';

@@ -27,3 +27,28 @@ main.notes{padding-block:44px 64px}
 .notes .katex{font-size:1.06em}
 .notes .katex-display{margin:0}
 .notes .math-error{color:var(--accent)}
+
+/* ---------- outline ---------- */
+.toc{font-family:var(--font-sans);font-size:14px;line-height:1.35;margin:0 auto 26px;max-width:760px}
+.toc details{border:1px solid var(--rule);border-radius:10px;background:var(--bg-alt);padding:10px 14px}
+.toc summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+.toc summary:hover{color:var(--accent)}
+.toc-list{list-style:none;margin:10px 0 2px;padding:0}
+.toc-list li{margin:0}
+.toc-list a{display:block;padding:4px 8px 4px 12px;border-left:2px solid transparent;color:var(--ink-soft);text-decoration:none}
+.toc-list a:hover{color:var(--accent)}
+.toc-list a.active{color:var(--ink);border-left-color:var(--accent);font-weight:600}
+.toc-h1 a{font-size:11.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-top:14px}
+.toc-h1:first-child a{margin-top:0}
+.toc-h1 a .katex{text-transform:none}
+.toc-h3 a{padding-left:26px;font-size:13px}
+.toc .katex{font-size:1em}
+@media (min-width:1100px){
+  main.wrap.notes{max-width:1160px;display:grid;grid-template-columns:250px minmax(0,760px);gap:0 56px;justify-content:center}
+  .notes article{margin:0;min-width:0}
+  .toc{position:sticky;top:84px;align-self:start;margin:6px 0 0;max-width:none}
+  .toc details{border:0;background:none;padding:0}
+  .toc summary{display:block;list-style:none;cursor:default;pointer-events:none;margin-bottom:4px}
+  .toc summary::-webkit-details-marker{display:none}
+  .toc-list{max-height:calc(100vh - 140px);overflow-y:auto;position:relative;margin-top:6px;padding-right:6px}
+}

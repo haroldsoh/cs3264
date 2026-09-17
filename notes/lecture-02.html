@@ -24,6 +24,47 @@
 </nav>
 
 <main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h2"><a href="#from-point-predictions-to-probability-distributions">From Point Predictions to Probability Distributions</a></li>
+<li class="toc-h2"><a href="#probability-preliminaries">Probability Preliminaries</a></li>
+<li class="toc-h3"><a href="#discrete-probabilities-and-continuous-densities">Discrete Probabilities and Continuous Densities</a></li>
+<li class="toc-h3"><a href="#the-gaussian-distribution">The Gaussian Distribution</a></li>
+<li class="toc-h2"><a href="#two-basic-probability-rules">Two Basic Probability Rules</a></li>
+<li class="toc-h3"><a href="#the-sum-rule">The Sum Rule</a></li>
+<li class="toc-h3"><a href="#the-product-rule">The Product Rule</a></li>
+<li class="toc-h2"><a href="#bayes-rule">Bayes' Rule</a></li>
+<li class="toc-h2"><a href="#independence">Independence</a></li>
+<li class="toc-h2"><a href="#maximum-likelihood-estimation">Maximum Likelihood Estimation</a></li>
+<li class="toc-h3"><a href="#a-gaussian-example">A Gaussian Example</a></li>
+<li class="toc-h3"><a href="#why-maximum-likelihood">Why Maximum Likelihood?</a></li>
+<li class="toc-h2"><a href="#multivariate-gaussians">Multivariate Gaussians</a></li>
+<li class="toc-h2"><a href="#linear-regression-a-probabilistic-approach">Linear Regression: A Probabilistic Approach</a></li>
+<li class="toc-h3"><a href="#the-distribution-of-the-target">The Distribution of the Target</a></li>
+<li class="toc-h3"><a href="#maximum-likelihood-for-linear-regression">Maximum Likelihood for Linear Regression</a></li>
+<li class="toc-h3"><a href="#the-noise-model-determines-the-loss">The Noise Model Determines the Loss</a></li>
+<li class="toc-h2"><a href="#from-maximum-likelihood-to-a-bayesian-model">From Maximum Likelihood to a Bayesian Model</a></li>
+<li class="toc-h3"><a href="#a-prior-over-the-weights">A Prior Over the Weights</a></li>
+<li class="toc-h2"><a href="#maximum-a-posteriori-estimation">Maximum A Posteriori Estimation</a></li>
+<li class="toc-h3"><a href="#the-regularization-hyperparameter-lambda">The regularization hyperparameter <span class="math inline">\lambda</span>.</a></li>
+<li class="toc-h1"><a href="#point-estimates-versus-distributions-over-parameters">Point Estimates Versus Distributions Over Parameters</a></li>
+<li class="toc-h2"><a href="#bayesian-linear-regression">Bayesian Linear Regression</a></li>
+<li class="toc-h2"><a href="#making-predictions-with-the-posterior">Making Predictions With the Posterior</a></li>
+<li class="toc-h2"><a href="#two-sources-of-predictive-uncertainty">Two Sources of Predictive Uncertainty</a></li>
+<li class="toc-h3"><a href="#aleatoric-uncertainty">Aleatoric Uncertainty</a></li>
+<li class="toc-h3"><a href="#epistemic-uncertainty">Epistemic Uncertainty</a></li>
+<li class="toc-h2"><a href="#mle-map-and-the-full-posterior">MLE, MAP, and the Full Posterior</a></li>
+<li class="toc-h3"><a href="#maximum-likelihood">Maximum Likelihood</a></li>
+<li class="toc-h3"><a href="#maximum-a-posteriori">Maximum A Posteriori</a></li>
+<li class="toc-h3"><a href="#full-bayesian-inference">Full Bayesian Inference</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
 <article>
 <h1 id="lecture-2-regression-ii--probabilistic-modelling">Lecture 2: Regression II — Probabilistic Modelling</h1>
 <h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
@@ -982,6 +1023,36 @@ document.querySelectorAll('span.math').forEach(function(el){
   try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
   catch (e) { el.classList.add('math-error'); }
 });
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
 /* Theme: the same choice as the course page. */
 (function(){
   const root = document.documentElement, KEY = 'cs3264-theme';

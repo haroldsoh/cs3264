@@ -24,6 +24,43 @@
 </nav>
 
 <main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h1"><a href="#what-is-machine-learning">What Is Machine Learning?</a></li>
+<li class="toc-h3"><a href="#a-recurring-picture">A recurring picture</a></li>
+<li class="toc-h1"><a href="#learning-from-examples">Learning From Examples</a></li>
+<li class="toc-h1"><a href="#types-of-machine-learning-problems">Types of Machine Learning Problems</a></li>
+<li class="toc-h2"><a href="#supervised-learning">Supervised learning</a></li>
+<li class="toc-h3"><a href="#classification">Classification</a></li>
+<li class="toc-h3"><a href="#regression">Regression</a></li>
+<li class="toc-h2"><a href="#unsupervised-learning">Unsupervised learning</a></li>
+<li class="toc-h2"><a href="#reinforcement-learning">Reinforcement learning</a></li>
+<li class="toc-h1"><a href="#regression-learning-a-relationship-from-data">Regression: Learning a Relationship From Data</a></li>
+<li class="toc-h2"><a href="#linear-regression">Linear Regression</a></li>
+<li class="toc-h3"><a href="#measuring-error-with-squared-loss">Measuring Error With Squared Loss</a></li>
+<li class="toc-h3"><a href="#least-squares-regression">Least-Squares Regression</a></li>
+<li class="toc-h3"><a href="#writing-linear-regression-with-vectors">Writing Linear Regression With Vectors</a></li>
+<li class="toc-h3"><a href="#deriving-the-least-squares-solution">Deriving the Least-Squares Solution</a></li>
+<li class="toc-h3"><a href="#a-geometric-view-of-least-squares">A Geometric View of Least Squares</a></li>
+<li class="toc-h3"><a href="#squared-error-and-outliers">Squared Error and Outliers</a></li>
+<li class="toc-h2"><a href="#nonlinear-regression-via-basis-functions">Nonlinear Regression via Basis Functions</a></li>
+<li class="toc-h2"><a href="#overfitting">Overfitting</a></li>
+<li class="toc-h3"><a href="#why-does-overfitting-happen">Why Does Overfitting Happen?</a></li>
+<li class="toc-h3"><a href="#what-overfitting-looks-like-in-polynomial-regression">What Overfitting Looks Like in Polynomial Regression</a></li>
+<li class="toc-h2"><a href="#regularisation">Regularisation</a></li>
+<li class="toc-h3"><a href="#ridge-regression">Ridge Regression</a></li>
+<li class="toc-h3"><a href="#what-does-the-regulariser-actually-do">What Does the Regulariser Actually Do?</a></li>
+<li class="toc-h2"><a href="#the-cost-of-the-closed-form-solution">The Cost of the Closed-Form Solution</a></li>
+<li class="toc-h2"><a href="#gradient-descent">Gradient Descent</a></li>
+<li class="toc-h2"><a href="#the-bigger-picture">The Bigger Picture</a></li>
+<li class="toc-h2"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
 <article>
 <h1 id="lecture-1-introduction-to-machine-learning-and-regression-i">Lecture 1: Introduction to Machine Learning and Regression I</h1>
 <h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
@@ -769,6 +806,36 @@ document.querySelectorAll('span.math').forEach(function(el){
   try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
   catch (e) { el.classList.add('math-error'); }
 });
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
 /* Theme: the same choice as the course page. */
 (function(){
   const root = document.documentElement, KEY = 'cs3264-theme';

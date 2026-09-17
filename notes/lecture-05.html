@@ -24,6 +24,43 @@
 </nav>
 
 <main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h2"><a href="#from-model-fitting-to-generalisation">From Model Fitting to Generalisation</a></li>
+<li class="toc-h2"><a href="#training-error-and-generalisation-error">Training Error and Generalisation Error</a></li>
+<li class="toc-h2"><a href="#the-training-dataset-is-random">The Training Dataset Is Random</a></li>
+<li class="toc-h2"><a href="#two-important-averages">Two Important Averages</a></li>
+<li class="toc-h3"><a href="#the-average-target">The Average Target</a></li>
+<li class="toc-h3"><a href="#the-average-model">The Average Model</a></li>
+<li class="toc-h2"><a href="#bias-variance-and-noise">Bias, Variance, and Noise</a></li>
+<li class="toc-h3"><a href="#bias">Bias</a></li>
+<li class="toc-h3"><a href="#variance">Variance</a></li>
+<li class="toc-h3"><a href="#noise">Noise</a></li>
+<li class="toc-h2"><a href="#the-bias-variance-decomposition">The Bias-Variance Decomposition</a></li>
+<li class="toc-h3"><a href="#first-split-variance">First Split: Variance</a></li>
+<li class="toc-h3"><a href="#second-split-bias-and-noise">Second Split: Bias and Noise</a></li>
+<li class="toc-h2"><a href="#how-to-read-the-decomposition">How to Read the Decomposition</a></li>
+<li class="toc-h3"><a href="#simple-models">Simple Models</a></li>
+<li class="toc-h3"><a href="#flexible-models">Flexible Models</a></li>
+<li class="toc-h2"><a href="#model-complexity-and-the-bias-variance-trade-off">Model Complexity and the Bias-Variance Trade-Off</a></li>
+<li class="toc-h3"><a href="#which-term-does-a-change-affect">Which Term Does a Change Affect?</a></li>
+<li class="toc-h2"><a href="#regularisation-through-the-bias-variance-lens">Regularisation Through the Bias-Variance Lens</a></li>
+<li class="toc-h2"><a href="#validation-and-cross-validation">Validation and Cross-Validation</a></li>
+<li class="toc-h3"><a href="#k-fold-cross-validation"><span class="math inline">K</span>-Fold Cross-Validation</a></li>
+<li class="toc-h2"><a href="#why-can-validation-work">Why Can Validation Work?</a></li>
+<li class="toc-h2"><a href="#hoeffdings-inequality">Hoeffding's Inequality</a></li>
+<li class="toc-h2"><a href="#evaluating-multiple-candidate-models">Evaluating Multiple Candidate Models</a></li>
+<li class="toc-h3"><a href="#the-union-bound">The Union Bound</a></li>
+<li class="toc-h2"><a href="#what-this-means-for-the-model-we-select">What This Means for the Model We Select</a></li>
+<li class="toc-h2"><a href="#cross-validation-and-the-simple-bound">Cross-Validation and the Simple Bound</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
 <article>
 <h1 id="lecture-5-overfitting-and-bias-variance">Lecture 5: Overfitting and Bias-Variance</h1>
 <h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
@@ -745,6 +782,36 @@ document.querySelectorAll('span.math').forEach(function(el){
   try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
   catch (e) { el.classList.add('math-error'); }
 });
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
 /* Theme: the same choice as the course page. */
 (function(){
   const root = document.documentElement, KEY = 'cs3264-theme';
