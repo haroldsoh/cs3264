@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 6 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 6: Computational Learning Theory">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-06.html" target="_blank" rel="noopener">Lecture 6 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h1"><a href="#is-learning-possible">Is Learning Possible?</a></li>
+<li class="toc-h2"><a href="#two-assumptions">Two Assumptions</a></li>
+<li class="toc-h2"><a href="#training-loss-and-generalisation-loss">Training Loss and Generalisation Loss</a></li>
+<li class="toc-h1"><a href="#from-verification-to-learning">From Verification to Learning</a></li>
+<li class="toc-h2"><a href="#a-fixed-hypothesis-is-easy-to-verify">A Fixed Hypothesis Is Easy to Verify</a></li>
+<li class="toc-h2"><a href="#verification-is-not-learning">Verification Is Not Learning</a></li>
+<li class="toc-h1"><a href="#uniform-convergence-and-finite-class-learning">Uniform Convergence and Finite-Class Learning</a></li>
+<li class="toc-h2"><a href="#the-finite-class-bound">The Finite-Class Bound</a></li>
+<li class="toc-h2"><a href="#reading-the-pac-guarantee">Reading the PAC Guarantee</a></li>
+<li class="toc-h3"><a href="#how-much-data-do-we-need">How Much Data Do We Need?</a></li>
+<li class="toc-h3"><a href="#generalisation-error-as-training-error-plus-a-penalty">Generalisation Error as Training Error Plus a Penalty</a></li>
+<li class="toc-h2"><a href="#what-does-the-bound-say-about-the-learned-hypothesis">What Does the Bound Say About the Learned Hypothesis?</a></li>
+<li class="toc-h2"><a href="#the-realizable-case">The Realizable Case</a></li>
+<li class="toc-h3"><a href="#realizable-and-non-realizable-problems">Realizable and Non-Realizable Problems</a></li>
+<li class="toc-h2"><a href="#what-the-finite-class-result-teaches-us">What the Finite-Class Result Teaches Us</a></li>
+<li class="toc-h1"><a href="#beyond-finite-hypothesis-classes">Beyond Finite Hypothesis Classes</a></li>
+<li class="toc-h2"><a href="#count-behaviours-not-hypotheses">Count Behaviours, Not Hypotheses</a></li>
+<li class="toc-h2"><a href="#weigh-hypotheses-instead-of-counting-them-equally">Weigh Hypotheses Instead of Counting Them Equally</a></li>
+<li class="toc-h2"><a href="#main-lessons-why-these-results-are-useful-even-when-the-bound-is-loose">Main Lessons: Why These Results Are Useful Even When the Bound Is Loose</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
+<article>
+<h1 id="lecture-6-computational-learning-theory">Lecture 6: Computational Learning Theory</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In Lecture 5, we asked why a model that fits the training data should work on new data. We studied this question using the bias-variance decomposition and then used held-out data to estimate generalisation error.</p>
+<p>In this lecture, we ask a more basic question:</p>
+<blockquote>
+<p><strong>What can the training data itself tell us about performance on unseen data?</strong></p>
+</blockquote>
+<p>The first answer is: without assumptions, very little. A model can fit every observed example perfectly while behaving in many different ways on inputs that were never observed. To learn from a finite dataset, we need some reason to believe that the observed examples tell us something about future examples.</p>
+<p>We will make two main assumptions:</p>
+<ol type="1">
+<li>The training examples are drawn independently from one fixed distribution <span class="math inline">p(x,t)</span>.</li>
+<li>We restrict ourselves to a hypothesis class <span class="math inline">\mathcal{H}</span> chosen before seeing the data.</li>
+</ol>
+<p>For one hypothesis <span class="math inline">h</span> fixed before the data is drawn, Hoeffding's inequality tells us that its training error is likely to be close to its generalisation error. Learning is harder because we use the training data to search through <span class="math inline">\mathcal{H}</span> and choose a hypothesis with small training error. The selected hypothesis therefore depends on the data.</p>
+<p>The main idea of the lecture is to control <strong>all hypotheses at once</strong>. If every hypothesis in <span class="math inline">\mathcal{H}</span> has training error close to generalisation error, then the hypothesis chosen by the learning algorithm is also covered. For a finite hypothesis class, Hoeffding's inequality together with the union bound gives</p>
+<p><span class="math display">\[\Pr
+\left(
+\exists h\in\mathcal{H}:
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+&gt;
+\varepsilon
+\right)
+\leq
+2|\mathcal{H}|e^{-2N\varepsilon^2}.\]</span></p>
+<p>This is our first example of a <strong>PAC</strong>, or probably approximately correct, guarantee. It tells us how the amount of data, the size of the hypothesis class, the allowed error <span class="math inline">\varepsilon</span>, and the failure probability <span class="math inline">\delta</span> are related.</p>
+<p>Finally, we will briefly see what happens when <span class="math inline">\mathcal{H}</span> is infinite. Counting hypotheses no longer works, but we can replace the raw number of hypotheses with better measures of what the class can actually do on a finite dataset. We will also see the basic idea behind PAC-Bayes, where a prior gives different hypotheses different complexity costs.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, the main things you should be able to do are:</p>
+<ul>
+<li>explain why a finite training set cannot determine behaviour on unseen inputs without additional assumptions</li>
+<li>state the assumptions used in our finite-class learning analysis</li>
+<li>distinguish between training loss <span class="math inline">L_{\mathcal{D}}(h)</span> and generalisation loss <span class="math inline">L_p(h)</span></li>
+<li>explain why Hoeffding's inequality applies directly to a hypothesis fixed before the data is drawn (and why it does not directly apply to the hypothesis selected using the same training data)</li>
+<li>explain what <strong>uniform convergence</strong> means</li>
+<li>derive the finite-class generalisation bound using Hoeffding's inequality and the union bound</li>
+<li>explain how the bound depends on <span class="math inline">N</span>, <span class="math inline">|\mathcal{H}|</span>, <span class="math inline">\varepsilon</span>, and <span class="math inline">\delta</span></li>
+<li>derive the guarantee for the hypothesis that minimises training error</li>
+<li>distinguish between the realizable and non-realizable cases</li>
+</ul>
+<p>We will first ask whether learning is possible at all. We will then analyse a finite hypothesis class carefully. The last section gives a short view of how the same ideas extend beyond finite classes.</p>
+<hr />
+<h1 id="is-learning-possible">Is Learning Possible?</h1>
+<p>Suppose the input consists of three binary values,</p>
+<p><span class="math display">\[x\in\{0,1\}^3,\]</span></p>
+<p>so there are only eight possible inputs. Imagine that our training dataset contains five of these eight inputs and their labels.</p>
+<p>Now suppose we consider <strong>every possible binary classifier</strong></p>
+<p><span class="math display">\[\mathcal{H}
+=
+\left\{
+h:\{0,1\}^3\rightarrow\{0,1\}
+\right\}.\]</span></p>
+<p>There may be many hypotheses that agree perfectly with all five training examples. Yet they can assign completely different labels to the three inputs we have not seen.</p>
+<p>The demonstration on <strong><a class="slide-link" href="../slides/lecture-06.html#9" target="_blank" rel="noopener">Slide 9</a></strong> shows this directly. Every hypothesis displayed has zero training error, but together they produce every possible labelling of the unseen inputs.</p>
+<p>The lesson is simple:</p>
+<blockquote>
+<p><strong>A perfect fit to the observed data does not, by itself, tell us what should happen on unobserved data.</strong></p>
+</blockquote>
+<p>We therefore need assumptions that connect the sample we observed to the examples we may see in the future.</p>
+<h2 id="two-assumptions">Two Assumptions</h2>
+<p>For the rest of the main analysis, we make two assumptions.</p>
+<p>First, the data is sampled independently from one fixed distribution:</p>
+<p><span class="math display">\[(x_n,t_n)
+\sim
+p(x,t),
+\qquad
+n=1,\ldots,N.\]</span></p>
+<p>This means that the training examples and future examples come from the same underlying population.</p>
+<p>Second, we choose a <strong>hypothesis class</strong> <span class="math inline">\mathcal{H}</span> before seeing the data. The learner searches only inside this class.</p>
+<p>For example, <span class="math inline">\mathcal{H}</span> might be all decision stumps using a fixed set of features, all polynomials up to some fixed degree, or a finite collection of classifiers prepared in advance.</p>
+<p>The first assumption lets the training data tell us something about future data. The second controls how many different explanations the learner is allowed to choose from.</p>
+<p>We will not obtain a statement that is always exactly correct. Instead, we will obtain a statement that is <strong>probably approximately correct</strong>.</p>
+<hr />
+<h2 id="training-loss-and-generalisation-loss">Training Loss and Generalisation Loss</h2>
+<p>From this point, the lecture focuses on binary classification with the <strong>0-1 loss</strong>:</p>
+<p><span class="math display">\[\ell(h(x),t)
+=
+\mathbb{1}[h(x)\neq t].\]</span></p>
+<p>The loss is 1 if the classifier is wrong and 0 if it is correct.</p>
+<p>For a dataset</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(x_n,t_n)\}_{n=1}^{N},\]</span></p>
+<p>the <strong>training loss</strong> is</p>
+<p><span class="math display">\[\boxed{
+L_{\mathcal{D}}(h)
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\ell(h(x_n),t_n).
+}\]</span></p>
+<p>This is simply the fraction of training examples that <span class="math inline">h</span> misclassifies.</p>
+<p>The <strong>generalisation loss</strong> is</p>
+<p><span class="math display">\[\boxed{
+L_p(h)
+=
+\mathbb{E}_{p(x,t)}
+\left[
+\ell(h(x),t)
+\right].
+}\]</span></p>
+<p>For 0-1 loss, this is the probability that <span class="math inline">h</span> misclassifies a fresh example from the underlying distribution.</p>
+<p>We can compute <span class="math inline">L_{\mathcal{D}}(h)</span> from the training data. We cannot directly compute <span class="math inline">L_p(h)</span> because we do not know <span class="math inline">p(x,t)</span>. Our goal is therefore to understand when</p>
+<p><span class="math display">\[L_{\mathcal{D}}(h)
+\approx
+L_p(h).\]</span></p>
+<hr />
+<h1 id="from-verification-to-learning">From Verification to Learning</h1>
+<h2 id="a-fixed-hypothesis-is-easy-to-verify">A Fixed Hypothesis Is Easy to Verify</h2>
+<p>Suppose we choose one hypothesis <span class="math inline">h</span> <strong>before</strong> drawing the training data.</p>
+<p>For each training example, define</p>
+<p><span class="math display">\[Z_n
+=
+\ell(h(x_n),t_n).\]</span></p>
+<p>Each <span class="math inline">Z_n</span> is either 0 or 1, and</p>
+<p><span class="math display">\[\mathbb{E}[Z_n]
+=
+L_p(h).\]</span></p>
+<p>The training loss is their average:</p>
+<p><span class="math display">\[L_{\mathcal{D}}(h)
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+Z_n.\]</span></p>
+<p>Since the examples are independent and <span class="math inline">Z_n\in[0,1]</span>, Hoeffding's inequality gives</p>
+<p><span class="math display">\[\boxed{
+\Pr
+\left(
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+&gt;
+\varepsilon
+\right)
+\leq
+2e^{-2N\varepsilon^2}.
+}\]</span></p>
+<p>So, for one hypothesis fixed in advance, the training loss is unlikely to be very far from the generalisation loss. This is similar to the Hot-or-Not example from Lecture 5. There we estimated an unknown population fraction using the average of a finite sample. Here, each example tells us whether a fixed classifier was right or wrong, and the sample average estimates its true error rate.</p>
+<h2 id="verification-is-not-learning">Verification Is Not Learning</h2>
+<p>There is an important catch. Hoeffding's inequality above applies to a hypothesis that was fixed <strong>before</strong> the data was drawn. But a learning algorithm does the opposite:</p>
+<ol type="1">
+<li>draw the dataset <span class="math inline">\mathcal{D}</span></li>
+<li>evaluate or fit many hypotheses using <span class="math inline">\mathcal{D}</span></li>
+<li>choose one that performs well on <span class="math inline">\mathcal{D}</span></li>
+</ol>
+<p>For empirical risk minimisation,</p>
+<p><span class="math display">\[\boxed{
+\hat{h}
+=
+\operatorname*{arg\,min}_{h\in\mathcal{H}}
+L_{\mathcal{D}}(h).
+}\]</span></p>
+<p>The selected hypothesis <span class="math inline">\hat{h}</span> depends on the dataset. We cannot simply take the fixed-<span class="math inline">h</span> Hoeffding bound and replace <span class="math inline">h</span> with <span class="math inline">\hat{h}</span>.</p>
+<p>This is the same selection effect we have seen before. Each fixed hypothesis has a noisy estimate of its true performance. When we search over many hypotheses and keep the one with the smallest training error, the search can favour both genuinely good hypotheses and hypotheses that happened to look unusually good on this particular sample.</p>
+<p>The hiring example on <strong><a class="slide-link" href="../slides/lecture-06.html#24" target="_blank" rel="noopener">Slide 24</a></strong> gives the same intuition: if many candidates sit a noisy exam and we hire the top scorer, we tend to select someone whose score contains both ability and favourable luck.</p>
+<p>The question is therefore:</p>
+<blockquote>
+<p><strong>How can we make a statement that remains valid even after the data is used to choose the hypothesis?</strong></p>
+</blockquote>
+<hr />
+<h1 id="uniform-convergence-and-finite-class-learning">Uniform Convergence and Finite-Class Learning</h1>
+<p>We do not know in advance which hypothesis the learner will choose. A simple solution is to ask for a statement that covers <strong>every hypothesis at once</strong>:</p>
+<p><span class="math display">\[\boxed{
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+\leq
+\varepsilon
+\qquad
+\text{for every }h\in\mathcal{H}.
+}\]</span></p>
+<p>This property is called <strong>uniform convergence</strong>.</p>
+<p>If it holds, then it automatically holds for <span class="math inline">\hat{h}</span>, regardless of which hypothesis the learning algorithm selected from <span class="math inline">\mathcal{H}</span>.</p>
+<p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-06.html#26" target="_blank" rel="noopener">Slide 26</a></strong> shows this idea. A dataset is good when all hypotheses have empirical errors close to their true errors. A dataset is bad when even one hypothesis has a large gap.</p>
+<p>For a finite hypothesis class, we can control this bad event using two tools we already know:</p>
+<ol type="1">
+<li>Hoeffding's inequality for one fixed hypothesis</li>
+<li>the union bound to cover the whole class</li>
+</ol>
+<hr />
+<h2 id="the-finite-class-bound">The Finite-Class Bound</h2>
+<p>For each hypothesis <span class="math inline">h\in\mathcal{H}</span>, define the bad event</p>
+<p><span class="math display">\[B_h
+=
+\left\{
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+&gt;
+\varepsilon
+\right\}.\]</span></p>
+<p>For one fixed hypothesis, Hoeffding gives</p>
+<p><span class="math display">\[\Pr(B_h)
+\leq
+2e^{-2N\varepsilon^2}.\]</span></p>
+<p>The event that uniform convergence fails is the event that <strong>at least one</strong> hypothesis is bad:</p>
+<p><span class="math display">\[\bigcup_{h\in\mathcal{H}} B_h.\]</span></p>
+<p>Using the union bound,</p>
+<p><span class="math display">\[\Pr
+\left(
+\bigcup_{h\in\mathcal{H}} B_h
+\right)
+\leq
+\sum_{h\in\mathcal{H}}
+\Pr(B_h).\]</span></p>
+<p>If <span class="math inline">\mathcal{H}</span> contains <span class="math inline">|\mathcal{H}|</span> hypotheses, then</p>
+<p><span class="math display">\[\boxed{
+\Pr
+\left(
+\exists h\in\mathcal{H}:
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+&gt;
+\varepsilon
+\right)
+\leq
+2|\mathcal{H}|e^{-2N\varepsilon^2}.
+}\]</span></p>
+<p>This is the main finite-class result. The important step is not very complicated but can be confusing if you are new to this topic. Go slow and remember that Hoeffding controls one hypothesis. The union bound is used to analyze searching over the whole class. The union bound is "coarse" since we are overcounting.</p>
+<hr />
+<h2 id="reading-the-pac-guarantee">Reading the PAC Guarantee</h2>
+<p>Let <span class="math inline">\delta</span> be the probability that we are willing to assign to the bad event. We ask for</p>
+<p><span class="math display">\[2|\mathcal{H}|e^{-2N\varepsilon^2}
+\leq
+\delta.\]</span></p>
+<p>Then, with probability at least <span class="math inline">1-\delta</span> over the random draw of the training set,</p>
+<p><span class="math display">\[\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+\leq
+\varepsilon
+\qquad
+\text{for every }h\in\mathcal{H}.\]</span></p>
+<p>This is the basic PAC language:</p>
+<ul>
+<li><strong>approximately correct:</strong> the gap is at most <span class="math inline">\varepsilon</span></li>
+<li><strong>probably:</strong> the statement holds with probability at least <span class="math inline">1-\delta</span></li>
+</ul>
+<p>The probability is over which training dataset we happen to draw.</p>
+<h3 id="how-much-data-do-we-need">How Much Data Do We Need?</h3>
+<p>Starting from</p>
+<p><span class="math display">\[2|\mathcal{H}|e^{-2N\varepsilon^2}
+\leq
+\delta,\]</span></p>
+<p>solve for <span class="math inline">N</span>:</p>
+<p><span class="math display">\[\boxed{
+N
+\geq
+\frac{1}{2\varepsilon^2}
+\ln
+\left(
+\frac{2|\mathcal{H}|}{\delta}
+\right).
+}\]</span></p>
+<p>This is a <strong>sample complexity</strong> result. It tells us how many training examples are sufficient for the finite-class guarantee.</p>
+<p>There are three useful things to notice. Asking for a smaller error tolerance is expensive because <span class="math inline">N</span> grows as <span class="math inline">1/\varepsilon^2</span>. Halving <span class="math inline">\varepsilon</span> requires four times as much data. The size of the hypothesis class appears only inside a logarithm, so a larger class costs more data, but only logarithmically. Higher confidence also costs only logarithmically through <span class="math inline">\ln(1/\delta)</span>.</p>
+<p>The interactive plot on <strong><a class="slide-link" href="../slides/lecture-06.html#31" target="_blank" rel="noopener">Slide 31</a></strong> is useful for seeing how these quantities affect the required sample size.</p>
+<h3 id="generalisation-error-as-training-error-plus-a-penalty">Generalisation Error as Training Error Plus a Penalty</h3>
+<p>We can instead solve the same inequality for <span class="math inline">\varepsilon</span>:</p>
+<p><span class="math display">\[\boxed{
+\varepsilon
+=
+\sqrt{
+\frac{
+\ln(2|\mathcal{H}|/\delta)
+}{
+2N
+}
+}.
+}\]</span></p>
+<p>Therefore, with probability at least <span class="math inline">1-\delta</span>, every hypothesis satisfies</p>
+<p><span class="math display">\[\boxed{
+L_p(h)
+\leq
+L_{\mathcal{D}}(h)
++
+\sqrt{
+\frac{
+\ln(2|\mathcal{H}|/\delta)
+}{
+2N
+}
+}.
+}\]</span></p>
+<p>This has a useful interpretation:</p>
+<p><span class="math display">\[\boxed{
+\text{generalisation loss}
+\leq
+\text{training loss}
++
+\text{complexity penalty}.
+}\]</span></p>
+<p>The penalty grows with the size of the hypothesis class and shrinks with the amount of data. This gives us a formal version of an idea that has appeared throughout the course: a flexible model can obtain a smaller training error, but searching a larger set of possibilities also makes it easier to fit accidents in the training sample.</p>
+<hr />
+<h2 id="what-does-the-bound-say-about-the-learned-hypothesis">What Does the Bound Say About the Learned Hypothesis?</h2>
+<p>Let</p>
+<p><span class="math display">\[\hat{h}
+=
+\operatorname*{arg\,min}_{h\in\mathcal{H}}
+L_{\mathcal{D}}(h)\]</span></p>
+<p>be the hypothesis chosen by empirical risk minimisation.</p>
+<p>Let</p>
+<p><span class="math display">\[h^*
+=
+\operatorname*{arg\,min}_{h\in\mathcal{H}}
+L_p(h)\]</span></p>
+<p>be the best hypothesis in the class according to the true generalisation loss.</p>
+<p>Suppose uniform convergence holds, so every hypothesis satisfies</p>
+<p><span class="math display">\[\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+\leq
+\varepsilon.\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[L_p(\hat{h})
+\leq
+L_{\mathcal{D}}(\hat{h})
++
+\varepsilon.\]</span></p>
+<p>Since <span class="math inline">\hat{h}</span> has the smallest training loss,</p>
+<p><span class="math display">\[L_{\mathcal{D}}(\hat{h})
+\leq
+L_{\mathcal{D}}(h^*).\]</span></p>
+<p>And since uniform convergence also holds for <span class="math inline">h^*</span>,</p>
+<p><span class="math display">\[L_{\mathcal{D}}(h^*)
+\leq
+L_p(h^*)
++
+\varepsilon.\]</span></p>
+<p>Combining these gives</p>
+<p><span class="math display">\[\boxed{
+L_p(\hat{h})
+\leq
+L_p(h^*)
++
+2\varepsilon.
+}\]</span></p>
+<p>So the learner's hypothesis has generalisation loss at most <span class="math inline">2\varepsilon</span> worse than the best hypothesis in the class.</p>
+<p>Note that the guarantee compares <span class="math inline">\hat{h}</span> with the <strong>best model available inside <span class="math inline">\mathcal{H}</span></strong>. If every hypothesis in <span class="math inline">\mathcal{H}</span> is poor, learning cannot fix the problem. This is the same basic issue we called high bias in Lecture 5.</p>
+<hr />
+<h2 id="the-realizable-case">The Realizable Case</h2>
+<p>There is a special case where we can obtain a stronger result.</p>
+<p>The problem is <strong>realizable</strong> if there is some hypothesis in the class that is always correct:</p>
+<p><span class="math display">\[L_p(h^*)=0.\]</span></p>
+<p>If such a hypothesis exists, it also has zero training error on every dataset. Suppose our learner returns some hypothesis <span class="math inline">\hat{h}</span> with zero training error.</p>
+<p>Call a hypothesis <strong>bad</strong> if</p>
+<p><span class="math display">\[L_p(h)&gt;\varepsilon.\]</span></p>
+<p>A bad hypothesis has probability at least <span class="math inline">\varepsilon</span> of making a mistake on a fresh example. Therefore, the probability that it makes <strong>no</strong> mistakes on <span class="math inline">N</span> independent training examples is</p>
+<p><span class="math display">\[(1-L_p(h))^N
+&lt;
+(1-\varepsilon)^N.\]</span></p>
+<p>Using</p>
+<p><span class="math display">\[1-\varepsilon
+\leq
+e^{-\varepsilon},\]</span></p>
+<p>we get</p>
+<p><span class="math display">\[(1-\varepsilon)^N
+\leq
+e^{-\varepsilon N}.\]</span></p>
+<p>So one bad hypothesis has probability at most <span class="math inline">e^{-\varepsilon N}</span> of looking perfect on the training set. Using the union bound over the whole finite class,</p>
+<p><span class="math display">\[\boxed{
+\Pr
+\left(
+L_p(\hat{h})&gt;\varepsilon
+\right)
+\leq
+|\mathcal{H}|e^{-\varepsilon N}.
+}\]</span></p>
+<p>To make this probability at most <span class="math inline">\delta</span>, it is sufficient that</p>
+<p><span class="math display">\[\boxed{
+N
+\geq
+\frac{1}{\varepsilon}
+\ln
+\left(
+\frac{|\mathcal{H}|}{\delta}
+\right).
+}\]</span></p>
+<p>Compare this with the general finite-class result:</p>
+<p><span class="math display">\[N
+\geq
+\frac{1}{2\varepsilon^2}
+\ln
+\left(
+\frac{2|\mathcal{H}|}{\delta}
+\right).\]</span></p>
+<p>The realizable case depends on <span class="math inline">1/\varepsilon</span> rather than <span class="math inline">1/\varepsilon^2</span>. The stronger assumption lets us obtain a stronger guarantee. The interactive comparison on <strong><a class="slide-link" href="../slides/lecture-06.html#38" target="_blank" rel="noopener">Slide 38</a></strong> shows the difference.</p>
+<h3 id="realizable-and-non-realizable-problems">Realizable and Non-Realizable Problems</h3>
+<p>It is useful to keep the two settings separate.</p>
+<p>In the <strong>realizable</strong> setting,</p>
+<p><span class="math display">\[\min_{h\in\mathcal{H}}L_p(h)=0.\]</span></p>
+<p>The class contains a perfect classifier.</p>
+<p>In the <strong>non-realizable</strong>, or <strong>agnostic</strong>, setting,</p>
+<p><span class="math display">\[\min_{h\in\mathcal{H}}L_p(h)&gt;0.\]</span></p>
+<p>No classifier in the class is perfect. We then aim to learn something close to the best hypothesis available in the class:</p>
+<p><span class="math display">\[L_p(\hat{h})
+\approx
+\min_{h\in\mathcal{H}}L_p(h).\]</span></p>
+<p>The earlier uniform-convergence result covers this more general case.</p>
+<hr />
+<h2 id="what-the-finite-class-result-teaches-us">What the Finite-Class Result Teaches Us</h2>
+<p>Before moving to more advanced ideas, it is useful to separate the main lessons from the algebra.</p>
+<p>A finite dataset cannot determine arbitrary behaviour outside the observed points. We assumed that examples come from one fixed distribution and that the learner searches within a restricted hypothesis class.</p>
+<p>For one fixed hypothesis, Hoeffding is enough. Once the learner searches a class, we need a statement that remains true for every hypothesis. For a finite class, the statistical cost of this search appears as</p>
+<p><span class="math display">\[\ln|\mathcal{H}|.\]</span></p>
+<p>More data decreases the generalisation penalty approximately as</p>
+<p><span class="math display">\[\frac{1}{\sqrt{N}}.\]</span></p>
+<p>Finally, the result is a worst-case <strong>upper bound</strong>. It does not say the actual gap is equal to the penalty. The true generalisation error can be much smaller.</p>
+<p>This point becomes important for modern machine learning, where simple worst-case capacity measures can give bounds that are technically correct but not useful.</p>
+<hr />
+<h1 id="beyond-finite-hypothesis-classes">Beyond Finite Hypothesis Classes</h1>
+<p>The finite-class proof has an obvious problem for many models we actually use.</p>
+<p>A linear classifier in two dimensions has parameters</p>
+<p><span class="math display">\[w_1,w_2,b\in\mathbb{R}.\]</span></p>
+<p>There are infinitely many possible parameter values, so</p>
+<p><span class="math display">\[|\mathcal{H}|=\infty.\]</span></p>
+<p>If we put this into the finite-class bound, the penalty becomes infinite. The statement remains true, but tells us nothing.</p>
+<p>The problem is not necessarily that the model is impossible to learn. The problem is that counting every parameter setting separately is wasteful. Many different parameter settings behave identically, or almost identically, on a finite dataset.</p>
+<p>The last part of the lecture introduces two ways to improve this counting idea. Note: This part is extended material for those of you interested in machine learning theory; it is <strong>not examinable</strong> in CS3264.</p>
+<h2 id="count-behaviours-not-hypotheses">Count Behaviours, Not Hypotheses</h2>
+<p>Take <span class="math inline">N</span> fixed input points. Even an infinite hypothesis class can produce only finitely many binary labellings of those points.</p>
+<p>A particular labelling is called a <strong>dichotomy</strong>.</p>
+<p>The <strong>growth function</strong> is the largest number of different labellings the class can produce on any set of <span class="math inline">N</span> points:</p>
+<p><span class="math display">\[\boxed{
+m_{\mathcal{H}}(N)
+=
+\max_{x_1,\ldots,x_N}
+\left|
+\left\{
+(h(x_1),\ldots,h(x_N))
+:
+h\in\mathcal{H}
+\right\}
+\right|.
+}\]</span></p>
+<p>Since <span class="math inline">N</span> binary labels have at most <span class="math inline">2^N</span> possible assignments,</p>
+<p><span class="math display">\[m_{\mathcal{H}}(N)
+\leq
+2^N.\]</span></p>
+<p>The useful question is whether the class can actually realise all of these labellings.</p>
+<p>For <strong>positive rays</strong> on the real line,</p>
+<p><span class="math display">\[h_a(x)
+=
+\operatorname{sign}(x-a),\]</span></p>
+<p>the threshold <span class="math inline">a</span> can fall into one of <span class="math inline">N+1</span> gaps between the points. Therefore,</p>
+<p><span class="math display">\[m_{\mathcal{H}}(N)=N+1.\]</span></p>
+<p>For <strong>intervals</strong> on the line, the slides show</p>
+<p><span class="math display">\[m_{\mathcal{H}}(N)
+=
+\frac{1}{2}N(N+1)+1.\]</span></p>
+<p>For affine linear classifiers in the plane, for points in general position, the slides give</p>
+<p><span class="math display">\[m_{\mathcal{H}}(N)
+=
+N^2-N+2.\]</span></p>
+<p>All three classes contain infinitely many hypotheses, but the number of different labellings they can produce on <span class="math inline">N</span> points grows only polynomially. The demonstrations on <strong><a class="slide-link" href="../slides/lecture-06.html#47" target="_blank" rel="noopener">Slides 47-50</a></strong> show these examples.</p>
+<p>A more advanced generalisation bound can replace <span class="math inline">|\mathcal{H}|</span> with the growth function. The slides give the following form:</p>
+<p><span class="math display">\[\boxed{
+L_p(h)
+\leq
+L_{\mathcal{D}}(h)
++
+\sqrt{
+\frac{8}{N}
+\ln
+\left(
+\frac{
+4m_{\mathcal{H}}(2N)
+}{
+\delta
+}
+\right)
+}
+}\]</span></p>
+<p>for every <span class="math inline">h\in\mathcal{H}</span> with probability at least <span class="math inline">1-\delta</span>.</p>
+<p>You do not need to derive this result here. The important idea is:</p>
+<blockquote>
+<p><strong>For an infinite class, count how many different behaviours it can produce on finite data, rather than how many parameter settings it contains.</strong></p>
+</blockquote>
+<p>The VC dimension and Rademacher complexity develop this idea further, but these are beyond the scope of this course.</p>
+<h2 id="weigh-hypotheses-instead-of-counting-them-equally">Weigh Hypotheses Instead of Counting Them Equally</h2>
+<p>There is another limitation in the finite-class proof. The union bound gave every hypothesis the same share of the failure probability.</p>
+<p>Suppose we instead assign a prior probability <span class="math inline">P(h)</span> to each hypothesis, where</p>
+<p><span class="math display">\[\sum_h P(h)=1.\]</span></p>
+<p>We can allocate hypothesis <span class="math inline">h</span> a failure budget <span class="math inline">\delta P(h)</span>. Applying Hoeffding with this budget gives a bound of the form</p>
+<p><span class="math display">\[\boxed{
+L_p(h)
+\leq
+L_{\mathcal{D}}(h)
++
+\sqrt{
+\frac{
+\ln(1/P(h))
++
+\ln(2/\delta)
+}{
+2N
+}
+}.
+}\]</span></p>
+<p>A hypothesis with large prior probability receives a smaller complexity penalty. A hypothesis that was considered very unlikely before seeing the data pays a larger penalty.</p>
+<p>This connects learning theory with an idea we saw in Bayesian modelling: a <strong>prior</strong> can express which explanations we consider simple or plausible before observing the data.</p>
+<p>For a continuous parameter space, however, a single exact hypothesis often has probability mass zero under a continuous prior. PAC-Bayes handles this by placing a prior distribution <span class="math inline">P</span> over hypotheses and comparing it with a data-dependent distribution <span class="math inline">Q</span> over hypotheses.</p>
+<p>One representative bound shown in the slides is</p>
+<p><span class="math display">\[\boxed{
+\mathbb{E}_{h\sim Q}[L_p(h)]
+\leq
+\mathbb{E}_{h\sim Q}[L_{\mathcal{D}}(h)]
++
+\sqrt{
+\frac{
+\mathrm{KL}(Q\|P)
++
+\ln(2\sqrt{N}/\delta)
+}{
+2N
+}
+}.
+}\]</span></p>
+<p>The key term is</p>
+<p><span class="math display">\[\mathrm{KL}(Q\|P),\]</span></p>
+<p>which measures how far the data-dependent distribution <span class="math inline">Q</span> has moved from the prior <span class="math inline">P</span>.</p>
+<p>We will not develop PAC-Bayes further in this course. The main idea to remember is that complexity need not be measured only by counting models. It can also be measured by how much the learning process moved away from a prior belief.</p>
+<hr />
+<h2 id="main-lessons-why-these-results-are-useful-even-when-the-bound-is-loose">Main Lessons: Why These Results Are Useful Even When the Bound Is Loose</h2>
+<p>The numerical value of a worst-case generalisation bound can be too large to be useful, especially for very flexible models. That does not make the argument pointless.</p>
+<p>The finite-class proof teaches us a general pattern:</p>
+<ol type="1">
+<li>identify the quantity measured on the sample</li>
+<li>ask how far it can be from its population value</li>
+<li>account for the fact that learning searched over many possible hypotheses</li>
+<li>express the resulting penalty using some measure of model complexity</li>
+</ol>
+<p>Different learning theories use different ways to perform the third step. The finite-class argument uses <span class="math inline">\ln|\mathcal{H}|</span>. Growth-function and VC arguments count possible behaviours on data. PAC-Bayes uses a prior and a divergence from that prior.</p>
+<p>The slides use modern overparameterised neural networks to motivate why crude measures such as raw parameter count can fail to explain observed generalisation. The broader lesson is that <strong>the right notion of model complexity depends on the learning problem and the learning algorithm</strong>.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>A finite training set does not determine what a model should do on unseen inputs. To make learning possible, we assumed that the data consists of independent samples from one fixed distribution and that the learner searches inside a hypothesis class <span class="math inline">\mathcal{H}</span> chosen before the data.</p>
+<p>For binary classification, the training loss is</p>
+<p><span class="math display">\[L_{\mathcal{D}}(h)
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\mathbb{1}[h(x_n)\neq t_n],\]</span></p>
+<p>while the generalisation loss is</p>
+<p><span class="math display">\[L_p(h)
+=
+\mathbb{E}_{p(x,t)}
+\left[
+\mathbb{1}[h(x)\neq t]
+\right].\]</span></p>
+<p>For one hypothesis fixed before the dataset is drawn, Hoeffding's inequality gives</p>
+<p><span class="math display">\[\Pr
+\left(
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+&gt;
+\varepsilon
+\right)
+\leq
+2e^{-2N\varepsilon^2}.\]</span></p>
+<p>Learning is harder because the hypothesis is selected using the training data. We therefore asked for <strong>uniform convergence</strong>, so that the training and generalisation losses are close for every hypothesis simultaneously.</p>
+<p>For a finite class, Hoeffding's inequality and the union bound give</p>
+<p><span class="math display">\[\boxed{
+\Pr
+\left(
+\exists h\in\mathcal{H}:
+\left|
+L_{\mathcal{D}}(h)-L_p(h)
+\right|
+&gt;
+\varepsilon
+\right)
+\leq
+2|\mathcal{H}|e^{-2N\varepsilon^2}.
+}\]</span></p>
+<p>To make the failure probability at most <span class="math inline">\delta</span>, it is sufficient that</p>
+<p><span class="math display">\[\boxed{
+N
+\geq
+\frac{1}{2\varepsilon^2}
+\ln
+\left(
+\frac{2|\mathcal{H}|}{\delta}
+\right).
+}\]</span></p>
+<p>Equivalently, with probability at least <span class="math inline">1-\delta</span>,</p>
+<p><span class="math display">\[\boxed{
+L_p(h)
+\leq
+L_{\mathcal{D}}(h)
++
+\sqrt{
+\frac{
+\ln(2|\mathcal{H}|/\delta)
+}{
+2N
+}
+}
+\qquad
+\text{for every }h\in\mathcal{H}.
+}\]</span></p>
+<p>If <span class="math inline">\hat{h}</span> minimises training error and <span class="math inline">h^*</span> is the best hypothesis in the class, uniform convergence gives</p>
+<p><span class="math display">\[\boxed{
+L_p(\hat{h})
+\leq
+L_p(h^*)
++
+2\varepsilon.
+}\]</span></p>
+<p>In the realizable case, where the class contains a perfect classifier, we can obtain the sharper sample complexity</p>
+<p><span class="math display">\[\boxed{
+N
+\geq
+\frac{1}{\varepsilon}
+\ln
+\left(
+\frac{|\mathcal{H}|}{\delta}
+\right).
+}\]</span></p>
+<p>Finally, the raw finite-class argument breaks when <span class="math inline">\mathcal{H}</span> is infinite. Two ways forward are:</p>
+<ul>
+<li>count the distinct labellings the class can produce on a finite dataset, leading to the growth function and VC theory</li>
+<li>put a prior over hypotheses and measure how far the learned distribution moves from it, leading towards PAC-Bayes</li>
+</ul>
+<p>The main ideas to take away are:</p>
+<ol type="1">
+<li>Learning from finite data requires assumptions that connect the observed sample to unseen data.</li>
+<li>A guarantee for one fixed hypothesis is not automatically a guarantee for a hypothesis chosen using the same data.</li>
+<li>Uniform convergence solves this problem by making the guarantee hold for the whole hypothesis class at once.</li>
+<li>Searching a richer class has a statistical cost, which appears as a complexity penalty.</li>
+<li>The central problem in learning theory is to find a useful measure of complexity that explains when fitting the data will generalise.</li>
+</ol>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
