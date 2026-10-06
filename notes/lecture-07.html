@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 7 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 7: Neural Networks">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-07.html" target="_blank" rel="noopener">Lecture 7 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h1"><a href="#what-is-a-neural-network">What Is a Neural Network?</a></li>
+<li class="toc-h2"><a href="#from-fixed-to-adaptive-basis-functions">From Fixed to Adaptive Basis Functions</a></li>
+<li class="toc-h2"><a href="#learning-representations-through-computation">Learning Representations Through Computation</a></li>
+<li class="toc-h2"><a href="#the-multilayer-perceptron">The Multilayer Perceptron</a></li>
+<li class="toc-h1"><a href="#how-does-an-mlp-work">How Does an MLP Work?</a></li>
+<li class="toc-h2"><a href="#one-artificial-neuron">One Artificial Neuron</a></li>
+<li class="toc-h2"><a href="#activation-functions">Activation Functions</a></li>
+<li class="toc-h3"><a href="#sigmoid">Sigmoid</a></li>
+<li class="toc-h3"><a href="#tanh">Tanh</a></li>
+<li class="toc-h3"><a href="#relu">ReLU</a></li>
+<li class="toc-h2"><a href="#layers-and-notation">Layers and Notation</a></li>
+<li class="toc-h2"><a href="#forward-propagation">Forward Propagation</a></li>
+<li class="toc-h2"><a href="#why-do-we-need-nonlinear-activations">Why Do We Need Nonlinear Activations?</a></li>
+<li class="toc-h1"><a href="#learning-the-parameters">Learning the Parameters</a></li>
+<li class="toc-h2"><a href="#choose-the-output-and-loss">Choose the Output and Loss</a></li>
+<li class="toc-h3"><a href="#regression">Regression</a></li>
+<li class="toc-h3"><a href="#binary-classification">Binary Classification</a></li>
+<li class="toc-h3"><a href="#multiclass-classification">Multiclass Classification</a></li>
+<li class="toc-h2"><a href="#the-training-objective">The Training Objective</a></li>
+<li class="toc-h2"><a href="#recall-gradients-for-linear-models">Recall: Gradients for Linear Models</a></li>
+<li class="toc-h2"><a href="#each-connection-has-a-weight">Each Connection Has a Weight</a></li>
+<li class="toc-h2"><a href="#define-the-error-signal">Define the Error Signal</a></li>
+<li class="toc-h2"><a href="#collect-the-gradients-in-a-matrix">Collect the Gradients in a Matrix</a></li>
+<li class="toc-h2"><a href="#backpropagation-and-the-optimiser">Backpropagation and the Optimiser</a></li>
+<li class="toc-h1"><a href="#what-can-a-neural-network-represent">What Can a Neural Network Represent?</a></li>
+<li class="toc-h2"><a href="#universal-approximation">Universal Approximation</a></li>
+<li class="toc-h2"><a href="#a-proof-sketch">A Proof Sketch</a></li>
+<li class="toc-h3"><a href="#1-approximate-the-target-with-small-steps">1. Approximate the Target With Small Steps</a></li>
+<li class="toc-h3"><a href="#2-write-the-staircase-as-a-sum-of-jumps">2. Write the Staircase as a Sum of Jumps</a></li>
+<li class="toc-h3"><a href="#3-replace-a-hard-step-with-a-sigmoid">3. Replace a Hard Step With a Sigmoid</a></li>
+<li class="toc-h3"><a href="#4-add-the-sigmoid-units">4. Add the Sigmoid Units</a></li>
+<li class="toc-h2"><a href="#what-the-theorem-guarantees">What the Theorem Guarantees</a></li>
+<li class="toc-h1"><a href="#deep-learning">Deep Learning</a></li>
+<li class="toc-h2"><a href="#hierarchy-and-compositionality">Hierarchy and Compositionality</a></li>
+<li class="toc-h2"><a href="#weighted-relus-build-piecewise-linear-functions">Weighted ReLUs Build Piecewise-Linear Functions</a></li>
+<li class="toc-h2"><a href="#comparing-depth-and-width">Comparing Depth and Width</a></li>
+<li class="toc-h1"><a href="#why-can-we-learn-it">Why Can We Learn It?</a></li>
+<li class="toc-h2"><a href="#a-gradient-descent-step">A Gradient-Descent Step</a></li>
+<li class="toc-h2"><a href="#the-goal-of-the-descent-proof">The Goal of the Descent Proof</a></li>
+<li class="toc-h2"><a href="#start-from-taylors-theorem">Start From Taylor's Theorem</a></li>
+<li class="toc-h3"><a href="#why-does-smoothness-bound-curvature">Why Does Smoothness Bound Curvature?</a></li>
+<li class="toc-h2"><a href="#substitute-the-gradient-descent-step">Substitute the Gradient-Descent Step</a></li>
+<li class="toc-h2"><a href="#what-does-convergence-mean">What Does Convergence Mean?</a></li>
+<li class="toc-h1"><a href="#stochastic-gradient-descent">Stochastic Gradient Descent</a></li>
+<li class="toc-h2"><a href="#sgd-can-keep-fluctuating-near-the-minimum">SGD Can Keep Fluctuating Near the Minimum</a></li>
+<li class="toc-h2"><a href="#the-sampled-gradient-is-unbiased">The Sampled Gradient is Unbiased</a></li>
+<li class="toc-h2"><a href="#why-do-individual-updates-fluctuate">Why Do Individual Updates Fluctuate?</a></li>
+<li class="toc-h2"><a href="#the-additional-variance-assumption">The Additional Variance Assumption</a></li>
+<li class="toc-h2"><a href="#when-does-sgd-decrease-the-loss-on-average">When Does SGD Decrease the Loss on Average?</a></li>
+<li class="toc-h2"><a href="#sgd-convergence-with-a-fixed-step-size">SGD Convergence With a Fixed Step Size</a></li>
+<li class="toc-h3"><a href="#connection-to-tutorial-6">Connection to Tutorial 6</a></li>
+<li class="toc-h2"><a href="#returning-to-the-quadratic-example">Returning to the Quadratic Example</a></li>
+<li class="toc-h1"><a href="#machine-learning--optimization">Machine Learning ≠ Optimization</a></li>
+<li class="toc-h2"><a href="#training-loss-and-test-loss-differ">Training Loss and Test Loss Differ</a></li>
+<li class="toc-h2"><a href="#the-goal-is-generalisation">The Goal Is Generalisation</a></li>
+<li class="toc-h2"><a href="#optimisation-can-act-as-regularisation">Optimisation Can Act as Regularisation</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+</ol>
+</details>
+</aside>
+<article>
+<h1 id="lecture-7-neural-networks">Lecture 7: Neural Networks</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In the earlier lectures, we made linear models more flexible by transforming the inputs using <strong>basis functions</strong>. We chose those functions ourselves and learnt how to combine them.</p>
+<p>In this lecture, we take the next step: <strong>learn the features as well</strong>.</p>
+<p>A neural network learns representations through a composition of parameterised computations. Each computation transforms the representation produced by the previous one. We will study the <strong>multilayer perceptron</strong>, or <strong>MLP</strong>, where each layer computes weighted sums, adds biases, and applies an activation function.</p>
+<p>Learning still uses the same ingredients: data, a model, and a loss. The output and loss depend on the task, just as they did for regression and classification. To train every layer, we need derivatives through the composed computations. Backpropagation computes them efficiently using the chain rule. For an ordinary weighted connection, the gradient has a simple form:</p>
+<p><span class="math display">\[\boxed{
+\text{weight gradient}
+=
+\text{error signal at the receiving unit}
+\;\times\;
+\text{input to the connection}.
+}\]</span></p>
+<p>We will then discuss why this approach can work. The Universal Approximation Theorem (UAT) tells us that a sufficiently wide network with one hidden layer can approximate any continuous function on a compact domain arbitrarily well. Depth can make some functions much cheaper to represent by reusing earlier computations.</p>
+<p>Representing a function and learning it from data are separate questions. We will show why gradient descent with a suitable learning rate is guaranteed to decrease a smooth training loss, and why stochastic gradient descent (SGD) can use a few sampled examples to estimate the full gradient. With a fixed step size, sampling noise can keep SGD fluctuating near a minimum.</p>
+<p>Finally, reducing training loss is only part of machine learning. We want good predictions on new data. Both the architecture and the training process influence which solution we learn.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ol type="1">
+<li><strong>Explain</strong> a neural network as a composition of functions to compute features.</li>
+<li><strong>Compute</strong> a Multilayer Perceptron (MLP) prediction and choose a suitable output and loss.</li>
+<li><strong>Write</strong> a weight gradient as error signal × input, and use it in an update.</li>
+<li><strong>Explain</strong> the Universal Approximation Theorem (UAT) and the benefit of depth over shallow networks.</li>
+<li><strong>Interpret</strong> the convergence properties of gradient descent and fixed-step stochastic gradient descent (SGD).</li>
+</ol>
+<p>We will first connect neural networks to basis functions, then build an MLP and learn its parameters. We will then study what networks can represent and what gradient-based learning can guarantee.</p>
+<p>We focus on the notation, the form of each weight gradient, and how the gradients become parameter updates. The notes include the gradient-descent and SGD arguments in full. Tutorial 6 provides practice with these arguments and the detailed backpropagation calculations. Architecture and inductive bias are a short preview of Lecture 8.</p>
+<hr />
+<h1 id="what-is-a-neural-network">What Is a Neural Network?</h1>
+<h2 id="from-fixed-to-adaptive-basis-functions">From Fixed to Adaptive Basis Functions</h2>
+<p>Recall the model</p>
+<p><span class="math display">\[y(\mathbf{x})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}(\mathbf{x})
+=
+\sum_{j=1}^{M}w_j\phi_j(\mathbf{x}).\]</span></p>
+<p>Previously, we chose each <span class="math inline">\phi_j</span> before fitting the model. Learning only changed the output weights <span class="math inline">\mathbf{w}</span>.</p>
+<p>Suppose instead that the features have parameters of their own:</p>
+<p><span class="math display">\[\boxed{
+y(\mathbf{x})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}_{\theta}(\mathbf{x}).
+}\]</span></p>
+<p>Now learning can change both the feature map and the way its outputs are combined.</p>
+<p>For a concrete example, consider a squared exponential basis function:</p>
+<p><span class="math display">\[\phi_j(x)
+=
+\exp\left[
+-\frac{(x-c_j)^2}{2s_j^2}
+\right],
+\qquad s_j&gt;0.\]</span></p>
+<p>The centre <span class="math inline">c_j</span> determines where the bump is located. The width <span class="math inline">s_j</span> determines how broadly it responds.</p>
+<p>If these quantities are fixed, the model can only adjust the height of each bump through <span class="math inline">w_j</span>. If we learn them, the bumps can move and change width to fit the data.</p>
+<p><strong>Try it:</strong> use the adaptive-basis demonstration on <a class="slide-link" href="../slides/lecture-07.html#42" target="_blank" rel="noopener">Slide 42</a>. Compare fixed and learned centres and widths using the same data and number of features. Watch where the features move and how the fitted curve changes. The demonstration uses gradient descent for the centres and widths, and least squares for the output weights.</p>
+<p>The main idea is:</p>
+<blockquote>
+<p><strong>Learning can choose which features to compute, as well as how to combine them.</strong></p>
+</blockquote>
+<p>This becomes especially useful when good features are difficult to design. An image contains many pixel values. We might want features describing edges, textures, parts, or objects, but writing all of them by hand is difficult.</p>
+<h2 id="learning-representations-through-computation">Learning Representations Through Computation</h2>
+<p>A <strong>representation</strong> is the collection of values we use to describe an input at some stage of a computation. In the basis-function example, the representation is the vector of feature values.</p>
+<p>We can write that example as two functions. The first computes the features:</p>
+<p><span class="math display">\[\mathbf z^{(2)}
+=\boldsymbol\phi_{\theta_1}(x)
+=f_{1,\theta_1}(x).\]</span></p>
+<p>Its parameters <span class="math inline">\theta_1</span> are the centres and widths. The second combines the feature values:</p>
+<p><span class="math display">\[y=\mathbf w^\top\mathbf z^{(2)}
+=f_{2,\theta_2}(\mathbf z^{(2)}).\]</span></p>
+<p>Here <span class="math inline">\theta_2</span> contains the output weights. The full prediction is</p>
+<p><span class="math display">\[\boxed{
+y=f_{2,\theta_2}(f_{1,\theta_1}(x))
+=(f_{2,\theta_2}\circ f_{1,\theta_1})(x).
+}\]</span></p>
+<p>The symbol <span class="math inline">\circ</span> means <strong>function composition</strong>. Apply the rightmost function first, then pass its output to the next function.</p>
+<p>We can continue with a third function:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbf z^{(2)}&amp;=f_{1,\theta_1}(\mathbf x),\\
+\mathbf z^{(3)}&amp;=f_{2,\theta_2}(\mathbf z^{(2)}),\\
+y&amp;=f_{3,\theta_3}(\mathbf z^{(3)}).
+\end{aligned}\]</span></p>
+<p>Each function uses the output of the previous one. The intermediate values <span class="math inline">\mathbf z^{(2)}</span> and <span class="math inline">\mathbf z^{(3)}</span> are the representations. They are the <strong>results</strong> of the computations.</p>
+<p>For <span class="math inline">L</span> functions, the general form is</p>
+<p><span class="math display">\[\boxed{
+f_\theta
+=f_{L,\theta_L}\circ\cdots\circ f_{2,\theta_2}\circ f_{1,\theta_1},
+\qquad
+\theta=(\theta_1,\ldots,\theta_L).
+}\]</span></p>
+<p>We choose the computations and learn their parameters from data. The functions need not be simple: they can combine information, keep track of a state, or resemble steps in an algorithm.</p>
+<p>Here <span class="math inline">L</span> counts the functions we compose. For the MLP notation below, the input is layer 1, and function <span class="math inline">f_l</span> computes the outputs of layer <span class="math inline">l+1</span>.</p>
+<p>For the rest of these notes, <span class="math inline">\theta</span> denotes the collection of <strong>all trainable parameters</strong> in the network.</p>
+<h2 id="the-multilayer-perceptron">The Multilayer Perceptron</h2>
+<p>We will begin with the <strong>multilayer perceptron (MLP)</strong>. An MLP repeatedly applies two operations:</p>
+<ol type="1">
+<li>compute weighted sums and add biases</li>
+<li>apply a nonlinear activation function.</li>
+</ol>
+<p>Each layer receives the representation produced by the previous layer. The final layer produces the prediction.</p>
+<p>An MLP is one example of a neural network. Other architectures change the computations and the connections between them. We will return to this idea at the end of the lecture.</p>
+<p><strong>Try it:</strong> in the TensorFlow Playground linked on <a class="slide-link" href="../slides/lecture-07.html#47" target="_blank" rel="noopener">Slide 47</a>, change the number of hidden units, the number of layers, and the activation. Watch how the hidden representations and the final decision boundary change.</p>
+<hr />
+<h1 id="how-does-an-mlp-work">How Does an MLP Work?</h1>
+<h2 id="one-artificial-neuron">One Artificial Neuron</h2>
+<p>We start with one unit receiving an input vector <span class="math inline">\mathbf{x}</span>. It first computes</p>
+<p><span class="math display">\[a
+=
+\mathbf{w}^{\top}\mathbf{x}+b.\]</span></p>
+<p>The quantity <span class="math inline">a</span> is called the <strong>pre-activation</strong>. The weights determine how the inputs are combined, and the bias shifts the result.</p>
+<p>The unit then applies an activation function:</p>
+<p><span class="math display">\[\boxed{
+z=\sigma(a).
+}\]</span></p>
+<p>Here <span class="math inline">z</span> is the unit's output. We can interpret it as one feature computed from <span class="math inline">\mathbf{x}</span>.</p>
+<p>With a single input, the calculation becomes</p>
+<p><span class="math display">\[a=wx+b,
+\qquad
+z=\sigma(a).\]</span></p>
+<p>Changing <span class="math inline">w</span> changes how the unit responds to the input. Changing <span class="math inline">b</span> shifts where the response occurs.</p>
+<h2 id="activation-functions">Activation Functions</h2>
+<p>Three common choices are sigmoid, tanh, and ReLU.</p>
+<h3 id="sigmoid">Sigmoid</h3>
+<p><span class="math display">\[\sigma(a)
+=
+\frac{1}{1+e^{-a}}.\]</span></p>
+<p>Its output lies between 0 and 1. Large negative inputs give values near 0, and large positive inputs give values near 1.</p>
+<p>We already used sigmoid in logistic regression to turn a real-valued score into a probability.</p>
+<h3 id="tanh">Tanh</h3>
+<p><span class="math display">\[\tanh(a)
+=
+\frac{e^{2a}-1}{e^{2a}+1}.\]</span></p>
+<p>Its output lies between <span class="math inline">-1</span> and 1. Like sigmoid, it flattens out for inputs with large magnitude.</p>
+<h3 id="relu">ReLU</h3>
+<p>The <strong>rectified linear unit</strong>, or <strong>ReLU</strong>, is</p>
+<p><span class="math display">\[\operatorname{ReLU}(a)
+=
+\max(0,a).\]</span></p>
+<p>It returns zero for a negative input and leaves a positive input unchanged. ReLU is <strong>piecewise linear</strong>: it has one linear piece on each side of zero.</p>
+<p>For a layer of units, we apply these activation functions separately to each component.</p>
+<h2 id="layers-and-notation">Layers and Notation</h2>
+<p>Let's make the notation clear. We use the same layer and connection indices as Tutorial 6.</p>
+<p>The input is layer 1:</p>
+<p><span class="math display">\[\mathbf{z}^{(1)}=\mathbf{x}.\]</span></p>
+<p>For a connection from layer <span class="math inline">l</span> to layer <span class="math inline">l+1</span>, write</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathbf{a}^{(l+1)}
+&amp;=
+\mathbf{W}^{(l)}\mathbf{z}^{(l)}
++
+\mathbf{b}^{(l+1)},\\
+\mathbf{z}^{(l+1)}
+&amp;=
+\sigma_{l+1}\left(\mathbf{a}^{(l+1)}\right).
+\end{aligned}
+}\]</span></p>
+<p>The notation tells us where each quantity belongs:</p>
+<ul>
+<li><span class="math inline">\mathbf{z}^{(l)}</span> contains the outputs of layer <span class="math inline">l</span></li>
+<li><span class="math inline">\mathbf{W}^{(l)}</span> contains the weights <strong>leaving</strong> layer <span class="math inline">l</span></li>
+<li><span class="math inline">\mathbf{b}^{(l+1)}</span> contains the biases of the receiving layer</li>
+<li><span class="math inline">\mathbf{a}^{(l+1)}</span> contains that layer's pre-activations</li>
+<li><span class="math inline">\sigma_{l+1}</span> is its activation function.</li>
+</ul>
+<p>If layer <span class="math inline">l</span> has <span class="math inline">M_l</span> units and layer <span class="math inline">l+1</span> has <span class="math inline">M_{l+1}</span> units, then</p>
+<p><span class="math display">\[\mathbf{W}^{(l)}
+\in
+\mathbb{R}^{M_{l+1}\times M_l}.\]</span></p>
+<p>Each row computes the weighted input to one receiving unit.</p>
+<p>For one hidden layer and a scalar regression output, we have</p>
+<p><span class="math display">\[\mathbf{z}^{(2)}
+=
+\sigma_2\left(
+\mathbf{W}^{(1)}\mathbf{x}
++
+\mathbf{b}^{(2)}
+\right),\]</span></p>
+<p>followed by</p>
+<p><span class="math display">\[y
+=
+\mathbf{W}^{(2)}\mathbf{z}^{(2)}
++
+b^{(3)}.\]</span></p>
+<p>Here <span class="math inline">\mathbf{W}^{(2)}</span> is a row matrix. The hidden activations <span class="math inline">\mathbf{z}^{(2)}</span> are the learned features used by the output.</p>
+<h2 id="forward-propagation">Forward Propagation</h2>
+<p><strong>Forward propagation</strong> means computing these quantities in order:</p>
+<ol type="1">
+<li>start with the input</li>
+<li>compute the first layer's pre-activations and outputs</li>
+<li>use those outputs as inputs to the next layer</li>
+<li>continue until we obtain the prediction.</li>
+</ol>
+<p>For a numerical example, consider an MLP with two inputs, hidden layers of three and two ReLU units, and one linear output. Let</p>
+<p><span class="math display">\[\mathbf{x}
+=
+\begin{bmatrix}1\\-1\end{bmatrix}.\]</span></p>
+<p>The first hidden layer uses</p>
+<p><span class="math display">\[\mathbf{W}^{(1)}
+=
+\begin{bmatrix}
+1&amp;0.5\\
+-0.5&amp;1\\
+1&amp;-1
+\end{bmatrix},
+\qquad
+\mathbf{b}^{(2)}
+=
+\begin{bmatrix}0\\0.5\\-1\end{bmatrix}.\]</span></p>
+<p>Multiplying by the input and adding the bias gives</p>
+<p><span class="math display">\[\mathbf{a}^{(2)}
+=
+\begin{bmatrix}0.5\\-1\\1\end{bmatrix},
+\qquad
+\mathbf{z}^{(2)}
+=
+\operatorname{ReLU}\left(\mathbf{a}^{(2)}\right)
+=
+\begin{bmatrix}0.5\\0\\1\end{bmatrix}.\]</span></p>
+<p>The next hidden layer uses</p>
+<p><span class="math display">\[\mathbf{W}^{(2)}
+=
+\begin{bmatrix}
+1&amp;-1&amp;0.5\\
+-0.5&amp;0.5&amp;1
+\end{bmatrix},
+\qquad
+\mathbf{b}^{(3)}
+=
+\begin{bmatrix}0\\-0.25\end{bmatrix}.\]</span></p>
+<p>Both pre-activations are positive, so ReLU leaves them unchanged:</p>
+<p><span class="math display">\[\mathbf{a}^{(3)}
+=
+\mathbf{z}^{(3)}
+=
+\begin{bmatrix}1\\0.5\end{bmatrix}.\]</span></p>
+<p>The output layer uses</p>
+<p><span class="math display">\[\mathbf W^{(3)}=\begin{bmatrix}1.2&amp;-0.8\end{bmatrix},
+\qquad b^{(4)}=0.1.\]</span></p>
+<p>Its prediction is</p>
+<p><span class="math display">\[y
+=
+1.2(1)-0.8(0.5)+0.1
+=
+0.9.\]</span></p>
+<p>During training, we keep the intermediate values because the backward pass will use them.</p>
+<p><strong>Try it:</strong> use <strong>Next layer</strong> on <a class="slide-link" href="../slides/lecture-07.html#53" target="_blank" rel="noopener">Slide 53</a> to follow this calculation alongside the network diagram. Match each matrix row to a receiving unit.</p>
+<h2 id="why-do-we-need-nonlinear-activations">Why Do We Need Nonlinear Activations?</h2>
+<p>Suppose we remove the activations and compose two affine layers:</p>
+<p><span class="math display">\[\mathbf{W}^{(2)}
+\left(
+\mathbf{W}^{(1)}\mathbf{x}
++
+\mathbf{b}^{(2)}
+\right)
++
+\mathbf{b}^{(3)}.\]</span></p>
+<p>Expanding gives</p>
+<p><span class="math display">\[\underbrace{
+\mathbf{W}^{(2)}\mathbf{W}^{(1)}
+}_{\mathbf{W}}
+\mathbf{x}
++
+\underbrace{
+\mathbf{W}^{(2)}\mathbf{b}^{(2)}
++
+\mathbf{b}^{(3)}
+}_{\mathbf{b}}.\]</span></p>
+<p>This is just</p>
+<p><span class="math display">\[\mathbf{W}\mathbf{x}+\mathbf{b}.\]</span></p>
+<p>So stacking affine layers still gives an affine map. Nonlinear activations are what allow the composition to represent more complicated functions of the input.</p>
+<hr />
+<h1 id="learning-the-parameters">Learning the Parameters</h1>
+<h2 id="choose-the-output-and-loss">Choose the Output and Loss</h2>
+<p>The output and loss should match the target. We can use the probability models from Lectures 2 and 3 to derive a suitable loss function in the same way as before.</p>
+<h3 id="regression">Regression</h3>
+<p>For a real-valued target, a common choice is a linear output,</p>
+<p><span class="math display">\[y=a,\]</span></p>
+<p>with squared loss,</p>
+<p><span class="math display">\[\ell(y,t)=\frac12(y-t)^2.\]</span></p>
+<p>As before, this corresponds to a Gaussian target model with fixed variance, up to a constant and a positive scaling of the loss.</p>
+<h3 id="binary-classification">Binary Classification</h3>
+<p>For <span class="math inline">t\in\{0,1\}</span>, use a sigmoid output,</p>
+<p><span class="math display">\[y=\sigma(a),\]</span></p>
+<p>and binary cross-entropy,</p>
+<p><span class="math display">\[\ell(y,t)
+=
+-t\log y-(1-t)\log(1-y).\]</span></p>
+<p>The output <span class="math inline">y</span> represents the probability of class 1.</p>
+<h3 id="multiclass-classification">Multiclass Classification</h3>
+<p>For mutually exclusive classes, use one score <span class="math inline">a_k</span> per class and apply softmax:</p>
+<p><span class="math display">\[y_k
+=
+\frac{e^{a_k}}{\sum_j e^{a_j}}.\]</span></p>
+<p>With a one-hot target vector <span class="math inline">\mathbf{t}</span>, the loss is</p>
+<p><span class="math display">\[\ell(\mathbf{y},\mathbf{t})
+=
+-\sum_k t_k\log y_k.\]</span></p>
+<p>Only the correct class contributes to this sum. The loss is the negative logarithm of the probability assigned to that class.</p>
+<p>The hidden layers can use ReLU even when the output uses sigmoid or softmax. The hidden activations and the output transformation have different jobs.</p>
+<h2 id="the-training-objective">The Training Objective</h2>
+<p>For a dataset</p>
+<p><span class="math display">\[\mathcal{D}
+=
+\{(\mathbf{x}_n,t_n)\}_{n=1}^{N},\]</span></p>
+<p>define the loss for example <span class="math inline">n</span> as</p>
+<p><span class="math display">\[\ell_n(\theta)
+=
+\ell\left(f_{\theta}(\mathbf{x}_n),t_n\right).\]</span></p>
+<p>We use the <strong>average training loss</strong>:</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}(\theta)
+=
+\frac1N\sum_{n=1}^{N}\ell_n(\theta).
+}\]</span></p>
+<p>Gradient descent updates all the parameters using</p>
+<p><span class="math display">\[\theta
+\leftarrow
+\theta-\eta\nabla_{\theta}\mathcal{L}(\theta),\]</span></p>
+<p>where <span class="math inline">\eta&gt;0</span> is the <strong>step size</strong>, also called the learning rate.</p>
+<p>Every layer can learn from the final loss. The question is how to compute the derivatives through the entire network.</p>
+<hr />
+<h2 id="recall-gradients-for-linear-models">Recall: Gradients for Linear Models</h2>
+<p>We have already seen the main pattern in simpler models.</p>
+<p>For each data point <span class="math inline">(\mathbf{x},t)</span>, let</p>
+<p><span class="math display">\[a=\mathbf{w}^{\top}\mathbf{x}+b.\]</span></p>
+<p>In linear regression with squared loss,</p>
+<p><span class="math display">\[y=a,
+\qquad
+\ell=\frac12(y-t)^2.\]</span></p>
+<p>Differentiating gives</p>
+<p><span class="math display">\[\frac{\partial\ell}{\partial a}=y-t.\]</span></p>
+<p>In logistic regression with binary cross-entropy, we also obtained</p>
+<p><span class="math display">\[\frac{\partial\ell}{\partial a}=y-t.\]</span></p>
+<p>The output transformation and loss are different, but the two derivatives happen to have the same form.</p>
+<p>Since</p>
+<p><span class="math display">\[\frac{\partial a}{\partial w_i}=x_i,\]</span></p>
+<p>the chain rule gives</p>
+<p><span class="math display">\[\boxed{
+\frac{\partial\ell}{\partial w_i}
+=
+\underbrace{(y-t)}_{\text{error signal}}
+\cdot
+\underbrace{x_i}_{\text{input}}.
+}\]</span></p>
+<p>We multiply two scalars here. The input tells us how strongly this weight affected the score. The error signal tells us how changing the score would affect the loss.</p>
+<h2 id="each-connection-has-a-weight">Each Connection Has a Weight</h2>
+<p>Now consider a hidden connection in an MLP. We write</p>
+<p><span class="math display">\[w^{(l)}_{j,i}\]</span></p>
+<p>for the weight from unit <span class="math inline">i</span> in layer <span class="math inline">l</span> to unit <span class="math inline">j</span> in layer <span class="math inline">l+1</span>. The superscript gives the <strong>source layer</strong>. The subscripts give the <strong>receiving unit first, then the input unit</strong>.</p>
+<p>For training example <span class="math inline">n</span>, the receiving unit computes</p>
+<p><span class="math display">\[a^{(l+1)}_{n,j}
+=
+\sum_i w^{(l)}_{j,i}z^{(l)}_{n,i}
++
+b^{(l+1)}_j.\]</span></p>
+<p>The subscript <span class="math inline">n</span> identifies the training example. The weights are shared across examples; the activations depend on the example.</p>
+<p>For instance, <span class="math inline">w^{(2)}_{1,2}</span> connects unit 2 in layer 2 to unit 1 in layer 3.</p>
+<h2 id="define-the-error-signal">Define the Error Signal</h2>
+<p>For each unit, define</p>
+<p><span class="math display">\[\boxed{
+\delta^{(l+1)}_{n,j}
+\equiv
+\frac{\partial\ell_n}
+{\partial a^{(l+1)}_{n,j}}.
+}\]</span></p>
+<p>This <strong>error signal</strong> measures how the final loss changes when we change the unit's pre-activation.</p>
+<p>For a hidden unit, it includes the effect of all the later computations. It is generally more complicated than simply subtracting a target from that unit's output.</p>
+<p>Apply the chain rule:</p>
+<p><span class="math display">\[\frac{\partial\ell_n}{\partial w^{(l)}_{j,i}}
+=
+\frac{\partial\ell_n}{\partial a^{(l+1)}_{n,j}}
+\cdot
+\frac{\partial a^{(l+1)}_{n,j}}
+{\partial w^{(l)}_{j,i}}.\]</span></p>
+<p>The second factor is the saved input, <span class="math inline">z^{(l)}_{n,i}</span>. Therefore,</p>
+<p><span class="math display">\[\boxed{
+\frac{\partial\ell_n}{\partial w^{(l)}_{j,i}}
+=
+\underbrace{\delta^{(l+1)}_{n,j}}_{\text{error signal}}
+\cdot
+\underbrace{z^{(l)}_{n,i}}_{\text{input}}.
+}\]</span></p>
+<p>This is the same pattern as the gradient for a linear model. The main additional work is finding the error signal at each hidden unit.</p>
+<h2 id="collect-the-gradients-in-a-matrix">Collect the Gradients in a Matrix</h2>
+<p>We can connect the individual weight gradients to their matrix form. Start with the entry for weight <span class="math inline">w^{(l)}_{j,i}</span>, then identify the row and column vectors that generate every entry.</p>
+<p>We can collect all the connection gradients into a matrix:</p>
+<p><span class="math display">\[\boxed{
+\frac{\partial\ell_n}{\partial\mathbf{W}^{(l)}}
+=
+\boldsymbol{\delta}^{(l+1)}_n
+\cdot
+\left(\mathbf{z}^{(l)}_n\right)^{\top}.
+}\]</span></p>
+<p>This is an <strong>outer product</strong>:</p>
+<p><span class="math display">\[(M_{l+1}\times1)
+\;\cdot\;
+(1\times M_l)
+=
+M_{l+1}\times M_l.\]</span></p>
+<p>The dimensions match the weight matrix. Entry <span class="math inline">(j,i)</span> is exactly</p>
+<p><span class="math display">\[\delta^{(l+1)}_{n,j}\cdot z^{(l)}_{n,i}.\]</span></p>
+<p>For the bias, the local derivative is 1, so</p>
+<p><span class="math display">\[\frac{\partial\ell_n}{\partial\mathbf{b}^{(l+1)}}
+=
+\boldsymbol{\delta}^{(l+1)}_n.\]</span></p>
+<p>For the average training loss, average the per-example gradients:</p>
+<p><span class="math display">\[\boxed{
+\frac{\partial\mathcal{L}}{\partial\mathbf{W}^{(l)}}
+=
+\frac1N
+\sum_{n=1}^{N}
+\boldsymbol{\delta}^{(l+1)}_n
+\cdot
+\left(\mathbf{z}^{(l)}_n\right)^{\top}.
+}\]</span></p>
+<p>Tutorial 6 uses a <strong>sum</strong> of losses, so its expression omits <span class="math inline">1/N</span>. Its worked network omits biases for simplicity. The layer and connection indices follow the same convention.</p>
+<p>As practice, write out the matrix for a layer with two inputs and three receiving units. Check that every entry is the receiving unit's error signal multiplied by the corresponding input. Then write the bias gradient and the gradient-descent update.</p>
+<h2 id="backpropagation-and-the-optimiser">Backpropagation and the Optimiser</h2>
+<p><strong>Backpropagation</strong> applies the chain rule backwards through the network.</p>
+<p>First, the forward pass computes the activations and the loss. The backward pass starts from the loss and computes how it depends on each preceding quantity. When several later units depend on the same hidden output, their contributions are added.</p>
+<p>Once the error signals are available, each weight gradient uses the saved input from the forward pass. Reusing these intermediate results makes the calculation efficient.</p>
+<p>The calculation has four stages:</p>
+<ol type="1">
+<li>save the inputs and activations during the forward pass</li>
+<li>compute error signals during the backward pass</li>
+<li>combine each error signal with the corresponding input</li>
+<li>pass the gradients to the optimiser.</li>
+</ol>
+<p>Backpropagation <strong>computes the gradients</strong>. The optimiser <strong>uses them to change the parameters</strong>. For ordinary gradient descent, the update is</p>
+<p><span class="math display">\[\mathbf{W}^{(l)}
+\leftarrow
+\mathbf{W}^{(l)}
+-
+\eta
+\frac{\partial\mathcal{L}}{\partial\mathbf{W}^{(l)}}.\]</span></p>
+<p>We repeat the forward pass, loss calculation, backward pass, and update over the training data. Tutorial 6 works through the detailed backward calculations.</p>
+<hr />
+<h1 id="what-can-a-neural-network-represent">What Can a Neural Network Represent?</h1>
+<p>We have now defined a network and a way to train it. Before analysing the updates, let us ask what functions the model can represent.</p>
+<h2 id="universal-approximation">Universal Approximation</h2>
+<p>One version of the <strong>Universal Approximation Theorem</strong> says the following.</p>
+<p>Let <span class="math inline">f:[0,1]\rightarrow\mathbb{R}</span> be continuous. For any desired accuracy <span class="math inline">\varepsilon&gt;0</span>, there is a finite width <span class="math inline">M</span> and a choice of parameters such that</p>
+<p><span class="math display">\[\hat f(x)
+=
+b^{(3)}_1+\sum_{j=1}^{M}w^{(2)}_{1,j}\sigma(w^{(1)}_{j,1}x+b^{(2)}_j)\]</span></p>
+<p>satisfies</p>
+<p><span class="math display">\[\boxed{
+\max_{x\in[0,1]}
+|f(x)-\hat f(x)|
+&lt;
+\varepsilon.
+}\]</span></p>
+<p>Here <span class="math inline">\sigma</span> is the sigmoid function. This is a network with one hidden layer and a linear output.</p>
+<p>The maximum means that the approximation is accurate <strong>throughout the interval</strong> <span class="math inline">[0,1]</span>. The result also extends to continuous functions on compact domains in higher dimensions. Here, you can think of a compact domain as a closed, bounded set: it includes its boundary and does not extend to infinity. A closed interval or a closed box is an example.</p>
+<p>The required width can depend on the target function and on how accurate we want the approximation to be.</p>
+<h2 id="a-proof-sketch">A Proof Sketch</h2>
+<p>We can understand the idea in one dimension by building an approximation in four steps. This is an informal construction; a full proof also controls the approximation error.</p>
+<h3 id="1-approximate-the-target-with-small-steps">1. Approximate the Target With Small Steps</h3>
+<p>Divide the interval into small pieces and use a constant value on each piece. The result is a staircase.</p>
+<p>Because the target is continuous on a closed, bounded interval, sufficiently short pieces make the variation of the target within each piece small. This lets the staircase approximate the target closely.</p>
+<h3 id="2-write-the-staircase-as-a-sum-of-jumps">2. Write the Staircase as a Sum of Jumps</h3>
+<p>Let <span class="math inline">\tau_j</span> be the location of jump <span class="math inline">j</span>, and let <span class="math inline">c_j</span> be the height after that jump. Define</p>
+<p><span class="math display">\[\Delta_j=c_j-c_{j-1}.\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[g(x)
+=
+c_0
++
+\sum_{j=1}^{M}
+\Delta_j\,\mathbb{1}[x&gt;\tau_j].\]</span></p>
+<p>Each indicator switches on one change in height. The jumps can be positive or negative.</p>
+<h3 id="3-replace-a-hard-step-with-a-sigmoid">3. Replace a Hard Step With a Sigmoid</h3>
+<p>Consider</p>
+<p><span class="math display">\[\sigma\bigl(k(x-\tau)\bigr)
+=
+\frac{1}{1+\exp[-k(x-\tau)]}.\]</span></p>
+<p>The centre <span class="math inline">\tau</span> determines where the transition occurs. Increasing <span class="math inline">k</span> makes the transition steeper. Multiplying by <span class="math inline">\Delta</span> gives a smooth change from approximately 0 to approximately <span class="math inline">\Delta</span>.</p>
+<h3 id="4-add-the-sigmoid-units">4. Add the Sigmoid Units</h3>
+<p>Replace the hard steps by sigmoid units:</p>
+<p><span class="math display">\[\hat f(x)
+=
+c_0
++
+\sum_{j=1}^{M}
+\Delta_j
+\sigma\bigl(k(x-\tau_j)\bigr).\]</span></p>
+<p>This has the required neural-network form. The first-layer weights and biases compute the sigmoid units. The second-layer weights and output bias combine them:</p>
+<p><span class="math display">\[\begin{aligned}
+w^{(1)}_{j,1}&amp;=k,
+&amp; b^{(2)}_j&amp;=-k\tau_j,\\
+w^{(2)}_{1,j}&amp;=\Delta_j,
+&amp; b^{(3)}_1&amp;=c_0.
+\end{aligned}\]</span></p>
+<p>First make the staircase steps small, then make the sigmoid transitions steep. A continuous sigmoid cannot uniformly match a fixed hard jump. Small jumps let us keep the smoothed curve close to the original continuous target. This explains the idea in one dimension; the theorem also covers higher-dimensional inputs.</p>
+<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#74" target="_blank" rel="noopener">Slide 74</a>, increase the number of sigmoid units and adjust their steepness. Compare the resulting curve with the target. More units provide more transitions; greater steepness makes each transition sharper.</p>
+<h2 id="what-the-theorem-guarantees">What the Theorem Guarantees</h2>
+<p>The theorem is an <strong>existence result</strong>. It says that suitable weights and a sufficiently large width exist. But it does not tell us:</p>
+<ul>
+<li>how many hidden units will be practical</li>
+<li>whether our training algorithm will find the required parameters</li>
+<li>how much data is needed to learn them</li>
+<li>whether the fitted network will have low test error.</li>
+</ul>
+<p>A model can represent an excellent predictor even when learning that predictor is difficult.</p>
+<hr />
+<h1 id="deep-learning">Deep Learning</h1>
+<p>Some of you may now be wondering: if one hidden layer is enough, why do we need deep neural networks? One answer is <strong>efficiency of representation</strong>. Some functions can be represented with far fewer units when we use several layers.</p>
+<h2 id="hierarchy-and-compositionality">Hierarchy and Compositionality</h2>
+<p>Depth allows later computations to reuse earlier results.</p>
+<p>For an image, a simple hierarchy might combine local changes in brightness into edges, edges into parts, and parts into larger patterns. We do not need to prescribe every intermediate feature. The network learns features that help with the task.</p>
+<p>Two ideas are useful here:</p>
+<ul>
+<li><strong>Hierarchy:</strong> construct more complex features from simpler ones.</li>
+<li><strong>Compositionality:</strong> reuse the same parts in several combinations.</li>
+</ul>
+<p>These ideas explain why depth can help when the target itself has reusable structure. They do not imply that every problem needs a deep network.</p>
+<p>An early example comes from <a href="https://ai.stanford.edu/~hllee/icml09-ConvolutionalDeepBeliefNetworks.pdf">Lee and colleagues (2009)</a>. Their convolutional deep belief network learned edge detectors from natural images. Building on these features, later layers learned face parts and more complete face patterns from unlabelled face images. This illustrates how later representations can build on earlier ones.</p>
+<h2 id="weighted-relus-build-piecewise-linear-functions">Weighted ReLUs Build Piecewise-Linear Functions</h2>
+<p>In one dimension, a ReLU unit can create a bend:</p>
+<p><span class="math display">\[\max(0,x-\tau_j).\]</span></p>
+<p>It is zero to the left of <span class="math inline">\tau_j</span> and has slope 1 to the right. Multiplying by <span class="math inline">w_j</span> changes the slope contribution.</p>
+<p>A shallow network can therefore form</p>
+<p><span class="math display">\[y(x)
+=
+b+\sum_{j=1}^{M}w_j\max(0,x-\tau_j).\]</span></p>
+<p>Each unit changes the slope at one location. The slope of the sum changes by <span class="math inline">w_j</span> when <span class="math inline">x</span> crosses <span class="math inline">\tau_j</span>.</p>
+<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#79" target="_blank" rel="noopener">Slide 79</a>, compare the individual weighted ReLU curves with their sum. Identify which unit creates each change in slope.</p>
+<h2 id="comparing-depth-and-width">Comparing Depth and Width</h2>
+<p>Consider a target built by repeatedly applying a small piecewise-linear computation. This gives us a concrete way to compare shallow and deep representations.</p>
+<p>On <span class="math inline">[0,1]</span>, define the triangular function</p>
+<p><span class="math display">\[q(u)
+=
+2\operatorname{ReLU}(u)
+-
+4\operatorname{ReLU}\left(u-\frac12\right).\]</span></p>
+<p>It rises from 0 to 1 and then returns to 0. Its output is again in <span class="math inline">[0,1]</span>, so we can apply it repeatedly.</p>
+<p>Let</p>
+<p><span class="math display">\[u_0(x)=x,
+\qquad
+u_r(x)=q(u_{r-1}(x)).\]</span></p>
+<p>Each composition introduces more bends. Take the fixed target</p>
+<p><span class="math display">\[f(x)
+=
+\sum_{r=1}^{6}
+0.6^{r-1}u_r(x).\]</span></p>
+<p>A deep network can reuse the preceding triangular computation and carry a running sum forward. With <span class="math inline">d</span> hidden layers, it computes the first <span class="math inline">d</span> terms of the target. Two units in the first layer begin the triangular computation. Each later layer uses two units for the next triangular computation and a third to carry the accumulated sum. At six hidden layers, this gives <span class="math inline">2+5(3)=17</span> hidden units.</p>
+<p>A shallow network can represent the same target directly as a piecewise-linear function. The target is linear between the grid points <span class="math inline">j/64</span>, for <span class="math inline">j=0,\ldots,64</span>. One ReLU unit supplies the initial slope and another supplies each of the 63 interior slope changes. This construction uses 64 hidden units. Both counts exclude the input and output units.</p>
+<p>The example shows how composition can save units. These weights are constructed directly; we have not shown that a training algorithm will find them. We also have not proved that the shallow construction is the smallest possible one, or that depth helps equally for every target.</p>
+<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#80" target="_blank" rel="noopener">Slide 80</a>, increase the depth while keeping the target fixed. Then select <strong>Match the deep curve</strong>. Compare the approximation curves and the numbers of hidden units.</p>
+<hr />
+<h1 id="why-can-we-learn-it">Why Can We Learn It?</h1>
+<p>Approximation tells us what a network can represent. We now ask what gradient-based learning can guarantee.</p>
+<p>We will first analyse full gradient descent, then replace the full gradient with a sampled estimate.</p>
+<p>Full gradient descent starts from initial parameters. At each step, it averages the gradients of all training examples, then subtracts this gradient multiplied by the step size.</p>
+<p>We use <span class="math inline">s</span> for the iteration index and <span class="math inline">T</span> for the total number of updates. The symbol <span class="math inline">t_n</span> is the target for training example <span class="math inline">n</span>.</p>
+<h2 id="a-gradient-descent-step">A Gradient-Descent Step</h2>
+<p>For the parameter vector <span class="math inline">\theta_s</span> at iteration <span class="math inline">s</span>, gradient descent uses</p>
+<p><span class="math display">\[\theta_{s+1}
+=
+\theta_s
+-
+\eta\nabla\mathcal{L}(\theta_s).\]</span></p>
+<p>The negative gradient points in the direction of greatest local decrease per unit distance. But the size of the step matters. For example, let</p>
+<p><span class="math display">\[\mathcal{L}(\theta)=\frac12\theta^2.\]</span></p>
+<p>At <span class="math inline">\theta=2</span>, the gradient is 2. With <span class="math inline">\eta=0.5</span>,</p>
+<p><span class="math display">\[\theta_{\mathrm{new}}=2-0.5(2)=1.\]</span></p>
+<p>The loss decreases from 2 to <span class="math inline">0.5</span>. A sufficiently large step can overshoot and increase the loss. For example, <span class="math inline">\eta=3</span> moves the parameter from 2 to <span class="math inline">-4</span>, increasing the loss from 2 to 8.</p>
+<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#83" target="_blank" rel="noopener">Slide 83</a>, change the step size and compare the updates. Identify when the loss decreases and when a step overshoots.</p>
+<p>To make a general statement about descent, we need to control how quickly the gradient changes. The next few sections are about controlling this step size.</p>
+<h2 id="the-goal-of-the-descent-proof">The Goal of the Descent Proof</h2>
+<p>Our goal is to find a range of learning rates for which every gradient-descent step reduces the training loss whenever the gradient is nonzero.</p>
+<p>First, we need this idea of a Lipschitz Gradient. We say that the loss has a <strong><span class="math inline">\beta</span>-Lipschitz gradient</strong>, or is <strong><span class="math inline">\beta</span>-smooth</strong>, if</p>
+<p><span class="math display">\[\boxed{
+\|\nabla\mathcal{L}(\mathbf{u})
+-
+\nabla\mathcal{L}(\mathbf{v})\|
+\leq
+\beta\|\mathbf{u}-\mathbf{v}\|.
+}\]</span></p>
+<p>Here, <span class="math inline">\|\cdot\|</span> is the Euclidean norm. The constant <span class="math inline">\beta</span> bounds how much the gradient can change when the parameters move. For a given change in the parameters, a smaller <span class="math inline">\beta</span> gives a tighter bound on the change in the gradient. A larger <span class="math inline">\beta</span> permits faster changes, so a smaller step size may be needed.</p>
+<p>For a <span class="math inline">\beta</span>-smooth loss, we will show that</p>
+<p><span class="math display">\[0&lt;\eta\leq\frac1\beta
+\quad\Longrightarrow\quad
+\mathcal{L}(\theta_{s+1})\leq\mathcal{L}(\theta_s).\]</span></p>
+<p>The decrease is strict when <span class="math inline">\nabla\mathcal{L}(\theta_s)\neq\mathbf{0}</span>. At a zero gradient, the update leaves the parameters unchanged.</p>
+<p>The proof has two steps. First, use Taylor's theorem and smoothness to bound the loss after a step. Then substitute the gradient-descent update and choose the learning rate so that the loss decreases.</p>
+<h2 id="start-from-taylors-theorem">Start From Taylor's Theorem</h2>
+<p>For a twice continuously differentiable loss, expand around <span class="math inline">\theta</span> using a displacement <span class="math inline">\mathbf{d}</span>:</p>
+<p><span class="math display">\[\mathcal{L}(\theta+\mathbf{d})
+=
+\mathcal{L}(\theta)
++
+\nabla\mathcal{L}(\theta)^{\top}\mathbf{d}
++
+\frac12\mathbf{d}^{\top}\mathbf{H}(\xi)\mathbf{d}.\]</span></p>
+<p>Here</p>
+<p><span class="math display">\[\mathbf{H}=\nabla^2\mathcal{L}\]</span></p>
+<p>is the <strong>Hessian</strong>, the matrix of second derivatives. The point <span class="math inline">\xi</span> lies on the line segment between <span class="math inline">\theta</span> and <span class="math inline">\theta+\mathbf{d}</span>. In other words,</p>
+<p><span class="math display">\[\xi=\theta+\alpha\mathbf{d},
+\qquad 0&lt;\alpha&lt;1.\]</span></p>
+<p>Taylor's theorem guarantees that such an intermediate point exists. We do not need to find it, because the smoothness bound applies throughout the segment.</p>
+<p>The first two terms give a linear prediction of how the loss changes. The last term accounts for curvature.</p>
+<h3 id="why-does-smoothness-bound-curvature">Why Does Smoothness Bound Curvature?</h3>
+<p>The Hessian tells us how the gradient changes. The Lipschitz condition limits that change. We can connect the two by taking a limit.</p>
+<p><strong>First, consider one parameter.</strong> Smoothness gives</p>
+<p><span class="math display">\[|\mathcal{L}'(x+h)-\mathcal{L}'(x)|
+\leq \beta|h|.\]</span></p>
+<p>For <span class="math inline">h\neq 0</span>, divide by <span class="math inline">|h|</span>:</p>
+<p><span class="math display">\[\left|
+\frac{\mathcal{L}'(x+h)-\mathcal{L}'(x)}{h}
+\right|
+\leq \beta.\]</span></p>
+<p>Now let <span class="math inline">h</span> approach zero. The fraction approaches the second derivative, so</p>
+<p><span class="math display">\[|\mathcal{L}''(x)|\leq\beta.\]</span></p>
+<p>This is the curvature bound in one dimension: the slope cannot change faster than <span class="math inline">\beta</span>.</p>
+<p><strong>For several parameters, use the same idea along a direction.</strong> Start at any point <span class="math inline">\mathbf{u}</span> and move to <span class="math inline">\mathbf{u}+h\mathbf{d}</span>, where <span class="math inline">h</span> is a scalar. The Lipschitz condition gives</p>
+<p><span class="math display">\[\|\nabla\mathcal{L}(\mathbf{u}+h\mathbf{d})
+-\nabla\mathcal{L}(\mathbf{u})\|
+\leq
+\beta\|h\mathbf{d}\|
+=
+\beta|h|\|\mathbf{d}\|.\]</span></p>
+<p>Divide by <span class="math inline">|h|</span>:</p>
+<p><span class="math display">\[\left\|
+\frac{\nabla\mathcal{L}(\mathbf{u}+h\mathbf{d})
+-\nabla\mathcal{L}(\mathbf{u})}{h}
+\right\|
+\leq\beta\|\mathbf{d}\|.\]</span></p>
+<p>As <span class="math inline">h</span> approaches zero, the fraction becomes the rate of change of the gradient in direction <span class="math inline">\mathbf{d}</span>. By the chain rule, this is the Hessian multiplied by <span class="math inline">\mathbf{d}</span>:</p>
+<p><span class="math display">\[\lim_{h\to 0}
+\frac{\nabla\mathcal{L}(\mathbf{u}+h\mathbf{d})
+-\nabla\mathcal{L}(\mathbf{u})}{h}
+=
+\mathbf{H}(\mathbf{u})\mathbf{d}.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\boxed{
+\|\mathbf{H}(\mathbf{u})\mathbf{d}\|
+\leq\beta\|\mathbf{d}\|.
+}\]</span></p>
+<p><strong>Finally, bound the term in Taylor's theorem.</strong> The result above holds at the intermediate point <span class="math inline">\xi</span>. Recall the Cauchy–Schwarz inequality:</p>
+<p><span class="math display">\[|\mathbf{a}^{\top}\mathbf{b}|
+\leq\|\mathbf{a}\|\|\mathbf{b}\|.\]</span></p>
+<p>Apply it with <span class="math inline">\mathbf{a}=\mathbf{d}</span> and <span class="math inline">\mathbf{b}=\mathbf{H}(\xi)\mathbf{d}</span>:</p>
+<p><span class="math display">\[\begin{aligned}
+|\mathbf{d}^{\top}\mathbf{H}(\xi)\mathbf{d}|
+&amp;\leq
+\|\mathbf{d}\|\,\|\mathbf{H}(\xi)\mathbf{d}\|\\
+&amp;\leq
+\|\mathbf{d}\|\,\beta\|\mathbf{d}\|\\
+&amp;=
+\beta\|\mathbf{d}\|^2.
+\end{aligned}\]</span></p>
+<p>One factor of <span class="math inline">\|\mathbf{d}\|</span> comes from the bound on the gradient's change. The other comes from taking the inner product with <span class="math inline">\mathbf{d}</span>.</p>
+<p>The curvature term can be positive or negative. For an upper bound on the loss, we use</p>
+<p><span class="math display">\[\mathbf{d}^{\top}\mathbf{H}(\xi)\mathbf{d}
+\leq
+|\mathbf{d}^{\top}\mathbf{H}(\xi)\mathbf{d}|
+\leq
+\beta\|\mathbf{d}\|^2.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}(\theta+\mathbf{d})
+\leq
+\mathcal{L}(\theta)
++
+\nabla\mathcal{L}(\theta)^{\top}\mathbf{d}
++
+\frac{\beta}{2}\|\mathbf{d}\|^2.
+}\]</span></p>
+<p>This is an upper bound on the loss after a step. It also holds for a differentiable loss with a Lipschitz gradient without requiring a continuous Hessian.</p>
+<h2 id="substitute-the-gradient-descent-step">Substitute the Gradient-Descent Step</h2>
+<p>Write</p>
+<p><span class="math display">\[\mathbf{g}=\nabla\mathcal{L}(\theta),
+\qquad
+\mathbf{d}=-\eta\mathbf{g}.\]</span></p>
+<p>Substitute into the bound:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}(\theta-\eta\mathbf{g})
+&amp;\leq
+\mathcal{L}(\theta)
++
+\mathbf{g}^{\top}(-\eta\mathbf{g})
++
+\frac{\beta}{2}\|-\eta\mathbf{g}\|^2\\
+&amp;=
+\mathcal{L}(\theta)
+-
+\eta\|\mathbf{g}\|^2
++
+\frac{\beta\eta^2}{2}\|\mathbf{g}\|^2\\
+&amp;=
+\mathcal{L}(\theta)
+-
+\eta\left(1-\frac{\beta\eta}{2}\right)
+\|\mathbf{g}\|^2.
+\end{aligned}\]</span></p>
+<p>If</p>
+<p><span class="math display">\[0&lt;\eta\leq\frac1\beta,\]</span></p>
+<p>then <span class="math inline">1-\beta\eta/2\geq1/2</span>. We obtain</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}(\theta_{s+1})
+\leq
+\mathcal{L}(\theta_s)
+-
+\frac{\eta}{2}
+\|\nabla\mathcal{L}(\theta_s)\|^2.
+}\]</span></p>
+<p>For a nonzero gradient, the loss decreases. The guaranteed decrease is larger when the gradient is larger.</p>
+<p><strong>Note:</strong> this argument assumes smoothness. ReLU is nondifferentiable at zero, so a ReLU network can violate this assumption. Even with smooth activations, a single global smoothness constant requires justification. The result tells us what follows when the stated condition holds over the region used by the updates.</p>
+<h2 id="what-does-convergence-mean">What Does Convergence Mean?</h2>
+<p>The one-step bound tells us that the loss decreases. We now ask what happens after many steps: how small can the gradient become, and do the parameters settle at one point?</p>
+<p>Suppose the loss has a finite lower bound <span class="math inline">\mathcal{L}_{\inf}</span>. Use a fixed step size satisfying <span class="math inline">0&lt;\eta\leq1/\beta</span>.</p>
+<p>Rearrange the one-step result:</p>
+<p><span class="math display">\[\frac{\eta}{2}
+\|\nabla\mathcal{L}(\theta_s)\|^2
+\leq
+\mathcal{L}(\theta_s)-\mathcal{L}(\theta_{s+1}).\]</span></p>
+<p>Sum from <span class="math inline">s=0</span> to <span class="math inline">T-1</span>:</p>
+<p><span class="math display">\[\frac{\eta}{2}
+\sum_{s=0}^{T-1}
+\|\nabla\mathcal{L}(\theta_s)\|^2
+\leq
+\mathcal{L}(\theta_0)-\mathcal{L}(\theta_T).\]</span></p>
+<p>The intermediate loss terms cancel. Since <span class="math inline">\mathcal{L}(\theta_T)\geq\mathcal{L}_{\inf}</span>,</p>
+<p><span class="math display">\[\frac{\eta}{2}
+\sum_{s=0}^{T-1}
+\|\nabla\mathcal{L}(\theta_s)\|^2
+\leq
+\mathcal{L}(\theta_0)-\mathcal{L}_{\inf}.\]</span></p>
+<p>The smallest squared gradient is at most the average, so</p>
+<p><span class="math display">\[\boxed{
+\min_{0\leq s&lt;T}
+\|\nabla\mathcal{L}(\theta_s)\|^2
+\leq
+\frac{
+2[\mathcal{L}(\theta_0)-\mathcal{L}_{\inf}]
+}{
+\eta T
+}.
+}\]</span></p>
+<p>The displayed bound controls the <strong>smallest squared gradient norm among the first <span class="math inline">T</span> iterates</strong>. Its upper bound decreases as <span class="math inline">O(1/T)</span>. With enough steps, at least one iterate has an arbitrarily small gradient. For the gradient norm itself, taking the square root gives an <span class="math inline">O(1/\sqrt{T})</span> upper bound on the smallest norm seen so far.</p>
+<p>This running-minimum bound alone does not show that every gradient approaches zero. For that stronger conclusion, return to the preceding summed inequality. The partial sums of <span class="math inline">\sum_s\|\nabla\mathcal{L}(\theta_s)\|^2</span> are bounded by a constant independent of <span class="math inline">T</span>. Since every term is nonnegative, the terms must approach zero. Thus, under the stated assumptions, <span class="math inline">\|\nabla\mathcal{L}(\theta_s)\|\to0</span> along the sequence. This extra argument does not give an <span class="math inline">O(1/T)</span> bound for every individual squared gradient norm.</p>
+<p>This is a <strong>stationarity guarantee</strong>. A stationary point has zero gradient. For a nonconvex loss, a stationary point can be a local minimum, a local maximum, or a saddle point. The argument does not guarantee a global minimum or convergence of the parameters to one particular point.</p>
+<p><strong>Remark: convergence to a single stationary point (extension).</strong> With additional assumptions, we can strengthen the conclusion to</p>
+<p><span class="math display">\[\theta_s\to\theta_\star,
+\qquad
+\nabla\mathcal L(\theta_\star)=\mathbf 0.\]</span></p>
+<p>The parameter sequence now settles at one point as the number of steps grows. This is beyond the scope of this course.</p>
+<hr />
+<h1 id="stochastic-gradient-descent">Stochastic Gradient Descent</h1>
+<p>Computing the full gradient requires all <span class="math inline">N</span> training examples:</p>
+<p><span class="math display">\[\nabla\mathcal L(\theta)
+=\frac1N\sum_{n=1}^N\nabla\ell_n(\theta).\]</span></p>
+<p>When <span class="math inline">N</span> is large, this can make each update expensive. <strong>Stochastic gradient descent (SGD)</strong> estimates this gradient using sampled examples.</p>
+<p>Choose initial parameters <span class="math inline">\theta_0</span>, a step size <span class="math inline">\eta&gt;0</span>, and a number of updates <span class="math inline">T</span>. For <span class="math inline">s=0,\ldots,T-1</span>:</p>
+<ol type="1">
+<li>sample an index <span class="math inline">n_s</span> uniformly from <span class="math inline">\{1,\ldots,N\}</span></li>
+<li>compute <span class="math inline">\mathbf g_s=\nabla\ell_{n_s}(\theta_s)</span> using backpropagation</li>
+<li>update <span class="math inline">\theta_{s+1}=\theta_s-\eta\mathbf g_s</span>.</li>
+</ol>
+<p>Return <span class="math inline">\theta_T</span>. For the analysis, each index is sampled independently of earlier sampling, with replacement. A <strong>minibatch</strong> averages several sampled gradients before making the update.</p>
+<h2 id="sgd-can-keep-fluctuating-near-the-minimum">SGD Can Keep Fluctuating Near the Minimum</h2>
+<p>Return to the simple quadratic loss</p>
+<p><span class="math display">\[\mathcal L(\theta)=\frac12\theta^2.\]</span></p>
+<p>Its minimum is at <span class="math inline">\theta=0</span>. With a suitable fixed step size, full gradient descent approaches zero. SGD uses a sampled gradient, which can be nonzero even when the full gradient is zero. If this sampling noise persists, the updates can keep moving the parameter away from the minimum.</p>
+<p>Smaller steps or larger batches can reduce these fluctuations. We want to explain why, and what kind of convergence we can still guarantee.</p>
+<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#91" target="_blank" rel="noopener">Slide 91</a>, compare the parameter values over successive updates. Change the step size and batch size, and observe how the spread of the SGD path changes.</p>
+<p>We will first show that the sampled gradient is correct on average. We will then account for how far individual samples can differ from that average.</p>
+<h2 id="the-sampled-gradient-is-unbiased">The Sampled Gradient is Unbiased</h2>
+<p>Our training objective is the average loss,</p>
+<p><span class="math display">\[\mathcal L(\theta)=\frac1N\sum_{n=1}^{N}\ell_n(\theta).\]</span></p>
+<p>At iteration <span class="math inline">s</span>, hold the current parameters <span class="math inline">\theta_s</span> fixed. Each loss is differentiable there, with a finite gradient. There are <span class="math inline">N</span> possible sampled gradients: one for each training example.</p>
+<p><strong>1. Average over the possible sampled examples.</strong> Each index <span class="math inline">n</span> has probability <span class="math inline">1/N</span>. If we select it, the sampled gradient is <span class="math inline">\nabla\ell_n(\theta_s)</span>. The conditional expectation is therefore</p>
+<p><span class="math display">\[\mathbb E[\mathbf g_s\mid\theta_s]
+=\sum_{n=1}^{N}\frac1N\nabla\ell_n(\theta_s).\]</span></p>
+<p><strong>2. Move the gradient outside the finite sum.</strong> Differentiation is linear, so</p>
+<p><span class="math display">\[\sum_{n=1}^{N}\frac1N\nabla\ell_n(\theta_s)
+=\nabla\left[\frac1N\sum_{n=1}^{N}\ell_n(\theta_s)\right].\]</span></p>
+<p><strong>3. Recognise the training objective.</strong> The expression inside the brackets is the average training loss. Thus,</p>
+<p><span class="math display">\[\boxed{
+\mathbb E[\mathbf g_s\mid\theta_s]=\nabla\mathcal L(\theta_s).
+}\]</span></p>
+<p>This is what <strong>unbiased</strong> means: at the current parameters, the sampled gradient equals the full training gradient on average.</p>
+<p>The conditioning matters because <span class="math inline">\theta_s</span> depends on earlier updates. We average over the new sampling at this step.</p>
+<p>For a one-parameter example, suppose the four training examples have gradients <span class="math inline">-2,-1,1,4</span> at the current parameters. Each has probability <span class="math inline">1/4</span>, so the mean is</p>
+<p><span class="math display">\[\frac{-2-1+1+4}{4}=0.5.\]</span></p>
+<p>This is also the full training gradient. Individual sampled gradients can be positive or negative, even though their mean is positive.</p>
+<h2 id="why-do-individual-updates-fluctuate">Why Do Individual Updates Fluctuate?</h2>
+<p>Unbiasedness describes an average over possible samples. The gradient from one example can point in a different direction from the full gradient.</p>
+<p>For example, consider two training losses:</p>
+<p><span class="math display">\[\ell_1(\theta)=\frac12(\theta-1)^2,
+\qquad
+\ell_2(\theta)=\frac12(\theta+1)^2.\]</span></p>
+<p>Their average is</p>
+<p><span class="math display">\[\mathcal L(\theta)
+=\frac12[\ell_1(\theta)+\ell_2(\theta)]
+=\frac12\theta^2+\frac12.\]</span></p>
+<p>The constant <span class="math inline">1/2</span> has no effect on the gradient, so the full-gradient update is the same as for the previous quadratic example. The average loss is minimised at <span class="math inline">\theta=0</span>, but the two individual gradients there are <span class="math inline">-1</span> and <span class="math inline">+1</span>. Sampling either example moves the parameter to <span class="math inline">+\eta</span> or <span class="math inline">-\eta</span>. The full gradient is zero, yet an individual update moves away from the minimum.</p>
+<p>Each individual loss favours its own minimum. Repeatedly choosing different examples can therefore make the parameter fluctuate around the minimum of their average.</p>
+<p>To analyse this, write the sampled gradient as</p>
+<p><span class="math display">\[\mathbf g_s=\nabla\mathcal L(\theta_s)+\boldsymbol\epsilon_s.\]</span></p>
+<p>The difference <span class="math inline">\boldsymbol\epsilon_s</span> is the <strong>sampling noise</strong>. From the unbiasedness proof,</p>
+<p><span class="math display">\[\mathbb E[\boldsymbol\epsilon_s\mid\theta_s]=\mathbf0.\]</span></p>
+<p>Zero-mean noise follows from uniform sampling. We have proved this property.</p>
+<h2 id="the-additional-variance-assumption">The Additional Variance Assumption</h2>
+<p>For the convergence analysis, we now make an <strong>additional assumption</strong>: the single-example noise variance is at most <span class="math inline">v^2</span> at every iteration. The same constant must work throughout the analysis. For a uniformly sampled index <span class="math inline">n</span>,</p>
+<p><span class="math display">\[\mathbb E_n\!\left[
+\|\nabla\ell_n(\theta_s)-\nabla\mathcal L(\theta_s)\|^2
+\mid\theta_s
+\right]\leq v^2
+\qquad\text{for every }s.\]</span></p>
+<p>This bounds the average squared distance of a sampled gradient from the full gradient. Individual deviations can be larger than <span class="math inline">v</span>. The bound does not follow from unbiasedness.</p>
+<p>At any fixed parameter setting, a finite collection of finite gradients has a finite maximum size. The unbiasedness proof uses this finite average and needs no global bound on gradient size. Those gradients can change as the parameters move, so a single variance bound throughout training needs its own justification.</p>
+<p>For a minibatch of <span class="math inline">B</span> independently sampled examples, the gradient estimate is their average:</p>
+<p><span class="math display">\[\mathbf g_s=\frac1B\sum_{b=1}^B\nabla\ell_{n_{s,b}}(\theta_s).\]</span></p>
+<p>Here <span class="math inline">n_{s,b}</span> is the index of the <span class="math inline">b</span>th sampled example at iteration <span class="math inline">s</span>. Averaging preserves unbiasedness and reduces the noise variance:</p>
+<p><span class="math display">\[\boxed{
+\mathbb E[\|\boldsymbol\epsilon_s\|^2\mid\theta_s]
+\leq\frac{v^2}{B}.
+}\]</span></p>
+<p>To see the factor <span class="math inline">1/B</span>, expand the squared norm of the average noise. The <span class="math inline">B</span> individual squared terms each have expectation at most <span class="math inline">v^2</span>. The cross terms have expectation zero because the samples are independent and their noise has mean zero. Dividing by <span class="math inline">B^2</span> leaves <span class="math inline">Bv^2/B^2=v^2/B</span>.</p>
+<p>Keep the three statements separate:</p>
+<ul>
+<li><strong>Proved:</strong> uniform sampling gives an unbiased gradient.</li>
+<li><strong>Assumed:</strong> single-example noise variance stays below <span class="math inline">v^2</span> throughout training.</li>
+<li><strong>Derived:</strong> averaging <span class="math inline">B</span> independent samples gives a variance bound of <span class="math inline">v^2/B</span>.</li>
+</ul>
+<p>Here the dataset is fixed. The randomness comes from which examples we sample for each update.</p>
+<h2 id="when-does-sgd-decrease-the-loss-on-average">When Does SGD Decrease the Loss on Average?</h2>
+<p>Assume a <span class="math inline">\beta</span>-smooth loss, a step size <span class="math inline">0&lt;\eta\leq1/\beta</span>, and the variance bound above. Average <span class="math inline">B</span> independent sampled gradients at each step.</p>
+<p>We can derive the bound by averaging the smoothness inequality. The calculation below also supports the optional SGD exercise in Tutorial 6.</p>
+<p>Start from the same smoothness inequality, now with the step <span class="math inline">-\eta\mathbf g_s</span>:</p>
+<p><span class="math display">\[\mathcal L(\theta_{s+1})
+\leq\mathcal L(\theta_s)
+-\eta\nabla\mathcal L(\theta_s)^\top\mathbf g_s
++\frac{\beta\eta^2}{2}\|\mathbf g_s\|^2.\]</span></p>
+<p>Hold <span class="math inline">\theta_s</span> fixed and average over the newly sampled gradient. For the middle term, unbiasedness gives</p>
+<p><span class="math display">\[\mathbb E[\nabla\mathcal L(\theta_s)^\top\mathbf g_s\mid\theta_s]
+=\|\nabla\mathcal L(\theta_s)\|^2.\]</span></p>
+<p>For the last term, expand the squared norm:</p>
+<p><span class="math display">\[\begin{aligned}
+\|\mathbf g_s\|^2
+&amp;=\|\nabla\mathcal L(\theta_s)+\boldsymbol\epsilon_s\|^2\\
+&amp;=\|\nabla\mathcal L(\theta_s)\|^2
++2\nabla\mathcal L(\theta_s)^\top\boldsymbol\epsilon_s
++\|\boldsymbol\epsilon_s\|^2.
+\end{aligned}\]</span></p>
+<p>The cross term has expectation zero. The remaining noise term is bounded by the variance assumption:</p>
+<p><span class="math display">\[\mathbb E[\|\mathbf g_s\|^2\mid\theta_s]
+\leq\|\nabla\mathcal L(\theta_s)\|^2+\frac{v^2}{B}.\]</span></p>
+<p>Substitute both results:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbb E[\mathcal L(\theta_{s+1})\mid\theta_s]
+&amp;\leq\mathcal L(\theta_s)-\eta\|\nabla\mathcal L(\theta_s)\|^2
++\frac{\beta\eta^2}{2}\left(\|\nabla\mathcal L(\theta_s)\|^2+\frac{v^2}{B}\right)\\
+&amp;=\mathcal L(\theta_s)
+-\eta\left(1-\frac{\beta\eta}{2}\right)\|\nabla\mathcal L(\theta_s)\|^2
++\frac{\beta\eta^2v^2}{2B}.
+\end{aligned}\]</span></p>
+<p>Our step-size condition gives <span class="math inline">1-\beta\eta/2\geq1/2</span>, so</p>
+<p><span class="math display">\[\boxed{
+\mathbb E[\mathcal L(\theta_{s+1})\mid\theta_s]
+\leq\mathcal L(\theta_s)
+-\underbrace{\frac\eta2\|\nabla\mathcal L(\theta_s)\|^2}_{\text{progress}}
++\underbrace{\frac{\beta\eta^2v^2}{2B}}_{\text{noise}}.
+}\]</span></p>
+<p>The first term we subtract comes from following the true gradient. The positive term accounts for sampling noise in the upper bound.</p>
+<p>The expected loss is guaranteed to decrease when the decrease term exceeds the noise term. A sufficient condition is</p>
+<p><span class="math display">\[\|\nabla\mathcal L(\theta_s)\|^2&gt;\frac{\beta\eta v^2}{B}.\]</span></p>
+<p>When the gradient becomes small, this guarantee can disappear. Smaller steps or larger batches reduce the noise term relative to the decrease term.</p>
+<p>This is a bound on the <strong>expected</strong> next loss. A particular SGD step may increase the loss. The positive noise term is also an upper-bound term; it does not mean that noise increases the loss by that amount on every step.</p>
+<h2 id="sgd-convergence-with-a-fixed-step-size">SGD Convergence With a Fixed Step Size</h2>
+<p>For a convergence bound, also assume the loss has a finite lower bound <span class="math inline">\mathcal L_{\inf}</span>. Keep <span class="math inline">\eta</span> and <span class="math inline">B</span> fixed, with the smoothness and variance assumptions holding throughout the updates.</p>
+<p>Sum the expected one-step inequalities. Taking expectations over the earlier sampling as well gives</p>
+<p><span class="math display">\[\frac\eta2\sum_{s=0}^{T-1}\mathbb E\|\nabla\mathcal L(\theta_s)\|^2
+\leq\mathcal L(\theta_0)-\mathcal L_{\inf}
++\frac{T\beta\eta^2v^2}{2B}.\]</span></p>
+<p>Divide by <span class="math inline">\eta T/2</span>. The minimum of the expected squared gradients is at most their average, so</p>
+<p><span class="math display">\[\boxed{
+\min_{0\leq s&lt;T}\mathbb E\|\nabla\mathcal L(\theta_s)\|^2
+\leq
+\underbrace{\frac{2[\mathcal L(\theta_0)-\mathcal L_{\inf}]}{\eta T}}_{\text{shrinks with time}}
++\underbrace{\frac{\beta\eta v^2}{B}}_{\text{noise floor}}.
+}\]</span></p>
+<p>The minimum is over the first <span class="math inline">T</span> iterates; the expectation averages over the random sampling. At some iteration among the first <span class="math inline">T</span> updates, the expected squared gradient is at most the right-hand side.</p>
+<p>The terms have the following consequences:</p>
+<ul>
+<li><strong>More iterations</strong> reduce the first term.</li>
+<li><strong>A fixed step size</strong> leaves the second term unchanged when <span class="math inline">B</span> and <span class="math inline">v^2</span> are fixed.</li>
+<li><strong>Smaller steps or larger batches</strong> lower the second term. Smaller steps also make the first term larger at a fixed number of iterations.</li>
+</ul>
+<p>If <span class="math inline">v^2&gt;0</span>, the bound approaches a positive value as <span class="math inline">T</span> grows. This is the <strong>noise floor in the bound</strong>. It does not prove that every problem has persistent fluctuations: the actual noise may be smaller, or vanish near a solution.</p>
+<p>The guarantee concerns <strong>expected squared gradient size</strong>. It gives neither a distance from the optimum nor convergence of the parameters to a single point. A stationary point also need not be a global minimum.</p>
+<h3 id="connection-to-tutorial-6">Connection to Tutorial 6</h3>
+<p>The optional SGD exercise in Tutorial 6 uses a bound on the <strong>second moment of the sampled gradient</strong>, <span class="math inline">\mathbb E[g_s^2\mid\theta_s]\leq\sigma^2</span>, in its scalar example. Here we assumed a bound on the <strong>noise variance</strong> instead. A second-moment bound also bounds the variance, but the two derivations give differently written bounds.</p>
+<p>The tutorial writes <span class="math inline">\alpha</span> for the step size and <span class="math inline">L</span> for the curvature bound. These correspond to <span class="math inline">\eta</span> and <span class="math inline">\beta</span> here. We use <span class="math inline">s</span> consistently for iterations, keeping <span class="math inline">t_n</span> for targets.</p>
+<h2 id="returning-to-the-quadratic-example">Returning to the Quadratic Example</h2>
+<p>We can now calculate the spread of the fluctuations in the quadratic example. Recall</p>
+<p><span class="math display">\[\mathcal L(\theta)=\frac12\theta^2.\]</span></p>
+<p>Full gradient descent follows</p>
+<p><span class="math display">\[\theta_{s+1}=(1-\eta)\theta_s.\]</span></p>
+<p>For <span class="math inline">0&lt;\eta&lt;2</span>, the factor has magnitude less than one, so the parameter approaches zero. For SGD, write the sampled gradient as <span class="math inline">\theta_s+\epsilon_s</span>. The update becomes</p>
+<p><span class="math display">\[\theta_{s+1}=(1-\eta)\theta_s-\eta\epsilon_s.\]</span></p>
+<p>Assume this noise is independent of earlier updates and has variance <span class="math inline">v^2/B</span>. Then <span class="math inline">\mathbb E[\theta_s]</span> still approaches zero, but</p>
+<p><span class="math display">\[\operatorname{Var}(\theta_{s+1})
+=(1-\eta)^2\operatorname{Var}(\theta_s)+\frac{\eta^2v^2}{B}.\]</span></p>
+<p>At the limiting variance <span class="math inline">V</span>, the value no longer changes between steps:</p>
+<p><span class="math display">\[V=(1-\eta)^2V+\frac{\eta^2v^2}{B}.\]</span></p>
+<p>Rearranging gives</p>
+<p><span class="math display">\[\boxed{V=\frac{\eta v^2}{B(2-\eta)}.}\]</span></p>
+<p>With positive noise variance and a fixed step size, the spread remains positive. Smaller steps or larger batches reduce it. The interval <span class="math inline">[-\sqrt V,\sqrt V]</span> is one long-run standard deviation on each side of zero. It describes the spread; it is not a boundary that contains every iterate.</p>
+<p>This specific example gives the <strong>noise ball</strong> picture: parameters fluctuate around the minimum. The general SGD convergence bound makes a statement about gradients; it does not establish such a region in parameter space for every loss.</p>
+<hr />
+<h1 id="machine-learning--optimization">Machine Learning ≠ Optimization</h1>
+<h2 id="training-loss-and-test-loss-differ">Training Loss and Test Loss Differ</h2>
+<p>Imagine two fitted networks. The first has lower training loss because it closely fits accidental details of the sample. The second has slightly higher training loss but predicts new examples more accurately. An optimiser that compares only training loss would prefer the first.</p>
+<p>The same issue can appear in a loss landscape: a narrow, deep minimum in training loss need not be a good minimum in test loss. A broader basin may generalise better in a particular problem, but width alone does not determine generalisation. The essential point is that training and test loss are different quantities.</p>
+<p>We still use validation data to compare training choices and estimate whether improvements carry over to new examples.</p>
+<h2 id="the-goal-is-generalisation">The Goal Is Generalisation</h2>
+<p>The descent arguments concern the <strong>training objective</strong>:</p>
+<p><span class="math display">\[\mathcal{L}(\theta)
+=
+\frac1N
+\sum_{n=1}^{N}
+\ell\left(f_\theta(\mathbf{x}_n),t_n\right).\]</span></p>
+<p>Our real goal is good performance on new data:</p>
+<p><span class="math display">\[R(\theta)
+=
+\mathbb{E}_{(\mathbf{x},t)\sim p}
+\left[
+\ell\left(f_\theta(\mathbf{x}),t\right)
+\right].\]</span></p>
+<p>In general,</p>
+<p><span class="math display">\[\boxed{
+\mathcal{L}(\theta)\neq R(\theta).
+}\]</span></p>
+<p>The training objective is a data-based estimate of the population objective. It is also the quantity we used to select the model. As we saw in Lectures 5 and 6, that selection can favour accidental details of the training sample.</p>
+<p>An optimisation method asks how to reduce the objective it is given. Machine learning also asks whether that objective and the available data lead to useful predictions.</p>
+<h2 id="optimisation-can-act-as-regularisation">Optimisation Can Act as Regularisation</h2>
+<p>A flexible network may have many parameter settings that fit the training data. The training process influences which one we reach.</p>
+<p>For example:</p>
+<ul>
+<li><strong>Early stopping</strong> limits how long we continue fitting the training sample.</li>
+<li><strong>Initialisation</strong> determines where the search begins.</li>
+<li><strong>The optimiser and step size</strong> influence the path through parameter space.</li>
+<li><strong>Sampling noise</strong> changes the updates and can affect the solution reached.</li>
+</ul>
+<p>These choices can favour some solutions even when we do not add an explicit penalty to the loss. This is called an <strong>implicit bias</strong> of the learning process, and it can act as a form of regularisation.</p>
+<p>It does not follow that every such bias improves generalisation. The useful question is whether the solutions favoured by the training process match the structure of the prediction problem.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>The main ideas are:</p>
+<ol type="1">
+<li><p><strong>Learned features.</strong> A neural network composes parameterised functions. Their intermediate outputs are the representations used by later computations. Learning changes both the features and the predictor.</p></li>
+<li><p><strong>MLP predictions.</strong> Compute each layer's weighted sums, biases, and activations in order. Choose the output and loss to match the task: a linear output and squared loss for regression, sigmoid and binary cross-entropy for binary classification, or softmax and cross-entropy for multiclass classification.</p></li>
+<li><p><strong>Gradients and updates.</strong> For an affine connection, the weight gradient is the receiving unit's error signal multiplied by its input. Backpropagation computes these gradients. The optimiser uses them to update the parameters.</p></li>
+<li><p><strong>UAT and depth.</strong> A sufficiently wide network with one sigmoid hidden layer can approximate a continuous target on a compact domain arbitrarily well. Depth can use fewer units for functions with reusable structure. These are representation results; learning and generalisation require further arguments.</p></li>
+<li><p><strong>Convergence.</strong> Under the smoothness, step-size, and lower-bound conditions, full gradient descent drives gradient norms towards zero. With a fixed step size and bounded sampling variance, the SGD bound includes a noise term. SGD can keep fluctuating, as the quadratic example shows. Neither result guarantees a global minimum.</p></li>
+</ol>
+<p>The optimisation results concern the training loss. Machine learning also requires good predictions on new data.</p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
