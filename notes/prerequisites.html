@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Mathematical prerequisites</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, mathematical prerequisites: CS3264: Mathematical Prerequisites">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h2"><a href="#basics">Basics</a></li>
+<li class="toc-h3"><a href="#mathematical-notation-and-reading-equations">Mathematical Notation and Reading Equations</a></li>
+<li class="toc-h3"><a href="#sets-indicators-sums-and-products">Sets, Indicators, Sums and Products</a></li>
+<li class="toc-h3"><a href="#algebra-you-will-use">Algebra You Will Use</a></li>
+<li class="toc-h3"><a href="#functions-exponentials-and-logarithms">Functions, Exponentials and Logarithms</a></li>
+<li class="toc-h2"><a href="#linear-algebra">Linear Algebra</a></li>
+<li class="toc-h3"><a href="#vectors-and-matrices">Vectors and Matrices</a></li>
+<li class="toc-h3"><a href="#solving-linear-equations-and-least-squares">Solving Linear Equations and Least Squares</a></li>
+<li class="toc-h2"><a href="#probability">Probability</a></li>
+<li class="toc-h3"><a href="#probability-basics">Probability Basics</a></li>
+<li class="toc-h3"><a href="#random-variables-and-common-distributions">Random Variables and Common Distributions</a></li>
+<li class="toc-h3"><a href="#expectation-variance-and-covariance">Expectation, Variance and Covariance</a></li>
+<li class="toc-h3"><a href="#basic-probability-bounds">Basic Probability Bounds</a></li>
+<li class="toc-h2"><a href="#calculus-and-optimisation">Calculus and Optimisation</a></li>
+<li class="toc-h3"><a href="#derivatives-and-gradients">Derivatives and Gradients</a></li>
+<li class="toc-h3"><a href="#optimisation-argminargmax-and-gradient-descent">Optimisation, argmin/argmax and Gradient Descent</a></li>
+<li class="toc-h3"><a href="#scaling-or-adding-a-constant-to-the-objective">Scaling or Adding a Constant to the Objective</a></li>
+<li class="toc-h3"><a href="#constraints-and-lagrange-multipliers">Constraints and Lagrange Multipliers</a></li>
+<li class="toc-h2"><a href="#how-these-pieces-will-be-used-in-cs3264">How These Pieces Will Be Used in CS3264</a></li>
+<li class="toc-h2"><a href="#summary--quick-reference">Summary / quick reference</a></li>
+</ol>
+</details>
+</aside>
+<article>
+<h1 id="cs3264-mathematical-prerequisites">CS3264: Mathematical Prerequisites</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>These notes review the mathematics you will need, using small examples that do not require any previous knowledge of machine learning. Start here if you are unfamiliar with the notation or would like to refresh the underlying ideas.</p>
+<p>Most of the mathematics serves a few purposes. <strong>Algebra</strong> lets us read and rearrange equations. <strong>Vectors and matrices</strong> organise several numbers and calculations together. <strong>Probability</strong> describes uncertain outcomes, while averages and measures of spread help us summarise them. <strong>Calculus and optimisation</strong> describe how a function changes and how to find values that make it small or large.</p>
+<p>The review is organised into four parts: <strong>Basics</strong>, <strong>Linear Algebra</strong>, <strong>Probability</strong>, and <strong>Calculus and Optimisation</strong>. Work through the examples in order when a topic is new to you. The final course map is only a preview of where these tools are used; the lectures will introduce the machine learning concepts themselves.</p>
+<p>The main aim is to understand what an equation says and why each step is valid. Ask: What is fixed? What can change? What does each symbol mean? Which rule allows the next step?</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>After working through these notes, you should be able to:</p>
+<ul>
+<li>read indices, sums, products, sets, and common mathematical notation</li>
+<li>rearrange simple equations and use exponential and logarithm rules</li>
+<li>calculate dot products and matrix products, check their dimensions, and interpret the normal equations</li>
+<li>distinguish joint, conditional, and marginal probabilities, and use Bayes' rule</li>
+<li>recognise Bernoulli, categorical, and Gaussian distributions</li>
+<li>calculate and interpret expectation, variance, and covariance</li>
+<li>explain independence, conditional independence, and the iid assumption</li>
+<li>use partial derivatives and the chain rule to calculate a gradient</li>
+<li>distinguish a minimum value from the input that achieves it, and perform a gradient-descent step</li>
+<li>solve a simple equality-constrained problem using a Lagrangian</li>
+<li>read a probability bound and rearrange it to find a sufficient sample size.</li>
+</ul>
+<p><strong>What should you remember?</strong> Make the short rules familiar: dot products, matrix dimensions, log rules, the chain rule, the sum and product rules of probability, Bayes' rule, and the definitions of expectation and variance.</p>
+<p><strong>What should you understand?</strong> Practise explaining and reproducing the worked examples. You should be able to say why a calculation works and when its assumptions apply. For longer expressions, such as a probability bound, start by identifying what every quantity means. You do not need to learn the machine learning methods before beginning the lectures.</p>
+<hr />
+<h2 id="basics">Basics</h2>
+<h3 id="mathematical-notation-and-reading-equations">Mathematical Notation and Reading Equations</h3>
+<p>A <strong>scalar</strong> is one number, a <strong>vector</strong> is an ordered collection of numbers, and a <strong>matrix</strong> is a rectangular table of numbers. Bold lowercase letters usually denote vectors, such as <span class="math inline">\mathbf{x}</span>; bold uppercase letters usually denote matrices, such as <span class="math inline">\mathbf{A}</span>. We will explain their operations in the linear algebra section.</p>
+<p>Notation sometimes varies between sources. Read the definitions around an equation, and please ask if a symbol is unclear. The following conventions are useful starting points.</p>
+<table>
+<thead>
+<tr>
+<th>Notation</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">x\in\mathbb{R}</span></td>
+<td><span class="math inline">x</span> is a real number</td>
+</tr>
+<tr>
+<td><span class="math inline">x_i</span></td>
+<td>Entry <span class="math inline">i</span> in a collection of numbers</td>
+</tr>
+<tr>
+<td><span class="math inline">N</span></td>
+<td>The number of items or observations</td>
+</tr>
+<tr>
+<td><span class="math inline">\mathbf{x}\in\mathbb{R}^M</span></td>
+<td>A vector containing <span class="math inline">M</span> real numbers</td>
+</tr>
+<tr>
+<td><span class="math inline">\mathbf{A}\in\mathbb{R}^{N\times M}</span></td>
+<td>A matrix with <span class="math inline">N</span> rows and <span class="math inline">M</span> columns</td>
+</tr>
+<tr>
+<td><span class="math inline">\bar{x}</span></td>
+<td>An average of values of <span class="math inline">x</span></td>
+</tr>
+<tr>
+<td><span class="math inline">\hat{\theta}</span></td>
+<td>An estimate of an unknown quantity <span class="math inline">\theta</span></td>
+</tr>
+<tr>
+<td><span class="math inline">f(x)</span></td>
+<td>The output of function <span class="math inline">f</span> at input <span class="math inline">x</span></td>
+</tr>
+</tbody>
+</table>
+<p>A subscript usually labels an entry rather than an operation. If <span class="math inline">x_1=2</span>, <span class="math inline">x_2=5</span>, and <span class="math inline">x_3=8</span>, then <span class="math inline">x_2</span> means the second value, which is <span class="math inline">5</span>. For a table, <span class="math inline">x_{nm}</span> can mean entry <span class="math inline">m</span> of row <span class="math inline">n</span>. Some sources write this as <span class="math inline">x_n^m</span>, with the superscript acting as an index. In an expression such as <span class="math inline">x^2</span>, however, it usually means a power. The definition determines which interpretation applies.</p>
+<p>Read an equation from its smaller pieces outward. For example,</p>
+<p><span class="math display">\[r=\frac{(2-5)^2+(8-5)^2}{2}
+=\frac{9+9}{2}=9.\]</span></p>
+<p>We subtract <span class="math inline">5</span> from each number, square both differences, add them, and divide by two. This is the average squared distance of the two numbers from <span class="math inline">5</span>.</p>
+<p>An equality <span class="math inline">=</span> says two quantities are equal. An approximation <span class="math inline">\approx</span> says they are close. A proportionality <span class="math inline">\propto</span> leaves out a common multiplicative factor: if quantities are proportional to <span class="math inline">2</span> and <span class="math inline">3</span> and must add to one, they are <span class="math inline">2/5</span> and <span class="math inline">3/5</span>. Proportionality does not mean “equal up to an additive constant”.</p>
+<p>Symbols can have different meanings in different settings. For example, <span class="math inline">E(x)</span> may simply be the name of a function, whereas <span class="math inline">\mathbb{E}[X]</span> denotes an expectation, which we will define later. Different styles help distinguish these meanings, but the surrounding definitions are still important.</p>
+<h3 id="sets-indicators-sums-and-products">Sets, Indicators, Sums and Products</h3>
+<p>A <strong>set</strong> is a collection of elements. For <span class="math inline">S=\{1,2,3,4\}</span>, the expression <span class="math inline">2\in S</span> means that <span class="math inline">2</span> belongs to the set, and <span class="math inline">|S|=4</span> gives its number of elements. Around a scalar, the same vertical bars denote absolute value: <span class="math inline">|-3|=3</span>.</p>
+<p>The union <span class="math inline">A\cup B</span> contains elements in either set or both. The intersection <span class="math inline">A\cap B</span> contains elements in both. For <span class="math inline">A=\{1,2\}</span> and <span class="math inline">B=\{2,3\}</span>,</p>
+<p><span class="math display">\[A\cup B=\{1,2,3\},
+\qquad A\cap B=\{2\}.\]</span></p>
+<p>The symbol <span class="math inline">\forall</span> means “for every”, and <span class="math inline">\exists</span> means “there exists at least one”. For example, <span class="math inline">\forall x\in S:\ x&gt;0</span> is true, and <span class="math inline">\exists x\in S:\ x&gt;3</span> is also true. A statement about every element fails as soon as one element fails it.</p>
+<p>A <strong>sum</strong> adds indexed terms, while a <strong>product</strong> multiplies them:</p>
+<p><span class="math display">\[\sum_{i=1}^{3}a_i=a_1+a_2+a_3,
+\qquad
+\prod_{i=1}^{3}a_i=a_1a_2a_3.\]</span></p>
+<p>If the values are <span class="math inline">2,3,4</span>, the sum is <span class="math inline">9</span> and the product is <span class="math inline">24</span>. The letter <span class="math inline">i</span> is a temporary index; replacing it consistently with <span class="math inline">j</span> does not change the result. A double sum such as <span class="math inline">\sum_i\sum_j a_{ij}</span> adds entries across both indices, for example all entries of a table.</p>
+<p>An <strong>indicator function</strong> turns a statement into zero or one:</p>
+<p><span class="math display">\[\mathbb{1}[A]=
+\begin{cases}
+1,&amp;\text{if }A\text{ is true},\\
+0,&amp;\text{if }A\text{ is false}.
+\end{cases}\]</span></p>
+<p>Suppose <span class="math inline">a_1=2</span>, <span class="math inline">a_2=5</span>, and <span class="math inline">a_3=8</span>. Then</p>
+<p><span class="math display">\[\sum_{i=1}^{3}\mathbb{1}[a_i&gt;3]=0+1+1=2\]</span></p>
+<p>counts how many values exceed <span class="math inline">3</span>. Dividing by three gives the fraction that satisfy the condition. An indicator can also select terms:</p>
+<p><span class="math display">\[\sum_{i:a_i&gt;3}a_i
+=\sum_{i=1}^{3}\mathbb{1}[a_i&gt;3]a_i
+=0(2)+1(5)+1(8)=13.\]</span></p>
+<p>The expression under the first sum means “include only indices for which <span class="math inline">a_i&gt;3</span>”.</p>
+<h3 id="algebra-you-will-use">Algebra You Will Use</h3>
+<p>Many derivations use ordinary expansion, factorisation, and rearrangement. Two useful identities are</p>
+<p><span class="math display">\[(a-b)^2=a^2-2ab+b^2,
+\qquad
+(a+b)^2=a^2+2ab+b^2.\]</span></p>
+<p>For example, <span class="math inline">(x-3)^2=x^2-6x+9</span>. The middle term is needed: squaring a difference is not the same as subtracting the squares.</p>
+<p>You can move a factor outside a sum if it does not depend on the summation index. For a constant <span class="math inline">c</span>,</p>
+<p><span class="math display">\[\sum_{i=1}^{N}ca_i=c\sum_{i=1}^{N}a_i,
+\qquad
+\sum_{i=1}^{N}c=Nc.\]</span></p>
+<p>For example, suppose we want a number <span class="math inline">m</span> for which the differences from <span class="math inline">2,5,8</span> add to zero:</p>
+<p><span class="math display">\[(2-m)+(5-m)+(8-m)=0
+\quad\Longrightarrow\quad
+15-3m=0
+\quad\Longrightarrow\quad
+m=5.\]</span></p>
+<p>For arbitrary numbers <span class="math inline">a_1,\ldots,a_N</span>, the same steps give</p>
+<p><span class="math display">\[\sum_{i=1}^{N}(a_i-m)=0
+\quad\Longrightarrow\quad
+\sum_{i=1}^{N}a_i-Nm=0
+\quad\Longrightarrow\quad
+m=\frac{1}{N}\sum_{i=1}^{N}a_i.\]</span></p>
+<p>Here <span class="math inline">m</span> is fixed as we move through the index <span class="math inline">i</span>, even though it is the unknown we want to find. This distinction between “constant with respect to an index” and “already known” is useful throughout mathematics.</p>
+<h3 id="functions-exponentials-and-logarithms">Functions, Exponentials and Logarithms</h3>
+<p>A <strong>function</strong> maps an input to an output. For example, <span class="math inline">f(x)=2x+1</span> gives <span class="math inline">f(3)=7</span>. A <strong>parameter</strong> is a number that specifies which function we use. In <span class="math inline">f(x;a)=ax+1</span>, the semicolon separates the input <span class="math inline">x</span> from the parameter <span class="math inline">a</span>. Fixing <span class="math inline">a=2</span> gives the previous function.</p>
+<p>A composition applies one function after another. If <span class="math inline">g(x)=2x+1</span> and <span class="math inline">h(u)=u^2</span>, then</p>
+<p><span class="math display">\[h(g(x))=(2x+1)^2.\]</span></p>
+<p>At <span class="math inline">x=3</span>, we first obtain <span class="math inline">7</span> and then square it to obtain <span class="math inline">49</span>.</p>
+<p>The exponential function <span class="math inline">e^a</span>, also written <span class="math inline">\exp(a)</span>, is positive for every real <span class="math inline">a</span>. The number <span class="math inline">e</span> is approximately <span class="math inline">2.718</span>. The natural logarithm <span class="math inline">\log a</span> or <span class="math inline">\ln a</span> is its inverse and is defined for <span class="math inline">a&gt;0</span>. We use natural logarithms in these notes. The main rules are</p>
+<p><span class="math display">\[\begin{aligned}
+e^{a+b}&amp;=e^ae^b, &amp; e^{-a}&amp;=\frac{1}{e^a},\\
+\log(ab)&amp;=\log a+\log b, &amp; \log(a/b)&amp;=\log a-\log b,\\
+\log(a^r)&amp;=r\log a, &amp; \log(e^a)&amp;=a.
+\end{aligned}\]</span></p>
+<p>The log identities involving <span class="math inline">a</span> and <span class="math inline">b</span> require positive arguments. For example, <span class="math inline">\log(2\times3)=\log2+\log3</span>. But <span class="math inline">\log(2+3)</span> is generally not <span class="math inline">\log2+\log3</span>.</p>
+<p>For positive numbers <span class="math inline">a_i</span>, a log changes a product into a sum:</p>
+<p><span class="math display">\[\log\left(\prod_{i=1}^{N}a_i\right)
+=\sum_{i=1}^{N}\log a_i.\]</span></p>
+<p>Logarithms are strictly increasing: if <span class="math inline">a&gt;b&gt;0</span>, then <span class="math inline">\log a&gt;\log b</span>. Taking logs therefore preserves which of several positive numbers is largest. This will be useful when we compare positive-valued functions.</p>
+<p>Two functions built from exponentials deserve a first introduction. The <strong>sigmoid</strong> maps a real number to a value strictly between zero and one:</p>
+<p><span class="math display">\[\sigma(a)=\frac{1}{1+e^{-a}}.\]</span></p>
+<p>For example, <span class="math inline">\sigma(0)=1/2</span>, <span class="math inline">\sigma(\log3)=3/4</span>, and <span class="math inline">\sigma(-\log3)=1/4</span>. Increasing the input increases the output, which approaches one for large positive inputs and zero for large negative inputs. At this stage, it is simply a useful way to turn an unrestricted number into a bounded one.</p>
+<p>If <span class="math inline">y=\sigma(a)</span>, rearranging gives</p>
+<p><span class="math display">\[\frac{1-y}{y}=e^{-a}
+\quad\Longrightarrow\quad
+\frac{y}{1-y}=e^a
+\quad\Longrightarrow\quad
+\log\frac{y}{1-y}=a.\]</span></p>
+<p>If <span class="math inline">y</span> is a probability, the ratio <span class="math inline">y/(1-y)</span> is called the <strong>odds</strong>, and its logarithm is the <strong>log-odds</strong>. For <span class="math inline">y=3/4</span>, the odds are <span class="math inline">3</span>: the event is three times as likely to occur as not to occur.</p>
+<p>The <strong>softmax</strong> function takes several real numbers and produces positive numbers that sum to one:</p>
+<p><span class="math display">\[y_k=\frac{e^{a_k}}{\sum_{j=1}^{K}e^{a_j}}.\]</span></p>
+<p>For inputs <span class="math inline">(0,\log2,\log3)</span>, the exponentials are <span class="math inline">(1,2,3)</span>. Dividing each by their total gives <span class="math inline">(1/6,2/6,3/6)</span>. This division is called <strong>normalisation</strong>. Larger inputs receive larger shares of the total, so the result can represent probabilities over alternatives.</p>
+<p>Adding the same constant <span class="math inline">c</span> to every input leaves these shares unchanged: every exponential is multiplied by <span class="math inline">e^c</span>, which cancels between numerator and denominator. Understand the two steps—make the values positive, then divide by their total—rather than treating softmax as an unexplained formula.</p>
+<hr />
+<h2 id="linear-algebra">Linear Algebra</h2>
+<h3 id="vectors-and-matrices">Vectors and Matrices</h3>
+<p>Unless stated otherwise, vectors are <strong>column vectors</strong>. For example, <span class="math inline">\mathbf{x}=[3,4]^{\top}</span> is a short way of writing the column with entries <span class="math inline">3</span> and <span class="math inline">4</span>. The <strong>transpose</strong>, written <span class="math inline">\top</span>, swaps rows and columns. If <span class="math inline">\mathbf{x}</span> is <span class="math inline">M\times1</span>, then <span class="math inline">\mathbf{x}^{\top}</span> is <span class="math inline">1\times M</span>.</p>
+<p>Vector addition and multiplication by a scalar act on each entry. For example,</p>
+<p><span class="math display">\[\begin{bmatrix}1\\2\end{bmatrix}
++2\begin{bmatrix}3\\4\end{bmatrix}
+=\begin{bmatrix}7\\10\end{bmatrix}.\]</span></p>
+<p>The <strong>dot product</strong> multiplies matching entries and adds them:</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\mathbf{x}=\sum_{m=1}^{M}w_mx_m.\]</span></p>
+<p>For <span class="math inline">\mathbf{w}=[2,-1]^{\top}</span> and <span class="math inline">\mathbf{x}=[3,4]^{\top}</span>, it is <span class="math inline">2(3)-1(4)=2</span>. The result is one number. For another interpretation, quantities <span class="math inline">[2,3]^{\top}</span> and prices <span class="math inline">[4,5]^{\top}</span> give a total cost of <span class="math inline">2(4)+3(5)=23</span> through a dot product.</p>
+<p>The <strong>Euclidean norm</strong> is a vector's length:</p>
+<p><span class="math display">\[\|\mathbf{x}\|_2=\sqrt{\sum_mx_m^2},
+\qquad
+\|\mathbf{x}\|_2^2=\mathbf{x}^{\top}\mathbf{x}.\]</span></p>
+<p>For <span class="math inline">[3,4]^{\top}</span>, the norm is <span class="math inline">5</span> and the squared norm is <span class="math inline">25</span>. The distance between two vectors is the norm of their difference. Two nonzero vectors with dot product zero are perpendicular, or <strong>orthogonal</strong>. For example, <span class="math inline">[1,1]^{\top}</span> and <span class="math inline">[1,-1]^{\top}</span> have dot product zero.</p>
+<p>Matrix multiplication is built from dot products. If <span class="math inline">\mathbf{A}</span> is <span class="math inline">r\times s</span> and <span class="math inline">\mathbf{B}</span> is <span class="math inline">s\times q</span>, then <span class="math inline">\mathbf{A}\mathbf{B}</span> is <span class="math inline">r\times q</span>, with</p>
+<p><span class="math display">\[(\mathbf{A}\mathbf{B})_{ij}=\sum_{k=1}^{s}A_{ik}B_{kj}.\]</span></p>
+<p>The inner dimensions must match. Each entry comes from a row of the first matrix and a column of the second. For example,</p>
+<p><span class="math display">\[\begin{bmatrix}1&amp;2\\3&amp;4\end{bmatrix}
+\begin{bmatrix}5\\6\end{bmatrix}
+=\begin{bmatrix}1(5)+2(6)\\3(5)+4(6)\end{bmatrix}
+=\begin{bmatrix}17\\39\end{bmatrix}.\]</span></p>
+<p>Multiplication is generally not entry by entry, and <span class="math inline">\mathbf{A}\mathbf{B}</span> need not equal <span class="math inline">\mathbf{B}\mathbf{A}</span>. Useful transpose rules are</p>
+<p><span class="math display">\[(\mathbf{A}\mathbf{B})^{\top}=\mathbf{B}^{\top}\mathbf{A}^{\top},
+\qquad
+(\mathbf{A}^{\top})^{\top}=\mathbf{A}.\]</span></p>
+<p>Notice the reversed order in the first rule. Also distinguish the scalar <span class="math inline">\mathbf{x}^{\top}\mathbf{x}</span> from the <strong>outer product</strong> <span class="math inline">\mathbf{x}\mathbf{x}^{\top}</span>. For <span class="math inline">\mathbf{x}=[3,4]^{\top}</span>, the outer product is</p>
+<p><span class="math display">\[\mathbf{x}\mathbf{x}^{\top}
+=\begin{bmatrix}9&amp;12\\12&amp;16\end{bmatrix}.\]</span></p>
+<p>A <strong>linear combination</strong> multiplies vectors by scalars and adds them. In two dimensions, the standard basis vectors <span class="math inline">\mathbf{e}_1=[1,0]^{\top}</span> and <span class="math inline">\mathbf{e}_2=[0,1]^{\top}</span> give</p>
+<p><span class="math display">\[\begin{bmatrix}a\\b\end{bmatrix}
+=a\mathbf{e}_1+b\mathbf{e}_2.\]</span></p>
+<p>The <strong>span</strong> of some vectors is the collection of all their linear combinations. The vectors are <strong>linearly independent</strong> if no vector in the collection can be written as a combination of the others. An independent collection that spans a space is a <strong>basis</strong> for that space. For example, <span class="math inline">[1,0]^{\top}</span> and <span class="math inline">[2,0]^{\top}</span> cannot form a basis for the plane: both point along the same line.</p>
+<p>We can also build functions from simpler functions. Choosing <span class="math inline">1,x,x^2</span> as ingredients gives</p>
+<p><span class="math display">\[\boldsymbol{\phi}(x)=\begin{bmatrix}1\\x\\x^2\end{bmatrix},
+\qquad
+f(x)=\mathbf{w}^{\top}\boldsymbol{\phi}(x)
+=w_0+w_1x+w_2x^2.\]</span></p>
+<p>The entries of <span class="math inline">\boldsymbol{\phi}(x)</span> are called <strong>features</strong>, and the chosen functions are often called <strong>basis functions</strong>. For <span class="math inline">x=2</span>, the features are <span class="math inline">[1,2,4]^{\top}</span>. Weights <span class="math inline">[1,3,2]^{\top}</span> then give <span class="math inline">1+6+8=15</span>. This function can curve as <span class="math inline">x</span> changes, but each weight enters linearly. Unlike coordinate basis vectors, chosen feature functions do not guarantee independent columns when evaluated at a particular collection of inputs.</p>
+<h3 id="solving-linear-equations-and-least-squares">Solving Linear Equations and Least Squares</h3>
+<p>A matrix equation is a compact way to write several linear equations. For example,</p>
+<p><span class="math display">\[\begin{bmatrix}1&amp;1\\1&amp;-1\end{bmatrix}
+\begin{bmatrix}u\\v\end{bmatrix}
+=\begin{bmatrix}6\\2\end{bmatrix}\]</span></p>
+<p>means <span class="math inline">u+v=6</span> and <span class="math inline">u-v=2</span>. Adding these equations gives <span class="math inline">u=4</span>, and substituting back gives <span class="math inline">v=2</span>.</p>
+<p>The <strong>identity matrix</strong> <span class="math inline">\mathbf{I}</span> leaves a vector unchanged. A square matrix <span class="math inline">\mathbf{A}</span> has an <strong>inverse</strong> <span class="math inline">\mathbf{A}^{-1}</span> when</p>
+<p><span class="math display">\[\mathbf{A}^{-1}\mathbf{A}=\mathbf{A}\mathbf{A}^{-1}=\mathbf{I}.\]</span></p>
+<p>If this inverse exists, <span class="math inline">\mathbf{A}\mathbf{w}=\mathbf{b}</span> has the solution <span class="math inline">\mathbf{w}=\mathbf{A}^{-1}\mathbf{b}</span>. An inverse is not formed by taking the reciprocal of each entry. Some matrices have no inverse. For example, equations <span class="math inline">u+v=2</span> and <span class="math inline">2u+2v=4</span> repeat the same information; many pairs satisfy them, so their coefficient matrix cannot have an inverse.</p>
+<p>Sometimes several equations cannot all hold exactly. Imagine three measurements of the same length: <span class="math inline">2</span>, <span class="math inline">3</span>, and <span class="math inline">4</span>. We want one number <span class="math inline">w</span> to represent them, but <span class="math inline">w</span> cannot equal all three. A natural choice is to minimise the sum of squared differences:</p>
+<p><span class="math display">\[E(w)=(w-2)^2+(w-3)^2+(w-4)^2
+=3(w-3)^2+2.\]</span></p>
+<p>The final expression is smallest at <span class="math inline">w=3</span>, since a square cannot be negative. This procedure is called <strong>least squares</strong>.</p>
+<p>For a general system <span class="math inline">\mathbf{A}\mathbf{w}\approx\mathbf{b}</span>, least squares minimises <span class="math inline">\|\mathbf{A}\mathbf{w}-\mathbf{b}\|_2^2</span>. The difference <span class="math inline">\mathbf{b}-\mathbf{A}\mathbf{w}</span> is the <strong>residual</strong>. Since <span class="math inline">\mathbf{A}\mathbf{w}</span> is a linear combination of the columns of <span class="math inline">\mathbf{A}</span>, we seek the point in their span closest to <span class="math inline">\mathbf{b}</span>. At that closest point, the residual is orthogonal to every column. Thus,</p>
+<p><span class="math display">\[\mathbf{A}^{\top}(\mathbf{b}-\mathbf{A}\mathbf{w})=\mathbf{0}
+\quad\Longrightarrow\quad
+\boxed{\mathbf{A}^{\top}\mathbf{A}\mathbf{w}=\mathbf{A}^{\top}\mathbf{b}.}\]</span></p>
+<p>These are the <strong>normal equations</strong>. For the three measurements, <span class="math inline">\mathbf{A}=[1,1,1]^{\top}</span> and <span class="math inline">\mathbf{b}=[2,3,4]^{\top}</span>. Then <span class="math inline">\mathbf{A}^{\top}\mathbf{A}=3</span> and <span class="math inline">\mathbf{A}^{\top}\mathbf{b}=9</span>, giving <span class="math inline">3w=9</span> and <span class="math inline">w=3</span> again.</p>
+<p>If <span class="math inline">\mathbf{A}</span> has <span class="math inline">N</span> rows and <span class="math inline">M</span> columns, the normal equations have an <span class="math inline">M\times M</span> matrix on the left and a vector of length <span class="math inline">M</span> on the right. When the columns of <span class="math inline">\mathbf{A}</span> are linearly independent,</p>
+<p><span class="math display">\[\mathbf{w}=(\mathbf{A}^{\top}\mathbf{A})^{-1}\mathbf{A}^{\top}\mathbf{b}.\]</span></p>
+<p><strong>The inverse requires that independence condition.</strong> Duplicate columns, or more columns than rows, make it fail. A least-squares solution still exists, but its coefficients need not be unique. Understand the normal equations as a system to solve; an inverse is one way to express its solution when it exists.</p>
+<hr />
+<h2 id="probability">Probability</h2>
+<h3 id="probability-basics">Probability Basics</h3>
+<p>A probability lies between zero and one and describes how likely an event is. An <strong>event</strong> is a set of possible outcomes. For a fair six-sided die, the event “roll an even number” is <span class="math inline">\{2,4,6\}</span> and has probability <span class="math inline">3/6=1/2</span>. Write <span class="math inline">P(A)</span> or <span class="math inline">\Pr(A)</span> for the probability of event <span class="math inline">A</span>. Its complement, meaning “<span class="math inline">A</span> does not occur”, has probability <span class="math inline">1-P(A)</span>.</p>
+<p>A <strong>joint probability</strong> describes events occurring together. A <strong>conditional probability</strong> describes one event given that another has occurred:</p>
+<p><span class="math display">\[P(A\mid B)=\frac{P(A\cap B)}{P(B)},
+\qquad P(B)&gt;0.\]</span></p>
+<p>For example, let <span class="math inline">A</span> mean “the die shows an even number” and <span class="math inline">B</span> mean “the die shows a number above three”. Once <span class="math inline">B</span> is known, the possible outcomes are <span class="math inline">4,5,6</span>. Two of these are even, so <span class="math inline">P(A\mid B)=2/3</span>, whereas <span class="math inline">P(A)=1/2</span>.</p>
+<p>Rearranging the conditional-probability definition gives the <strong>product rule</strong>:</p>
+<p><span class="math display">\[P(A\cap B)=P(A\mid B)P(B).\]</span></p>
+<p>In our example, this is <span class="math inline">(2/3)(1/2)=1/3</span>, the probability of rolling <span class="math inline">4</span> or <span class="math inline">6</span>. The product rule is always valid when the conditional is defined; it does not require independence.</p>
+<p>The <strong>sum rule</strong> adds over alternatives. If <span class="math inline">B_1,\ldots,B_K</span> are mutually exclusive and cover all possibilities, then</p>
+<p><span class="math display">\[P(A)=\sum_{k=1}^{K}P(A\cap B_k)
+=\sum_{k=1}^{K}P(A\mid B_k)P(B_k).\]</span></p>
+<p>For example, suppose we choose bag 1 with probability <span class="math inline">1/3</span> and bag 2 with probability <span class="math inline">2/3</span>. Bag 1 contains three red balls and one blue ball; bag 2 contains one red ball and three blue balls. We draw a ball uniformly from the chosen bag. If <span class="math inline">R</span> means “the ball is red”, then</p>
+<p><span class="math display">\[P(R)=\frac{3}{4}\frac{1}{3}+\frac{1}{4}\frac{2}{3}
+=\frac{1}{4}+\frac{1}{6}=\frac{5}{12}.\]</span></p>
+<p>We accounted for both ways a red ball can be drawn. Adding over the bag choice leaves the probability of the colour alone. This is called <strong>marginalisation</strong>.</p>
+<p>Writing the joint probability in the two possible orders gives <strong>Bayes' rule</strong>:</p>
+<p><span class="math display">\[P(B\mid A)=\frac{P(A\mid B)P(B)}{P(A)},
+\qquad P(A)&gt;0.\]</span></p>
+<p>If the ball is red, the probability that we chose bag 1 is therefore</p>
+<p><span class="math display">\[P(B_1\mid R)
+=\frac{P(R\mid B_1)P(B_1)}{P(R)}
+=\frac{(3/4)(1/3)}{5/12}=\frac{3}{5}.\]</span></p>
+<p>The chance of bag 1 was <span class="math inline">1/3</span> before seeing the colour; it becomes <span class="math inline">3/5</span> after seeing red. The first is a <strong>prior</strong> probability and the second is a <strong>posterior</strong> probability. The factor <span class="math inline">P(R\mid B_1)</span> describes how well bag 1 explains the observation and is called a <strong>likelihood</strong> when comparing bag choices. Notice that <span class="math inline">P(B_1\mid R)</span> and <span class="math inline">P(R\mid B_1)</span> answer different questions.</p>
+<p>Two events are <strong>independent</strong> if</p>
+<p><span class="math display">\[P(A\cap B)=P(A)P(B).\]</span></p>
+<p>Knowing that one occurred then does not change the probability of the other, whenever the conditional probability is defined. Two independent fair coin tosses give <span class="math inline">P(\text{both heads})=(1/2)(1/2)=1/4</span>. Merely having two outcomes does not make them independent; the experimental setup matters.</p>
+<p><strong>Conditional independence</strong> means independence after some information is specified. Return to the bags. Choose one bag, draw a ball, replace it, mix, and draw again. If the bag is known, the two draws are independent. Writing <span class="math inline">R_1</span> and <span class="math inline">R_2</span> for red on the two draws,</p>
+<p><span class="math display">\[P(R_1\cap R_2\mid B_k)
+=P(R_1\mid B_k)P(R_2\mid B_k).\]</span></p>
+<p>If the bag is unknown, the first draw gives information about which bag was chosen, and therefore about the second draw. The draws need not be independent overall even though they are independent conditional on the bag. Replacing the ball matters: without replacement, even a known bag changes composition after the first draw.</p>
+<p>The abbreviation <strong>iid</strong> means <em>independent and identically distributed</em>. Repeated independent flips of the same coin, with an unchanged chance of heads, are iid. Different flips need not produce the same outcome; they follow the same probability rule. Independent flips of coins with different chances of heads would not be identically distributed.</p>
+<h3 id="random-variables-and-common-distributions">Random Variables and Common Distributions</h3>
+<p>A <strong>random variable</strong> assigns a number to an uncertain outcome. Let <span class="math inline">Z</span> be the number shown by a die, or let <span class="math inline">Z=1</span> for heads and <span class="math inline">Z=0</span> for tails. Uppercase letters often name random variables, and lowercase letters name particular values. The notation <span class="math inline">Z\sim p</span> means that <span class="math inline">Z</span> has distribution <span class="math inline">p</span>.</p>
+<p>For a <strong>discrete</strong> variable, a probability mass function assigns probabilities to individual values. These probabilities sum to one. For example, a fair die has <span class="math inline">P(Z=z)=1/6</span> for each <span class="math inline">z\in\{1,\ldots,6\}</span>.</p>
+<p>For a <strong>continuous</strong> variable, such as a length measurement, a density <span class="math inline">p(z)</span> describes probabilities through areas:</p>
+<p><span class="math display">\[P(a&lt;Z&lt;b)=\int_a^b p(z)\,dz,
+\qquad
+\int_{-\infty}^{\infty}p(z)\,dz=1.\]</span></p>
+<p>An integral is a continuous version of adding contributions over possible values. The <span class="math inline">dz</span> indicates the variable being integrated. For a variable with a density, one exact value has probability zero, although intervals can have positive probability. The density height can exceed one; the total area, not the height, must equal one.</p>
+<p>For variables, the product and sum rules are often written more compactly as</p>
+<p><span class="math display">\[p(u,v)=p(u\mid v)p(v),
+\qquad
+p(u)=\sum_v p(u,v).\]</span></p>
+<p>Here the sum ranges over all values of a discrete variable <span class="math inline">V</span>. For continuous <span class="math inline">V</span>, use <span class="math inline">p(u)=\int p(u,v)\,dv</span> instead. This is the same marginalisation idea as adding over the two bags.</p>
+<p>The <strong>Bernoulli distribution</strong> describes one binary outcome <span class="math inline">Z\in\{0,1\}</span>. Its parameter <span class="math inline">\mu</span> is the probability of outcome one:</p>
+<p><span class="math display">\[P(Z=z)=\mu^z(1-\mu)^{1-z},
+\qquad
+P(Z=1)=\mu,
+\quad P(Z=0)=1-\mu.\]</span></p>
+<p>For <span class="math inline">0&lt;\mu&lt;1</span>, the exponents act as switches. Substituting <span class="math inline">z=1</span> leaves <span class="math inline">\mu</span>; substituting <span class="math inline">z=0</span> leaves <span class="math inline">1-\mu</span>. For a coin with chance of heads <span class="math inline">0.7</span>, these probabilities are <span class="math inline">0.7</span> and <span class="math inline">0.3</span>. The endpoint cases <span class="math inline">\mu=0</span> and <span class="math inline">\mu=1</span> mean deterministic outcomes.</p>
+<p>The <strong>categorical distribution</strong> describes one outcome among <span class="math inline">K</span> alternatives. A spinner with red, green, and blue outcomes might have probabilities <span class="math inline">(0.2,0.5,0.3)</span>. In general, <span class="math inline">P(Z=k)=\mu_k</span>, where <span class="math inline">\mu_k\geq0</span> and <span class="math inline">\sum_k\mu_k=1</span>.</p>
+<p>A <strong>one-hot vector</strong> records the outcome using one entry equal to one and all others zero. Green, the second colour, becomes <span class="math inline">\mathbf{t}=[0,1,0]^{\top}</span>. For positive probabilities, the compact expression</p>
+<p><span class="math display">\[p(\mathbf{t})=\prod_{k=1}^{K}\mu_k^{t_k}\]</span></p>
+<p>selects the probability of the observed outcome. For green, it gives <span class="math inline">0.2^0\,0.5^1\,0.3^0=0.5</span>. You can always return to “the probability of colour <span class="math inline">k</span> is <span class="math inline">\mu_k</span>” if the vector form is unfamiliar.</p>
+<p>The <strong>Gaussian</strong>, or normal, distribution describes a continuous value with a bell-shaped density:</p>
+<p><span class="math display">\[p(z)=\mathcal{N}(z\mid\mu,\sigma^2)
+=\frac{1}{\sqrt{2\pi\sigma^2}}
+\exp\left(-\frac{(z-\mu)^2}{2\sigma^2}\right),
+\qquad \sigma^2&gt;0.\]</span></p>
+<p>The mean <span class="math inline">\mu</span> locates its centre. The standard deviation <span class="math inline">\sigma</span> describes its spread, and <span class="math inline">\sigma^2</span> is its variance; we define these measures more precisely next. For example, repeated measurements of a length might be approximately Gaussian, centred at <span class="math inline">10</span> centimetres with standard deviation <span class="math inline">0.2</span> centimetres. A value of <span class="math inline">10.2</span> is one standard deviation above the mean.</p>
+<p>The squared distance in the exponent makes values farther from the centre less likely. The factor in front makes the total area one. <strong>Precision</strong> means inverse variance, so <span class="math inline">\beta=1/\sigma^2</span> is another way to describe spread: larger precision means smaller spread. Understand the parts of the density before trying to memorise the complete expression.</p>
+<h3 id="expectation-variance-and-covariance">Expectation, Variance and Covariance</h3>
+<p>An <strong>expectation</strong> is a probability-weighted average. For a discrete random variable,</p>
+<p><span class="math display">\[\mathbb{E}[Z]=\sum_z zP(Z=z),
+\qquad
+\mathbb{E}[g(Z)]=\sum_z g(z)P(Z=z).\]</span></p>
+<p>For a continuous variable, replace the sum by an integral:</p>
+<p><span class="math display">\[\mathbb{E}[g(Z)]=\int g(z)p(z)\,dz.\]</span></p>
+<p>A fair die has expected value <span class="math inline">(1+2+3+4+5+6)/6=3.5</span>. The expectation need not be a possible outcome. For a coin coded as one for heads and zero for tails, with chance of heads <span class="math inline">0.7</span>, the expectation is <span class="math inline">1(0.7)+0(0.3)=0.7</span>.</p>
+<p>A sample average <span class="math inline">N^{-1}\sum_i z_i</span> averages values actually observed. An expectation averages over the underlying probability distribution. Ten die rolls can average to <span class="math inline">4</span> even though the expectation for a fair die is <span class="math inline">3.5</span>. A finite sample average is an estimate, not an exact population quantity.</p>
+<p><strong>Linearity of expectation</strong> says</p>
+<p><span class="math display">\[\mathbb{E}[aU+bV+c]
+=a\mathbb{E}[U]+b\mathbb{E}[V]+c\]</span></p>
+<p>for fixed constants, provided the expectations exist. Independence is not needed. For instance, <span class="math inline">\mathbb{E}[2Z+1]=2(3.5)+1=8</span> for the fair die. In contrast, <span class="math inline">\mathbb{E}[UV]=\mathbb{E}[U]\mathbb{E}[V]</span> is not generally valid; independence is one sufficient condition.</p>
+<p>The <strong>variance</strong> measures average squared distance from the mean:</p>
+<p><span class="math display">\[\operatorname{Var}(Z)
+=\mathbb{E}[(Z-\mathbb{E}[Z])^2]
+=\mathbb{E}[Z^2]-(\mathbb{E}[Z])^2.\]</span></p>
+<p>Suppose <span class="math inline">Z</span> takes the values <span class="math inline">2</span> and <span class="math inline">4</span>, each with probability <span class="math inline">1/2</span>. Its mean is <span class="math inline">3</span>, so</p>
+<p><span class="math display">\[\operatorname{Var}(Z)
+=\tfrac12(2-3)^2+\tfrac12(4-3)^2=1.\]</span></p>
+<p>Standard deviation is the square root of variance, so it is also <span class="math inline">1</span> in this example. If <span class="math inline">Z</span> is measured in centimetres, variance has units of squared centimetres and standard deviation has units of centimetres. For a Bernoulli variable, <span class="math inline">Z^2=Z</span>, giving variance <span class="math inline">\mu-\mu^2=\mu(1-\mu)</span>.</p>
+<p>For observed numbers, their average squared distance from the sample mean is <span class="math inline">N^{-1}\sum_i(z_i-\bar{z})^2</span>. You may also encounter the sample-variance formula with denominator <span class="math inline">N-1</span>. When estimating a population variance from iid observations, that denominator corrects the downward bias caused by estimating the mean from the same data. The formulas serve different purposes; always check which quantity is being calculated.</p>
+<p>The <strong>covariance</strong> between two variables is</p>
+<p><span class="math display">\[\operatorname{Cov}(U,V)
+=\mathbb{E}[(U-\mathbb{E}[U])(V-\mathbb{E}[V])].\]</span></p>
+<p>Positive covariance means their deviations from their means tend to have the same sign; negative covariance means they tend to have opposite signs. For a simple example, let <span class="math inline">U</span> be equally likely to be <span class="math inline">-1</span> or <span class="math inline">1</span>, and let <span class="math inline">V=2U</span>. Both means are zero, and <span class="math inline">UV=2</span> in either case, so their covariance is <span class="math inline">2</span>. If instead <span class="math inline">V=-2U</span>, their covariance is <span class="math inline">-2</span>.</p>
+<p>Independence implies zero covariance when second moments exist. Zero covariance alone does not generally imply independence: it rules out one particular measure of association, not every possible relationship.</p>
+<p>For a random vector <span class="math inline">\mathbf{Z}</span> with mean <span class="math inline">\boldsymbol{\mu}</span>, collect covariances into a matrix:</p>
+<p><span class="math display">\[\boldsymbol{\Sigma}
+=\mathbb{E}[(\mathbf{Z}-\boldsymbol{\mu})(\mathbf{Z}-\boldsymbol{\mu})^{\top}],
+\qquad
+\Sigma_{ij}=\operatorname{Cov}(Z_i,Z_j).\]</span></p>
+<p>The diagonal entries are variances; the off-diagonal entries are covariances. For example,</p>
+<p><span class="math display">\[\boldsymbol{\Sigma}=\begin{bmatrix}1&amp;0\\0&amp;4\end{bmatrix}\]</span></p>
+<p>describes two coordinates with variances one and four and covariance zero. A <strong>multivariate Gaussian</strong> is a Gaussian distribution for a vector, specified by a mean vector and covariance matrix. For this particular family, a diagonal covariance means independent coordinates. Its full density is not needed to understand these ideas.</p>
+<p>Pay attention to what an expectation averages over. The expression <span class="math inline">\mathbb{E}[Z]</span> for a die averages all six outcomes. The conditional expectation <span class="math inline">\mathbb{E}[Z\mid Z&gt;3]</span> averages only <span class="math inline">4,5,6</span>, and is therefore <span class="math inline">5</span>.</p>
+<p>One final identity is useful. Write <span class="math inline">m=\mathbb{E}[Z]</span> and let <span class="math inline">c</span> be a fixed number. Add and subtract <span class="math inline">m</span> inside the square:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbb{E}[(Z-c)^2]
+&amp;=\mathbb{E}[((Z-m)+(m-c))^2]\\
+&amp;=\mathbb{E}[(Z-m)^2]+(m-c)^2
++2(m-c)\mathbb{E}[Z-m]\\
+&amp;=\operatorname{Var}(Z)+(m-c)^2.
+\end{aligned}\]</span></p>
+<p>The cross term vanishes because <span class="math inline">\mathbb{E}[Z-m]=0</span>. For the equally likely values <span class="math inline">2</span> and <span class="math inline">4</span>, take <span class="math inline">c=0</span>: the left side is <span class="math inline">10</span>, and the right side is <span class="math inline">1+3^2=10</span>. Practise the expansion and the averaging step separately.</p>
+<p>An indicator is itself a binary random variable when its statement depends on a random outcome. Consequently,</p>
+<p><span class="math display">\[\mathbb{E}[\mathbb{1}[A]]=1P(A)+0(1-P(A))=P(A).\]</span></p>
+<p>For example, the average of indicators for heads is the observed fraction of heads, while the expectation of one such indicator is the coin's true probability of heads.</p>
+<h3 id="basic-probability-bounds">Basic Probability Bounds</h3>
+<p>An <strong>upper bound</strong> gives a value that a quantity cannot exceed. It need not equal that quantity. For events <span class="math inline">B_1,\ldots,B_J</span>, the <strong>union bound</strong> says</p>
+<p><span class="math display">\[P\left(\bigcup_{j=1}^{J}B_j\right)
+\leq\sum_{j=1}^{J}P(B_j).\]</span></p>
+<p>Suppose each of three lamps has probability at most <span class="math inline">0.01</span> of failing during an evening. The probability that at least one fails is at most <span class="math inline">0.03</span>. Adding the individual probabilities may count occasions with several failures more than once, so it gives an upper bound. The events need not be independent for this rule to hold.</p>
+<p>Another kind of bound concerns sample averages. Flip a coin independently <span class="math inline">N</span> times and let <span class="math inline">Z_i</span> be one for heads and zero for tails. If its true chance of heads is <span class="math inline">\mu</span>, then <span class="math inline">\mathbb{E}[Z_i]=\mu</span>. The observed fraction of heads is <span class="math inline">\bar{Z}=N^{-1}\sum_i Z_i</span>.</p>
+<p><strong>Hoeffding's inequality</strong> states that, for iid variables in <span class="math inline">[0,1]</span> with common mean <span class="math inline">\mu</span>,</p>
+<p><span class="math display">\[P(|\bar{Z}-\mu|&gt;\varepsilon)
+\leq2e^{-2N\varepsilon^2},
+\qquad \varepsilon&gt;0.\]</span></p>
+<p>The left side is the chance that the observed average differs from the true mean by more than the tolerance <span class="math inline">\varepsilon</span>. The coin example satisfies the conditions because its indicators are independent, follow the same distribution, and lie in <span class="math inline">[0,1]</span>. We state the inequality here without proving it; the main tasks are to understand its assumptions and work with its algebra.</p>
+<p>Now suppose we have <span class="math inline">J</span> coins, chosen before the experiment, and flip each one independently <span class="math inline">N</span> times. The coins can have different true probabilities of heads. Call coin <span class="math inline">j</span>'s estimate “bad” if it differs from its true probability by more than <span class="math inline">\varepsilon</span>. Hoeffding bounds the bad event for each coin, and the union bound gives</p>
+<p><span class="math display">\[P(\text{at least one bad estimate})
+\leq2J e^{-2N\varepsilon^2}.\]</span></p>
+<p>The union-bound step does not require independence between different coins' bad events. It is the repeated observations for each coin that must meet Hoeffding's assumptions.</p>
+<p>Suppose we want the chance of any bad estimate to be at most <span class="math inline">\delta</span>, where <span class="math inline">0&lt;\delta&lt;1</span>. It is sufficient that</p>
+<p><span class="math display">\[2J e^{-2N\varepsilon^2}\leq\delta.\]</span></p>
+<p>Solve for <span class="math inline">N</span> one step at a time:</p>
+<p><span class="math display">\[\begin{aligned}
+e^{-2N\varepsilon^2}&amp;\leq\frac{\delta}{2J},\\
+-2N\varepsilon^2&amp;\leq\log\frac{\delta}{2J},\\
+2N\varepsilon^2&amp;\geq\log\frac{2J}{\delta},\\
+N&amp;\geq\frac{1}{2\varepsilon^2}\log\frac{2J}{\delta}.
+\end{aligned}\]</span></p>
+<p>Taking logs preserves the inequality because log is increasing. Multiplying by <span class="math inline">-1</span> reverses its direction, and <span class="math inline">-\log(\delta/(2J))=\log(2J/\delta)</span>. The final division is by the positive number <span class="math inline">2\varepsilon^2</span>.</p>
+<p>For <span class="math inline">J=10</span> coins, tolerance <span class="math inline">\varepsilon=0.1</span>, and failure probability <span class="math inline">\delta=0.05</span>, the expression gives <span class="math inline">N\geq299.57\ldots</span>. Thus, <span class="math inline">300</span> flips <strong>per coin</strong> suffice for this bound. With probability at least <span class="math inline">0.95</span>, every observed fraction is within <span class="math inline">0.1</span> of its coin's true probability. This does not say the coins have probability of heads at most <span class="math inline">0.1</span>.</p>
+<p>We can instead choose a tolerance for given <span class="math inline">N,J,\delta</span>:</p>
+<p><span class="math display">\[\varepsilon=\sqrt{\frac{\log(2J/\delta)}{2N}}.\]</span></p>
+<p>More observations reduce the bound, while controlling more estimates at once increases it. An upper bound can be loose; if a probability bound exceeds one, the trivial bound of one is more informative.</p>
+<p>A second useful exponential inequality is <span class="math inline">1-u\leq e^{-u}</span> for <span class="math inline">0\leq u\leq1</span>. For a coin with chance of heads <span class="math inline">q</span>, independence gives</p>
+<p><span class="math display">\[P(\text{no heads in }N\text{ flips})
+=(1-q)^N\leq e^{-Nq}.\]</span></p>
+<p>For <span class="math inline">q&gt;0</span>, requiring <span class="math inline">e^{-Nq}\leq\delta</span> gives <span class="math inline">N\geq\log(1/\delta)/q</span>. This uses the same log and inequality rules. Focus on those steps and on why independence justifies the original product.</p>
+<hr />
+<h2 id="calculus-and-optimisation">Calculus and Optimisation</h2>
+<h3 id="derivatives-and-gradients">Derivatives and Gradients</h3>
+<p>A <strong>derivative</strong> measures a function's local rate of change. For <span class="math inline">f(x)=x^2</span>, the derivative is <span class="math inline">f&#39;(x)=2x</span>. At <span class="math inline">x=3</span>, the slope is <span class="math inline">6</span>: a small increase <span class="math inline">\Delta x</span> changes the output by approximately <span class="math inline">6\Delta x</span>. For example, <span class="math inline">3.01^2-3^2=0.0601</span>, close to <span class="math inline">6(0.01)=0.06</span>.</p>
+<p>The basic rules we use are</p>
+<p><span class="math display">\[\frac{d}{dx}c=0,
+\qquad
+\frac{d}{dx}x^r=rx^{r-1},
+\qquad
+\frac{d}{dx}e^x=e^x,
+\qquad
+\frac{d}{dx}\log x=\frac{1}{x}.\]</span></p>
+<p>The log rule requires <span class="math inline">x&gt;0</span>, and the power rule applies where the expression is defined and differentiable. Derivatives distribute over sums, and constant factors can be taken outside. Thus the derivative of <span class="math inline">3x^2+2x+7</span> is <span class="math inline">6x+2</span>.</p>
+<p>A <strong>partial derivative</strong> changes one variable while holding the others fixed. For</p>
+<p><span class="math display">\[f(u,v)=u^2+3uv+2v^2,\]</span></p>
+<p>we obtain</p>
+<p><span class="math display">\[\frac{\partial f}{\partial u}=2u+3v,
+\qquad
+\frac{\partial f}{\partial v}=3u+4v.\]</span></p>
+<p>When differentiating with respect to <span class="math inline">u</span>, the term <span class="math inline">2v^2</span> is constant and has derivative zero. When differentiating with respect to <span class="math inline">v</span>, the term <span class="math inline">u^2</span> is constant instead. The symbol <span class="math inline">\partial</span> reminds us that other variables are being held fixed.</p>
+<p>The <strong>chain rule</strong> differentiates a composition. If <span class="math inline">y=h(a)</span> and <span class="math inline">a=g(x)</span>, then</p>
+<p><span class="math display">\[\frac{dy}{dx}=\frac{dy}{da}\frac{da}{dx}.\]</span></p>
+<p>For <span class="math inline">y=(3x+1)^2</span>, let <span class="math inline">a=3x+1</span>. The outer derivative is <span class="math inline">dy/da=2a</span> and the inner derivative is <span class="math inline">da/dx=3</span>, so</p>
+<p><span class="math display">\[\frac{dy}{dx}=2(3x+1)\times3=6(3x+1).\]</span></p>
+<p>Forgetting the inner derivative would give the wrong answer. The same rule works with partial derivatives when an intermediate quantity depends on several variables.</p>
+<p>The <strong>gradient</strong> collects the partial derivatives into one column vector. If <span class="math inline">\mathbf{w}=[w_1,\ldots,w_M]^{\top}</span>, then</p>
+<p><span class="math display">\[\nabla_{\mathbf{w}}f
+=\begin{bmatrix}
+\partial f/\partial w_1\\
+\vdots\\
+\partial f/\partial w_M
+\end{bmatrix}.\]</span></p>
+<p>For the earlier function <span class="math inline">f(u,v)</span>, its gradient at <span class="math inline">(u,v)=(1,2)</span> is <span class="math inline">[8,11]^{\top}</span>. The first entry measures the change from moving <span class="math inline">u</span>; the second measures the change from moving <span class="math inline">v</span>. For a simple squared length,</p>
+<p><span class="math display">\[f(\mathbf{w})=\frac12\|\mathbf{w}\|_2^2
+=\frac12\sum_m w_m^2
+\quad\Longrightarrow\quad
+\nabla_{\mathbf{w}}f=\mathbf{w}.\]</span></p>
+<p>You can derive vector gradients one entry at a time rather than memorising a large table of matrix derivatives.</p>
+<p>The sigmoid from the Basics section provides another chain-rule example. Write <span class="math inline">\sigma(a)=(1+e^{-a})^{-1}</span>. Then</p>
+<p><span class="math display">\[\sigma'(a)
+=-(1+e^{-a})^{-2}(-e^{-a})
+=\frac{e^{-a}}{(1+e^{-a})^2}
+=\sigma(a)(1-\sigma(a)).\]</span></p>
+<p>The two negative signs cancel. The final equality follows because <span class="math inline">1-\sigma(a)=e^{-a}/(1+e^{-a})</span>. At <span class="math inline">a=0</span>, the derivative is <span class="math inline">(1/2)(1/2)=1/4</span>. Remember this compact derivative, but also understand how to obtain it from the chain rule.</p>
+<p>A <strong>second derivative</strong> measures how the slope changes. The functions <span class="math inline">x^2</span> and <span class="math inline">10x^2</span> have second derivatives <span class="math inline">2</span> and <span class="math inline">20</span>, respectively; the latter bends more sharply. For several variables, the matrix of second partial derivatives is called the <strong>Hessian</strong>. You only need this basic meaning of curvature here.</p>
+<h3 id="optimisation-argminargmax-and-gradient-descent">Optimisation, argmin/argmax and Gradient Descent</h3>
+<p><strong>Optimisation</strong> means finding inputs that make a chosen function small or large. The function being optimised is called the <strong>objective</strong>. The notation <span class="math inline">\min</span> returns the smallest objective value, while <span class="math inline">\operatorname*{arg\,min}</span> returns an input that achieves it.</p>
+<p>For example, if <span class="math inline">J(w)=(w-3)^2+2</span>, then</p>
+<p><span class="math display">\[\min_w J(w)=2,
+\qquad
+\operatorname*{arg\,min}_w J(w)=3.\]</span></p>
+<p>Similarly, <span class="math inline">\max</span> returns the largest value and <span class="math inline">\operatorname*{arg\,max}</span> an input that achieves it. There may be several optimisers. An optimum may also fail to be attained: <span class="math inline">e^{-w}</span> approaches zero as <span class="math inline">w</span> grows, but never equals zero for any finite <span class="math inline">w</span>.</p>
+<p>For a differentiable function, an unconstrained local minimum in the interior of its domain has zero gradient. But a zero derivative does not by itself prove a minimum. At zero, <span class="math inline">-x^2</span> has a maximum, while <span class="math inline">x^3</span> has neither a minimum nor a maximum. For a differentiable <strong>convex</strong> function, a zero gradient does give a global minimum. A convex function has the property that the line segment joining two points on its graph lies on or above the graph; <span class="math inline">x^2</span> is a familiar bowl-shaped example.</p>
+<p><strong>Gradient descent</strong> searches for a minimum by taking repeated steps:</p>
+<p><span class="math display">\[\mathbf{w}^{(s+1)}
+=\mathbf{w}^{(s)}-\eta\nabla_{\mathbf{w}}J(\mathbf{w}^{(s)}),
+\qquad \eta&gt;0.\]</span></p>
+<p>Here <span class="math inline">s</span> labels the iteration, rather than a power, and <span class="math inline">\eta</span> is the <strong>step size</strong>, also called the learning rate. Where the gradient is nonzero, its negative points in a direction of local decrease. The gradient is evaluated at the current point before calculating the next one.</p>
+<p>For <span class="math inline">J(w)=(w-3)^2/2</span>, the derivative is <span class="math inline">w-3</span>. Starting at <span class="math inline">w^{(0)}=0</span> with <span class="math inline">\eta=0.1</span> gives</p>
+<p><span class="math display">\[w^{(1)}=0-0.1(-3)=0.3,
+\qquad
+w^{(2)}=0.3-0.1(-2.7)=0.57.\]</span></p>
+<p>Both steps move towards the minimum at three. A step that is too large can increase the objective: from zero, taking <span class="math inline">\eta=3</span> jumps to nine and increases <span class="math inline">J</span> from <span class="math inline">4.5</span> to <span class="math inline">18</span>. A local direction of improvement is not a guarantee for an arbitrarily large step.</p>
+<h3 id="scaling-or-adding-a-constant-to-the-objective">Scaling or Adding a Constant to the Objective</h3>
+<p>Adding a constant independent of the variable being optimised does not change the minimiser. Neither does multiplying the whole objective by a positive constant. For example,</p>
+<p><span class="math display">\[f(w)=(w-3)^2,
+\qquad
+g(w)=2(w-3)^2+7\]</span></p>
+<p>both have minimiser <span class="math inline">w=3</span>, although their minimum values are zero and seven. Multiplying by a negative number reverses the ordering and changes a minimisation problem into a maximisation problem.</p>
+<p>“Constant” depends on which variables can change. In <span class="math inline">F(u,v)=(u-3)^2+v^2</span>, the term <span class="math inline">v^2</span> is constant if we optimise only <span class="math inline">u</span> and hold <span class="math inline">v</span> fixed. If we optimise both <span class="math inline">u</span> and <span class="math inline">v</span>, it is not constant and must be kept.</p>
+<p>Scaling only part of an objective can change the answer. For example,</p>
+<p><span class="math display">\[f(w)=(w-2)^2+w^2,
+\qquad
+g(w)=2(w-2)^2+w^2\]</span></p>
+<p>have minimisers <span class="math inline">1</span> and <span class="math inline">4/3</span>, respectively. You can check these by differentiating. The extra factor changes the balance between the two terms. To preserve the same minimiser by scaling, scale the entire objective together.</p>
+<p>A strictly increasing transformation also preserves which input gives the largest value. For the positive function <span class="math inline">q(w)=e^{-(w-2)^2}</span>,</p>
+<p><span class="math display">\[\operatorname*{arg\,max}_w q(w)
+=\operatorname*{arg\,max}_w\log q(w)
+=\operatorname*{arg\,min}_w[-\log q(w)]
+=2.\]</span></p>
+<p>The functions have different output values, but they select the same input. This is why distinguishing an optimum value from its location matters.</p>
+<h3 id="constraints-and-lagrange-multipliers">Constraints and Lagrange Multipliers</h3>
+<p>A <strong>constraint</strong> limits the values we are allowed to choose. Suppose we want to minimise</p>
+<p><span class="math display">\[f(u,v)=u^2+v^2
+\qquad\text{subject to}\qquad u+v=6.\]</span></p>
+<p>Without the constraint, the minimum is at <span class="math inline">(0,0)</span>. That point is not allowed because its coordinates do not add to six. The allowed, or <strong>feasible</strong>, points lie on the line <span class="math inline">u+v=6</span>.</p>
+<p>For an equality constraint, a useful method introduces an extra unknown called a <strong>Lagrange multiplier</strong>. Write the constraint as <span class="math inline">u+v-6=0</span> and form the <strong>Lagrangian</strong>:</p>
+<p><span class="math display">\[\mathcal{J}(u,v,\lambda)
+=u^2+v^2+\lambda(u+v-6).\]</span></p>
+<p>Differentiate with respect to all three variables and set the derivatives to zero:</p>
+<p><span class="math display">\[\frac{\partial\mathcal{J}}{\partial u}=2u+\lambda=0,
+\qquad
+\frac{\partial\mathcal{J}}{\partial v}=2v+\lambda=0,
+\qquad
+\frac{\partial\mathcal{J}}{\partial\lambda}=u+v-6=0.\]</span></p>
+<p>The first two equations imply <span class="math inline">u=v</span>. The third then gives <span class="math inline">u=v=3</span>, and <span class="math inline">\lambda=-6</span>. The candidate satisfies the constraint and has objective value <span class="math inline">18</span>.</p>
+<p>We should still check that it is a minimum. Substituting <span class="math inline">v=6-u</span> into the objective gives</p>
+<p><span class="math display">\[u^2+(6-u)^2=2(u-3)^2+18.\]</span></p>
+<p>This is at least <span class="math inline">18</span> for every feasible point, so <span class="math inline">(3,3)</span> is indeed the constrained minimum.</p>
+<p>The general construction for minimising <span class="math inline">f(\boldsymbol{\theta})</span> subject to <span class="math inline">g(\boldsymbol{\theta})=0</span> is</p>
+<p><span class="math display">\[\mathcal{J}(\boldsymbol{\theta},\lambda)
+=f(\boldsymbol{\theta})+\lambda g(\boldsymbol{\theta}).\]</span></p>
+<p>For differentiable functions, at a constrained optimum where <span class="math inline">\nabla g\neq\mathbf{0}</span>, the necessary equations are</p>
+<p><span class="math display">\[\nabla f+\lambda\nabla g=\mathbf{0},
+\qquad g(\boldsymbol{\theta})=0.\]</span></p>
+<p>Geometrically, the objective cannot decrease by moving along the constraint at the optimum. Its gradient is perpendicular to those allowed directions. The multiplier makes the objective gradient and constraint gradient balance.</p>
+<p>The multiplier is solved for together with the original variables; it is not an extra setting we choose beforehand. These equations identify stationary candidates, so feasibility and minimum checks still matter. We are not minimising the Lagrangian freely over all its variables. If a problem also has inequalities, such as nonnegative probabilities, its boundary needs separate attention; the equality equations alone do not handle every such case.</p>
+<hr />
+<h2 id="how-these-pieces-will-be-used-in-cs3264">How These Pieces Will Be Used in CS3264</h2>
+<p>This table is a preview of the lectures, not additional prerequisite knowledge. The lectures will introduce the named methods and explain how the mathematical tools fit together.</p>
+<table>
+<thead>
+<tr>
+<th>Lecture</th>
+<th>What you will study</th>
+<th>Preparation from these notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>L1: Regression I</strong></td>
+<td>How to fit a numerical relationship to observations</td>
+<td>Weighted sums, matrix equations, squared distances, and derivatives</td>
+</tr>
+<tr>
+<td><strong>L2: Probabilistic modelling</strong></td>
+<td>How probability describes uncertain observations</td>
+<td>Distributions, independence, logarithms, Bayes' rule, and expectation</td>
+</tr>
+<tr>
+<td><strong>L3: Linear classification</strong></td>
+<td>How to predict which category an observation belongs to</td>
+<td>Bernoulli and categorical outcomes, sigmoid, softmax, and the chain rule</td>
+</tr>
+<tr>
+<td><strong>L4: Naive Bayes</strong></td>
+<td>How assumptions about independence simplify a probability model</td>
+<td>Conditional independence, the sum and product rules, averages, and constraints</td>
+</tr>
+<tr>
+<td><strong>L5: Overfitting and bias–variance</strong></td>
+<td>Why results can change when we collect a different sample</td>
+<td>Expectation, variance, expanding squares, and sample averages</td>
+</tr>
+<tr>
+<td><strong>L6: Learning theory</strong></td>
+<td>What finite samples can tell us about future outcomes</td>
+<td>Sets, indicators, probability bounds, and exponential/log algebra</td>
+</tr>
+</tbody>
+</table>
+<p>Being able to work through the simple examples in these notes is the preparation you need. You are not expected to derive the lecture methods in advance.</p>
+<hr />
+<h2 id="summary--quick-reference">Summary / quick reference</h2>
+<p><strong>Keep these short rules readily available from memory.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Rule or meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sum and product</td>
+<td>Add or multiply the indexed terms.</td>
+</tr>
+<tr>
+<td>Dot product</td>
+<td><span class="math inline">\mathbf{w}^{\top}\mathbf{x}=\sum_mw_mx_m</span> is a scalar.</td>
+</tr>
+<tr>
+<td>Matrix dimensions</td>
+<td><span class="math inline">(r\times s)(s\times q)</span> gives <span class="math inline">r\times q</span>.</td>
+</tr>
+<tr>
+<td>Squared Euclidean norm</td>
+<td><span class="math inline">|\mathbf{x}|_2^2=\mathbf{x}^{\top}\mathbf{x}</span>.</td>
+</tr>
+<tr>
+<td>Logarithms</td>
+<td>Products become sums, quotients become differences, and powers become factors.</td>
+</tr>
+<tr>
+<td>Chain rule</td>
+<td>Differentiate each stage of a composition and multiply the derivatives.</td>
+</tr>
+<tr>
+<td>Gradient</td>
+<td>A column vector containing the partial derivatives.</td>
+</tr>
+<tr>
+<td>Sigmoid derivative</td>
+<td><span class="math inline">\sigma&#39;(a)=\sigma(a)(1-\sigma(a))</span>.</td>
+</tr>
+<tr>
+<td>Product rule</td>
+<td><span class="math inline">P(A\cap B)=P(A\mid B)P(B)</span>.</td>
+</tr>
+<tr>
+<td>Bayes' rule</td>
+<td><span class="math inline">P(B\mid A)=P(A\mid B)P(B)/P(A)</span> when <span class="math inline">P(A)&gt;0</span>.</td>
+</tr>
+<tr>
+<td>Expectation</td>
+<td>A probability-weighted average; linearity does not require independence.</td>
+</tr>
+<tr>
+<td>Variance</td>
+<td><span class="math inline">\operatorname{Var}(Z)=\mathbb{E}[(Z-\mathbb{E}[Z])^2]</span>.</td>
+</tr>
+<tr>
+<td>Indicator</td>
+<td><span class="math inline">\mathbb{E}[\mathbb{1}[A]]=P(A)</span>.</td>
+</tr>
+<tr>
+<td>Gradient descent</td>
+<td>Current point minus step size times current gradient.</td>
+</tr>
+<tr>
+<td>Union bound</td>
+<td>The probability of any event in a collection is at most the sum of their probabilities.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Understand and practise the calculations.</strong> Try computing a dot product and checking the dimensions of a matrix product. Reproduce the bag calculation using Bayes' rule, find the variance of a two-outcome variable, differentiate <span class="math inline">(3x+1)^2</span>, take a gradient-descent step, and solve the constraint <span class="math inline">u+v=6</span>. For the sample-size bound, practise the log and inequality steps with the starting bound in front of you.</p>
+<p><strong>Read longer formulas through their ingredients.</strong> Understand that a Gaussian has a centre and spread, that the normal equations describe a least-squares solution, and that a bound has assumptions as well as an algebraic form. Begin with these meanings rather than memorising long expressions without context.</p>
+<p>When you get stuck, identify the indices, check the dimensions, mark what is fixed, and name the rule used in the next step. These habits will make the new mathematics in the lectures easier to follow.</p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
