@@ -83,9 +83,6 @@
 <li class="toc-h3"><a href="#connection-to-tutorial-6">Connection to Tutorial 6</a></li>
 <li class="toc-h2"><a href="#returning-to-the-quadratic-example">Returning to the Quadratic Example</a></li>
 <li class="toc-h1"><a href="#machine-learning--optimization">Machine Learning ≠ Optimization</a></li>
-<li class="toc-h2"><a href="#training-loss-and-test-loss-differ">Training Loss and Test Loss Differ</a></li>
-<li class="toc-h2"><a href="#the-goal-is-generalisation">The Goal Is Generalisation</a></li>
-<li class="toc-h2"><a href="#optimisation-can-act-as-regularisation">Optimisation Can Act as Regularisation</a></li>
 <li class="toc-h1"><a href="#summary">Summary</a></li>
 </ol>
 </details>
@@ -662,7 +659,7 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 <p>To make a general statement about descent, we need to control how quickly the gradient changes. The next few sections are about controlling this step size.</p>
 <h2 id="the-goal-of-the-descent-proof">The Goal of the Descent Proof</h2>
 <p>Our goal is to find a range of learning rates for which every gradient-descent step reduces the training loss whenever the gradient is nonzero.</p>
-<p>First, we need this idea of a Lipschitz Gradient. We say that the loss has a <strong><span class="math inline">\beta</span>-Lipschitz gradient</strong>, or is <strong><span class="math inline">\beta</span>-smooth</strong>, if</p>
+<p>First, we need the idea of a Lipschitz Gradient. We say that the loss has a <strong><span class="math inline">\beta</span>-Lipschitz gradient</strong>, or is <strong><span class="math inline">\beta</span>-smooth</strong>, if</p>
 <p><span class="math display">\[\boxed{
 \|\nabla\mathcal{L}(\mathbf{u})
 -
@@ -730,7 +727,7 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 \|\mathbf{H}(\mathbf{u})\mathbf{d}\|
 \leq\beta\|\mathbf{d}\|.
 }\]</span></p>
-<p><strong>Finally, bound the term in Taylor's theorem.</strong> The result above holds at the intermediate point <span class="math inline">\xi</span>. Recall the Cauchy–Schwarz inequality:</p>
+<p><strong>Finally, bound the term in Taylor's theorem.</strong> The result above holds at the intermediate point <span class="math inline">\xi</span>. We apply the Cauchy–Schwarz inequality:</p>
 <p><span class="math display">\[|\mathbf{a}^{\top}\mathbf{b}|
 \leq\|\mathbf{a}\|\|\mathbf{b}\|.\]</span></p>
 <p>Apply it with <span class="math inline">\mathbf{a}=\mathbf{d}</span> and <span class="math inline">\mathbf{b}=\mathbf{H}(\xi)\mathbf{d}</span>:</p>
@@ -1005,11 +1002,6 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 <p>This specific example gives the <strong>noise ball</strong> picture: parameters fluctuate around the minimum. The general SGD convergence bound makes a statement about gradients; it does not establish such a region in parameter space for every loss.</p>
 <hr />
 <h1 id="machine-learning--optimization">Machine Learning ≠ Optimization</h1>
-<h2 id="training-loss-and-test-loss-differ">Training Loss and Test Loss Differ</h2>
-<p>Imagine two fitted networks. The first has lower training loss because it closely fits accidental details of the sample. The second has slightly higher training loss but predicts new examples more accurately. An optimiser that compares only training loss would prefer the first.</p>
-<p>The same issue can appear in a loss landscape: a narrow, deep minimum in training loss need not be a good minimum in test loss. A broader basin may generalise better in a particular problem, but width alone does not determine generalisation. The essential point is that training and test loss are different quantities.</p>
-<p>We still use validation data to compare training choices and estimate whether improvements carry over to new examples.</p>
-<h2 id="the-goal-is-generalisation">The Goal Is Generalisation</h2>
 <p>The descent arguments concern the <strong>training objective</strong>:</p>
 <p><span class="math display">\[\mathcal{L}(\theta)
 =
@@ -1029,8 +1021,7 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 }\]</span></p>
 <p>The training objective is a data-based estimate of the population objective. It is also the quantity we used to select the model. As we saw in Lectures 5 and 6, that selection can favour accidental details of the training sample.</p>
 <p>An optimisation method asks how to reduce the objective it is given. Machine learning also asks whether that objective and the available data lead to useful predictions.</p>
-<h2 id="optimisation-can-act-as-regularisation">Optimisation Can Act as Regularisation</h2>
-<p>A flexible network may have many parameter settings that fit the training data. The training process influences which one we reach.</p>
+<p>Importantly, research has shown that optimisation can act as a form of regularisation. A flexible network may have many parameter settings that fit the training data. The training process influences which one we reach.</p>
 <p>For example:</p>
 <ul>
 <li><strong>Early stopping</strong> limits how long we continue fitting the training sample.</li>
@@ -1038,8 +1029,7 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 <li><strong>The optimiser and step size</strong> influence the path through parameter space.</li>
 <li><strong>Sampling noise</strong> changes the updates and can affect the solution reached.</li>
 </ul>
-<p>These choices can favour some solutions even when we do not add an explicit penalty to the loss. This is called an <strong>implicit bias</strong> of the learning process, and it can act as a form of regularisation.</p>
-<p>It does not follow that every such bias improves generalisation. The useful question is whether the solutions favoured by the training process match the structure of the prediction problem.</p>
+<p>These choices can favour some solutions even when we do not add an explicit penalty to the loss. This is called an <strong>implicit bias</strong> of the learning process, and it can act as a form of regularisation. However, not every such bias improves generalisation. The useful question is whether the solutions favoured by the training process match the structure of the prediction problem.</p>
 <hr />
 <h1 id="summary">Summary</h1>
 <p>The main ideas are:</p>
