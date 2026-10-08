@@ -1291,7 +1291,7 @@ const SLIDES = [
 `},
 
 {s:"Part III", t:"SGD can keep fluctuating near the minimum", draw:"noiseball7", html:`
-<div class="eyebrow">III-B · A concrete example</div><h2>SGD can keep fluctuating near the minimum</h2><div class="eq l7-eq n7-equation" style="font-size:27px"><span class="texd" data-tex="\\mathcal L(\\theta)=\\tfrac12\\theta^2"></span></div><div class="g7-split"><svg id="noiseball7" viewBox="0 0 620 300" role="img" aria-label="Parameter trajectories: full gradient descent settles at zero, while fixed-step SGD fluctuates near zero."></svg><div><div class="g7-control"><label for="noiseball7eta">Step size η: <output id="noiseball7etav">0.25</output></label><input id="noiseball7eta" type="range" min="0.05" max="0.9" step="0.05" value="0.25"></div><div class="g7-control"><label for="noiseball7batch">Batch size B: <output id="noiseball7batchv">1</output></label><input id="noiseball7batch" type="range" min="1" max="32" value="1"></div><p class="n7-small">Blue: full GD<br><span class="n7-error">Red: SGD</span></p><p class="n7-small">Shaded band: ± one long-run standard deviation.</p></div></div><p class="n7-centre-note">Full GD settles at the minimum. Fixed-step SGD keeps fluctuating.</p><!-- Instructor note: Independent Rademacher noise epsilon = ±1/sqrt(B). The stationary variance of theta(s+1)=(1-eta)theta(s)-eta epsilon(s) is eta/[B(2-eta)], for 0<eta<2. The shaded band is a standard deviation, not a hard bound. -->
+<div class="eyebrow">III-B · A concrete example</div><h2>SGD can keep fluctuating near the minimum</h2><div class="eq l7-eq n7-equation" style="font-size:27px"><span class="texd" data-tex="\\mathcal L(\\theta)=\\tfrac12\\theta^2"></span></div><div class="g7-split"><div><svg id="noiseball7" class="g7-figure" viewBox="0 0 620 300" role="img" aria-label="Parameter trajectories: full gradient descent settles at zero, while fixed-step SGD fluctuates near zero."></svg></div><div><div class="g7-control"><label for="noiseball7eta">Step size η: <output id="noiseball7etav">0.25</output></label><input id="noiseball7eta" type="range" min="0.05" max="0.9" step="0.05" value="0.25"></div><div class="g7-control"><label for="noiseball7batch">Batch size B: <output id="noiseball7batchv">1</output></label><input id="noiseball7batch" type="range" min="1" max="32" value="1"></div><p class="n7-small">Blue: full GD<br><span class="n7-error">Red: SGD</span></p><p class="n7-small">Shaded band: ± one long-run standard deviation.</p></div></div><p class="n7-centre-note">Full GD settles at the minimum. Fixed-step SGD keeps fluctuating.</p><!-- Instructor note: Independent Rademacher noise epsilon = ±1/sqrt(B). The stationary variance of theta(s+1)=(1-eta)theta(s)-eta epsilon(s) is eta/[B(2-eta)], for 0<eta<2. The shaded band is a standard deviation, not a hard bound. -->
 `},
 
 {s:"Part III", t:"Why the sampled gradient is unbiased", html:`
@@ -4942,12 +4942,13 @@ function g7Arrow(x1,y1,x2,y2,col='var(--ink-soft)',w=2){
   return g7Line(x1,y1,x2-r*c,y2-r*s,col,w)+'<path d="M'+x2+' '+y2+' L'+(x2-r*c-4*s)+' '+(y2-r*s+4*c)+' L'+(x2-r*c+4*s)+' '+(y2-r*s-4*c)+' Z" fill="'+col+'"/>';
 }
 function g7Circle(x,y,r,col,fill='var(--bg)',w=2.5){return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" stroke="'+col+'" fill="'+fill+'" stroke-width="'+w+'"/>';}
-function g7Frame({W=620,H=300,x0,x1,y0,y1,xt,yt,xa='x',ya='',left=62,top=28}){
-  const right=W-22,bottom=H-44,X=x=>left+(x-x0)*(right-left)/(x1-x0),Y=y=>bottom-(y-y0)*(bottom-top)/(y1-y0);
+function g7Frame({W=620,H=300,x0,x1,y0,y1,xt,yt,xa='x',ya='',left=62,top=28,bot=44}){
+  /* bot: room under the axis; a larger value separates the axis title from a tick label at the right end */
+  const right=W-22,bottom=H-bot,X=x=>left+(x-x0)*(right-left)/(x1-x0),Y=y=>bottom-(y-y0)*(bottom-top)/(y1-y0);
   let g='';
   for(const y of yt){g+=g7Line(left,Y(y),right,Y(y),'var(--grid)',1)+g7Text(left-12,Y(y)+5,y,'var(--ink-soft)',16,'end');}
   for(const x of xt){g+=g7Line(X(x),bottom,X(x),bottom+5)+g7Text(X(x),bottom+25,x,'var(--ink-soft)',16);}
-  g+=g7Line(left,bottom,right,bottom,'var(--ink-soft)')+g7Text(right,bottom+41,xa,'var(--ink)',18,'end');
+  g+=g7Line(left,bottom,right,bottom,'var(--ink-soft)')+g7Text(right,H-3,xa,'var(--ink)',18,'end');
   if(ya)g+=g7Text(left,18,ya,'var(--ink-soft)',17,'start');
   return {X,Y,g,left,right,top,bottom};
 }
@@ -5178,7 +5179,7 @@ g7Bind('boundg7eta','input',e=>boundg7Set('eta',e.target.value));g7Bind('boundg7
 let NOISEBALL7_ETA=.25, NOISEBALL7_B=1;
 function drawNoiseball7(){
   const svg=document.getElementById('noiseball7');if(!svg)return;
-  const F=g7Frame({W:620,H:300,x0:0,x1:100,y0:-1.1,y1:2.2,xt:[0,25,50,75,100],yt:[-1,0,1,2],xa:'Iteration',ya:'Parameter θ',left:58,top:32});
+  const F=g7Frame({W:620,H:300,x0:0,x1:100,y0:-1.1,y1:2.2,xt:[0,25,50,75,100],yt:[-1,0,1,2],xa:'Iteration',ya:'Parameter θ',left:58,top:32,bot:54});
   const rng=lcg5(7307),eta=NOISEBALL7_ETA,B=NOISEBALL7_B,sd=Math.sqrt(eta/(B*(2-eta)));
   let gd=2,sgd=2,d1='',d2='';
   for(let t=0;t<=100;t++){
