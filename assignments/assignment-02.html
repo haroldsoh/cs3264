@@ -372,6 +372,21 @@
     <p style="margin-bottom:0;">Open the notebook in Colab with the link above, or upload the downloaded file with <strong>File → Upload notebook</strong>. Read the recorded examples first. You need a GPU runtime only when you run your own experiments (we suggest a T4, see Section 6).</p>
   </div>
 
+  <div class="card">
+    <p>The rest of this page is the detailed instructions for the assignment. Please read it carefully.</p>
+    <ol style="margin-bottom:0;columns:2;column-gap:2rem;">
+      <li><a href="#1-what-you-need-to-do">What you need to do</a></li>
+      <li><a href="#2-choose-and-validate-your-questions">Choose and validate your question</a></li>
+      <li><a href="#3-example-from-failure-to-repair">Example: from failure to repair</a></li>
+      <li><a href="#4-build-your-open-repair">Build your repair</a></li>
+      <li><a href="#5-freeze-and-evaluate">Freeze and evaluate</a></li>
+      <li><a href="#notebook">Use the notebook</a></li>
+      <li><a href="#7-what-to-submit">What to submit</a></li>
+      <li><a href="#8-how-your-work-is-assessed">How your work is assessed</a></li>
+      <li><a href="#9-before-you-submit">Before you submit</a></li>
+    </ol>
+  </div>
+
   <section id="1-what-you-need-to-do">
     <div class="sec-head">
       <span class="sec-tag">1</span>
@@ -524,7 +539,7 @@
         </tbody>
       </table>
     </div>
-    <p>Download <a href="submission_template.json"><code class="inline">submission_template.json</code></a> for an explanation of every field and a filled example. The example has two questions and six responses to show the structure, and its responses are invented. Your final comparison must contain all six questions and 18 question–method results. Also include your screening, development, and repeat runs, labelled as such. The file will therefore contain more than six questions and 18 results.</p>
+    <p>Download <a href="submission_template.json"><code class="inline">submission_template.json</code></a> for an explanation of every field and a filled example. The example has two questions and six responses to show the structure, and its responses are invented. Your final comparison must contain all six questions and 18 question–method results. Also include your screening, development, and repeat runs, labelled as such.</p>
     <p>The JSON file is the record. The notebook holds the code and the readable analysis. If you use the supplied single-call runner, the notebook generates the JSON for you. For other methods, adapt the implementation and the exporter and keep the required fields. Use the same question IDs, run names, and method names everywhere. Keep the automatic scores and put manual reviews in their own records. Exporting needs no new model calls. Do not retype responses, and do not submit the unchanged template. For multi-call or tool methods, keep the intermediate calls and the final system answer, as the template explains.</p>
     <p>Follow the notebook's submission steps to export your records and save the notebook with its outputs. A marker must be able to open your results from the JSON alone, without a GPU, a model download, or your log folder. Keep the JSON next to the notebook and turn off live experiment and training calls in the saved-results workflow. The export checks only test the file format.</p>
     <h3 id="files-for-your-repair-method">Files for your repair method</h3>
