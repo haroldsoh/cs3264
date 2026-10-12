@@ -1,0 +1,260 @@
+{
+  "instructions": {
+    "how_to_use": "Read this example, fill in your notebook, and export your own JSON. The example model responses below are invented, not experiment evidence.",
+    "edit_in_notebook": [
+      "STUDENT_ID: enter your own student ID.",
+      "MY_QUESTIONS: enter questions, groups, anchor links, verified answers, solutions and independent checks. You may improve derivation and independent_check under the same ID; collect_evidence(..., question_notes=MY_QUESTIONS) includes your latest explanations.",
+      "Repair and control: enter the actual prompts/code you use.",
+      "RUN_STAGES and final_run: list your actual runs and identify the frozen final comparison. Change method_roles only if your method names differ from the defaults.",
+      "MANUAL_REVIEWS: add any human answer reviews, or keep [] if none are needed."
+    ],
+    "generated_for_you": "For the supplied single-call prompt runner, the helpers copy your questions and run settings, collect full responses, scores, timestamps, and costs, and write the JSON. Adapt them for other methods as explained in field_guide.other_methods. Do not retype responses or invent values for unmeasured costs.",
+    "keep_unchanged": "Keep the JSON field names, allowed group/status labels, baseline definition, and scoring tolerances. Do not edit raw responses or automatic scores; use MANUAL_REVIEWS for your interpretation.",
+    "finish": "Run collect_evidence and save_submission, then download <student_id>_A2.json. The exporter sets example_only to false and omits instructions and field_guide. Include the generated JSON beside your notebook, PDF report and README.md in <student_id>_A2.zip; upload the ZIP to Canvas Assignment 2. See the assignment page for required method files and large-model instructions. Do not submit this example. To view saved results, set SUBMISSION_FILE to your JSON filename and keep live experiment, training and export calls disabled; no GPU or working logs are needed.",
+    "example_scope": "This shortened example has two questions and six results. Your final comparison needs six questions and 18 results, plus the records from screening, development, and repeat runs. Detailed field explanations follow the example data."
+  },
+  "example_only": true,
+  "student_id": "A0123456Z",
+  "final_run": "final_01",
+  "method_roles": {
+    "baseline": "baseline",
+    "repair": "my_repair",
+    "control": "generic_check"
+  },
+  "questions": [
+    {
+      "id": "anchor-01",
+      "split": "anchor",
+      "anchor_id": null,
+      "variant_type": null,
+      "question": "A model predicts f(w)=w*x. Let x=2, y=0 and L=0.5*(f(w)-y)^2. Starting from w=1, take one gradient descent step with learning rate 0.1. What is the new w?",
+      "answer": 0.6,
+      "derivation": "dL/dw=(w*x-y)*x. At w=1, x=2 and y=0, the gradient is 4. Thus w_new=1-0.1*4=0.6.",
+      "independent_check": "Expanding the loss gives L=2*w^2, so its derivative is 4*w. Substituting w=1 gives the same gradient 4 and updated weight 0.6.",
+      "absolute_tolerance": 1e-05,
+      "relative_tolerance": 0.01
+    },
+    {
+      "id": "heldout-01-struct",
+      "split": "heldout",
+      "anchor_id": "anchor-01",
+      "variant_type": "condition_structural",
+      "question": "A model predicts f(w)=w*x. Let x=2, y=0 and L=abs(f(w)-y), where abs denotes absolute value. Starting from w=1, take one gradient descent step with learning rate 0.1. What is the new w?",
+      "answer": 0.8,
+      "derivation": "This variant replaces squared error with absolute error, keeping the other values fixed. The residual is positive at w=1, so dL/dw=sign(w*x-y)*x=2. Thus w_new=1-0.1*2=0.8.",
+      "independent_check": "Substitution gives L=2*abs(w). Around the starting point w=1, L=2*w and its slope is 2. The update is therefore 0.8; the loss is differentiable at the starting point.",
+      "absolute_tolerance": 1e-05,
+      "relative_tolerance": 0.01
+    }
+  ],
+  "settings": {
+    "final_01": {
+      "stage": "final",
+      "question_ids": [
+        "anchor-01",
+        "heldout-01-struct"
+      ],
+      "methods": [
+        "baseline",
+        "my_repair",
+        "generic_check"
+      ],
+      "runtime": {
+        "model": "Qwen/Qwen3-1.7B",
+        "dtype": "bfloat16",
+        "batch_size": 1,
+        "thinking": true,
+        "do_sample": false,
+        "max_new_tokens": 8192,
+        "seed": 3264,
+        "device": null,
+        "python": null,
+        "torch": null,
+        "transformers": "5.16.1",
+        "accelerate": null,
+        "attn_implementation": "sdpa"
+      },
+      "system": "You are a careful problem solver. Show your work, then give exactly one final line as instructed.",
+      "suffix": "\n\nReason step by step, then end your response with a single line in exactly this format:\nFinal Answer: <number>",
+      "prompts": {
+        "baseline": "",
+        "my_repair": "Before taking an update, write the stated loss explicitly as a function of the trainable parameter. Differentiate that loss, including every chain-rule factor, evaluate the derivative at the original parameter value, and then apply the update.",
+        "generic_check": "Check your calculation and final answer carefully before responding."
+      },
+      "implementation_reference": "Notebook section: Method and reproduction. Include the executable runner and the exact prompts used in this run."
+    }
+  },
+  "results": [
+    {
+      "run_name": "final_01",
+      "id": "anchor-01",
+      "method": "baseline",
+      "completion": "The prediction is 2 and the residual is 2. Using the residual as the gradient gives w_new=1-0.1*2=0.8.\nFinal Answer: 0.8",
+      "predicted": 0.8,
+      "status": "incorrect",
+      "truncated": false,
+      "model_calls": 1,
+      "input_tokens": null,
+      "output_tokens": null,
+      "seconds": null,
+      "started_at_unix": 1791763200.0,
+      "finished_at_unix": 1791763210.0
+    },
+    {
+      "run_name": "final_01",
+      "id": "anchor-01",
+      "method": "my_repair",
+      "completion": "The loss is 0.5*(2*w)^2=2*w^2. Its derivative is 4*w, which is 4 at w=1. The update is 1-0.1*4=0.6.\nFinal Answer: 0.6",
+      "predicted": 0.6,
+      "status": "correct",
+      "truncated": false,
+      "model_calls": 1,
+      "input_tokens": null,
+      "output_tokens": null,
+      "seconds": null,
+      "started_at_unix": 1791763260.0,
+      "finished_at_unix": 1791763270.0
+    },
+    {
+      "run_name": "final_01",
+      "id": "anchor-01",
+      "method": "generic_check",
+      "completion": "The derivative is (w*x-y)*x=4. Subtracting 0.1*4 from 1 gives 0.6. The updated weight is 0.6.",
+      "predicted": null,
+      "status": "unparsed",
+      "truncated": false,
+      "model_calls": 1,
+      "input_tokens": null,
+      "output_tokens": null,
+      "seconds": null,
+      "started_at_unix": 1791763320.0,
+      "finished_at_unix": 1791763330.0
+    },
+    {
+      "run_name": "final_01",
+      "id": "heldout-01-struct",
+      "method": "baseline",
+      "completion": "Using the squared-error gradient (w*x-y)*x gives 4. The updated parameter is 1-0.1*4=0.6.\nFinal Answer: 0.6",
+      "predicted": 0.6,
+      "status": "incorrect",
+      "truncated": false,
+      "model_calls": 1,
+      "input_tokens": null,
+      "output_tokens": null,
+      "seconds": null,
+      "started_at_unix": 1791763380.0,
+      "finished_at_unix": 1791763390.0
+    },
+    {
+      "run_name": "final_01",
+      "id": "heldout-01-struct",
+      "method": "my_repair",
+      "completion": "The stated loss is abs(2*w). At w=1, the argument is positive, so the derivative is 2. The update is 1-0.1*2=0.8.\nFinal Answer: 0.8",
+      "predicted": 0.8,
+      "status": "correct",
+      "truncated": false,
+      "model_calls": 1,
+      "input_tokens": null,
+      "output_tokens": null,
+      "seconds": null,
+      "started_at_unix": 1791763440.0,
+      "finished_at_unix": 1791763450.0
+    },
+    {
+      "run_name": "final_01",
+      "id": "heldout-01-struct",
+      "method": "generic_check",
+      "completion": "This is absolute error, whose derivative here is sign(2*w)*2=2. Therefore w_new=1-0.1*2=0.8.\nFinal Answer: 0.8",
+      "predicted": 0.8,
+      "status": "correct",
+      "truncated": false,
+      "model_calls": 1,
+      "input_tokens": null,
+      "output_tokens": null,
+      "seconds": null,
+      "started_at_unix": 1791763500.0,
+      "finished_at_unix": 1791763510.0
+    }
+  ],
+  "manual_reviews": [
+    {
+      "run_name": "final_01",
+      "id": "anchor-01",
+      "method": "generic_check",
+      "reviewed_answer": 0.6,
+      "mathematically_correct": true,
+      "reason": "The completed response explicitly gives the correct updated weight 0.6 but omits the required Final Answer prefix. The automatic status remains unparsed."
+    }
+  ],
+  "field_guide": {
+    "top_level_fields": {
+      "example_only": "true only in this teaching template; false for your actual experiment records.",
+      "student_id": "Your student ID, matching the ZIP, report, notebook and JSON filenames, and the ID in README.md.",
+      "final_run": "The settings key for the primary frozen comparison, chosen before evaluation, such as final_01. Include fresh repeats of baseline and repair on the anchor with unchanged effective settings. Report these repeats separately, without replacing the primary run.",
+      "method_roles": "Map baseline, repair, and control to the exact method names used in results and settings. If your names differ, pass method_roles to collect_evidence.",
+      "questions": "One entry for every distinct question used in the included runs. This may exceed six when you include screening or development attempts. The final set is selected by settings[final_run].question_ids.",
+      "settings": "One object per run_name. Record the actual settings and prompt version for that run, so earlier trials are not described using the final prompt.",
+      "results": "One record per run_name + id + method. The final run has 18 such records; earlier trials and repeats add more. This combination must be unique. Give each repeat a separate run_name.",
+      "manual_reviews": "A list of optional human reviews linked to existing results. Use [] if none are needed. Keep the original automatic scores unchanged."
+    },
+    "question_fields": {
+      "id": "Unique, stable question ID across methods and repeats. Changes to question text, the answer, scoring settings or group/anchor assignment need a new ID and run name. Editing only derivation or independent_check does not; export your current notes using question_notes=MY_QUESTIONS.",
+      "split": "The question group: anchor, development, heldout, or regression. This differs from a run stage: an anchor remains an anchor during a development run.",
+      "anchor_id": "For a variant, the originating anchor ID; otherwise null. The referenced anchor must be in questions.",
+      "variant_type": "numerical_wording or condition_structural for variants; otherwise null. The final anchor has one development variant and one held-out variant of each type.",
+      "question": "Complete question text, including all assumptions and numeric values needed to solve it.",
+      "answer": "Verified numeric answer, as a JSON number rather than a fraction string. Keep enough precision for scoring.",
+      "derivation": "Your mathematical solution; for a variant, state what changed from its anchor. You may refine this explanation without rerunning the model, provided the question and verified answer are unchanged.",
+      "independent_check": "A second derivation or numerical check and its result, or a precise reference to checking code and saved output in the notebook. This explanatory field may be refined under the same question ID.",
+      "absolute_tolerance / relative_tolerance": "Use 0.00001 and 0.01, respectively, as in the provided scorer."
+    },
+    "run_settings_fields": {
+      "stage": "The experiment phase: screening, development, final, or repeat. Exactly one run has stage final, and its name matches final_run. If you tune after seeing a test run, retain those original records as stage development and evaluate fresh held-out questions in a new final run.",
+      "question_ids / methods": "List the question IDs and method names actually evaluated in this run. A result must belong to both lists.",
+      "runtime": "Shared actual model, precision, decoding, token limit, device, and package versions for the run, recorded by the runner. Optional method_runtime_overrides records differences; effective settings are runtime plus that method's overrides. Metadata must match the executable method.",
+      "system / suffix / prompts": "Exact input instructions, including the prompt for each method. prompts.baseline must be an empty string. The notebook also logs each call's messages; preserve those fields when exporting.",
+      "implementation_reference": "A clear location in your notebook containing the executable method and reproduction instructions. It may call submitted scripts using relative paths. README.md identifies additional data and trained artifacts, including any large-model download links allowed by the assignment page.",
+      "method_runtime_overrides (optional)": "Map method names to only their changed runtime fields, e.g. {\"my_repair\": {\"thinking\": false}}. Omit when all methods share runtime. Record your implementation's actual behavior; adding metadata alone does not change generation. Keep the baseline unchanged."
+    },
+    "result_fields": {
+      "run_name / id / method": "Link the record to settings, questions, and the named method. Example: final_01 / anchor-01 / generic_check.",
+      "completion": "Full raw final model response, including thinking if present. Do not shorten it, replace it with a summary, or correct the model's text.",
+      "predicted": "Finite number extracted by the scorer from a completed final answer; null for unparsed or truncated responses. Do not replace it by hand; use manual_reviews.",
+      "status": "correct, incorrect, unparsed, or truncated. A token-limited response is truncated even if a number appears earlier.",
+      "truncated": "Boolean indicating that generation reached its limit without completing.",
+      "model_calls": "Total target-model calls used for this question-method attempt, including retries. The provided runner uses one.",
+      "input_tokens / output_tokens / seconds": "Recorded token totals and elapsed inference time for this attempt. Null values in this example are unmeasured, not zero costs. Fill in measured values; explain any genuinely unavailable values in the notebook.",
+      "final_system_response / system_predicted / system_status / system_truncated (optional)": "If a tool or selector changes the delivered response, add all four fields: exact delivered text and its numeric scorer results, using the same prefix and tolerances. system_truncated describes that delivered response, not an intermediate call. Keep completion/predicted/status/truncated unchanged as the raw final model record. If these fields are absent, the raw response is the delivered response. The main comparison scores delivered responses; also report raw model scores separately when they differ.",
+      "started_at_unix / finished_at_unix": "UTC call start and finish times as Unix seconds (from time.time()), recorded automatically and preserved on resume/export. These let a marker inspect experiment order. Keep them unchanged. The times in this format example are invented, just like its responses. For a multi-call method, record the whole attempt here and each individual call time in intermediate_calls."
+    },
+    "manual_review_fields": {
+      "run_name / id / method": "Must identify an existing result record.",
+      "reviewed_answer": "The final numeric answer you identify in a completed response, or null if none is present (with mathematically_correct set to false). Do not use provisional numbers from unfinished thinking.",
+      "mathematically_correct": "true or false for the reviewed final numeric answer, according to the verified answer and the same tolerance. This does not certify every reasoning step. Truncated targets cannot be correct. In Python use True/False; the exporter writes JSON booleans.",
+      "reason": "Brief evidence for the review. In this example, the answer is correct but lacks the required Final Answer prefix; automatic status stays unparsed.",
+      "target (optional)": "model (default when omitted) reviews the raw completion; system reviews final_system_response and requires those system fields. Keep at most one review for each run_name + id + method + target. A truncated target must have reviewed_answer=null and mathematically_correct=false."
+    },
+    "other_methods": [
+      "Extra fields are allowed. The supplied save_submission helper handles the single-call prompt runner. Adapt it for multi-call or tool methods while preserving the linking fields and the 18 final question-method records.",
+      "For those methods, add intermediate_calls in execution order, with each call's inputs, full completion, tokens, time and truncation flag, plus tool_steps for tool inputs and outputs. Intermediate calls are nested records, not extra top-level question-method results. The raw last model call stays in completion; do not duplicate it in intermediate_calls.",
+      "Record the exact delivered response and its score using the four final-system fields when tools or selection change the output. Apply the same scorer and tolerances; do not hide intermediate failures or count the last call twice. Sum all calls and token/time costs once per attempt. Adapt save_submission for nested multi-call/tool records while retaining its validation checks. Put training configuration and compute in the notebook. Supply the final adapter or trained model used by each trained method, including a trained control, as specified on the assignment page; do not include unmodified base-model downloads.",
+      "Anchor and development questions and solutions may inform training or fixed examples. Keep held-out and regression cases and their solutions out of training, example/reference collections, and repair tuning. Report seen-question performance separately from held-out transfer."
+    ],
+    "optional_extension_example": {
+      "how_to_read": "Illustration only, not a seventh result. These fields could extend a tool-assisted result for heldout-01-struct: the raw model answer remains 0.6, while a tool delivers 0.8. Real tool use also needs tool_steps. The runtime override illustrates a separate optional metadata change; it does not configure generation.",
+      "run_settings_addition": {
+        "method_runtime_overrides": {
+          "my_repair": {
+            "thinking": false
+          }
+        }
+      },
+      "result_addition": {
+        "final_system_response": "Final Answer: 0.8",
+        "system_predicted": 0.8,
+        "system_status": "correct",
+        "system_truncated": false
+      }
+    }
+  }
+}
