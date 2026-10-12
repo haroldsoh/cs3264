@@ -3,7 +3,7 @@
     "how_to_use": "Read this example, fill in your notebook, and export your own JSON. The example model responses below are invented, not experiment evidence.",
     "edit_in_notebook": [
       "STUDENT_ID: enter your own student ID.",
-      "MY_QUESTIONS: enter questions, groups, anchor links, verified answers, solutions and independent checks. You may improve derivation and independent_check under the same ID; collect_evidence(..., question_notes=MY_QUESTIONS) includes your latest explanations.",
+      "MY_QUESTIONS: enter questions, topics, groups, anchor links, verified answers, solutions and independent checks. You may improve derivation and independent_check under the same ID; collect_evidence(..., question_notes=MY_QUESTIONS) includes your latest explanations.",
       "Repair and control: enter the actual prompts/code you use.",
       "RUN_STAGES and final_run: list your actual runs and identify the frozen final comparison. Change method_roles only if your method names differ from the defaults.",
       "MANUAL_REVIEWS: add any human answer reviews, or keep [] if none are needed."
@@ -25,6 +25,7 @@
     {
       "id": "anchor-01",
       "split": "anchor",
+      "topic": "nn_backprop",
       "anchor_id": null,
       "variant_type": null,
       "question": "A model predicts f(w)=w*x. Let x=2, y=0 and L=0.5*(f(w)-y)^2. Starting from w=1, take one gradient descent step with learning rate 0.1. What is the new w?",
@@ -37,6 +38,7 @@
     {
       "id": "heldout-01-struct",
       "split": "heldout",
+      "topic": "nn_backprop",
       "anchor_id": "anchor-01",
       "variant_type": "condition_structural",
       "question": "A model predicts f(w)=w*x. Let x=2, y=0 and L=abs(f(w)-y), where abs denotes absolute value. Starting from w=1, take one gradient descent step with learning rate 0.1. What is the new w?",
@@ -79,7 +81,7 @@
       "prompts": {
         "baseline": "",
         "my_repair": "Before taking an update, write the stated loss explicitly as a function of the trainable parameter. Differentiate that loss, including every chain-rule factor, evaluate the derivative at the original parameter value, and then apply the update.",
-        "generic_check": "Check your calculation and final answer carefully before responding."
+        "generic_check": "Before giving the final answer, check your reasoning and arithmetic carefully and correct any mistakes you find."
       },
       "implementation_reference": "Notebook section: Method and reproduction. Include the executable runner and the exact prompts used in this run."
     }
@@ -200,6 +202,7 @@
     "question_fields": {
       "id": "Unique, stable question ID across methods and repeats. Changes to question text, the answer, scoring settings or group/anchor assignment need a new ID and run name. Editing only derivation or independent_check does not; export your current notes using question_notes=MY_QUESTIONS.",
       "split": "The question group: anchor, development, heldout, or regression. This differs from a run stage: an anchor remains an anchor during a development run.",
+      "topic": "One of the six A1 topic names: regression_prob, classification, pac_learning, nn_backprop, kernels_svm, unsupervised. Name the topic in your report as well.",
       "anchor_id": "For a variant, the originating anchor ID; otherwise null. The referenced anchor must be in questions.",
       "variant_type": "numerical_wording or condition_structural for variants; otherwise null. The final anchor has one development variant and one held-out variant of each type.",
       "question": "Complete question text, including all assumptions and numeric values needed to solve it.",
