@@ -344,261 +344,247 @@
 </head>
 <body>
 <div class="page">
-<header class="doc-head">
-<span class="eyebrow">Assignment 2 · 15% of final grade</span>
-<h1>Repair the Model</h1>
-<div class="doc-meta">
-<span><b>Course:</b> <a href="https://haroldsoh.com/cs3264/">CS3264 Foundations of Machine Learning</a></span>
-<span><b>Individual work</b></span>
-<span><b>Deadline:</b> Friday 13 November 2026, 23:59 (same as Assignment 1)</span>
-<span><a href="assignment-01.html">Assignment 1: Stump the Model ↗</a></span>
-</div>
-</header>
-<div class="intro">
-<p>You found a mistake. Can you fix it—and show that your fix works on a new problem?</p>
-<p style="margin-bottom:0;">Build on Assignment 1 with a reusable intervention for Qwen3-1.7B.<br/>Explain the mathematics, evaluate your repair, and measure what changes.</p>
-</div>
-<ol class="step-flow">
-<li><strong>Diagnose</strong> — Validate one question and locate the actual error.</li>
-<li><strong>Repair</strong> — Design one method that can act on a new question.</li>
-<li><strong>Evaluate</strong> — Use a control, held-out variants, and regression checks.</li>
-</ol>
-<div class="card">
-<p><strong>Files:</strong> <a download="" href="cs3264_assignment2.ipynb"><code class="inline">cs3264_assignment2.ipynb</code></a> (notebook) · <a download="" href="submission_template.json"><code class="inline">submission_template.json</code></a> (JSON template) · <a href="https://colab.research.google.com/github/haroldsoh/cs3264/blob/main/assignments/cs3264_assignment2.ipynb">Open in Google Colab ↗</a></p>
-<p style="margin-bottom:0;">Open the notebook in Colab with the link above, or choose <strong>File → Upload notebook</strong> and select the downloaded file. Start with the recorded examples, then connect a GPU runtime (we suggest a T4, see Section 6) to run your own experiments.</p>
-</div>
-<section id="1-what-you-need-to-do">
-<div class="sec-head">
-<span class="sec-tag">1</span>
-<h2>What you need to do</h2>
-</div>
-<p>In Assignment 1, you identified questions that expose mistakes in a fixed language model. In Assignment 2, <strong>design a reusable repair and test whether it helps on new questions</strong>.</p><p>Choose one valid ML question, explain the observed mistake, and develop one primary repair. Compare the original model, your repair, and a meaningful control. Your contribution is a mathematical explanation supported by controlled experiments: what fails, why your intervention might help, and what the results actually show.</p><p>Training is optional. Prompting, examples, retrieval, tools, verification, and parameter-efficient finetuning are all possible approaches. A careful, well-supported negative result can earn full marks.</p><p><strong>Your task at a glance:</strong> one original failure, one reusable repair, one control, and a six-question evaluation. Submit one ZIP through Canvas containing a short PDF report, a notebook with saved results, a structured JSON file, and a brief README, plus any necessary method files. Start by reading the notebook examples and testing just your candidate anchor. You do not need to prepare all six questions before beginning.</p>
-</section>
-<section id="2-choose-and-validate-your-questions">
-<div class="sec-head">
-<span class="sec-tag">2</span>
-<h2>Choose and validate your questions</h2>
-</div>
-<p>Start from one of your A1 questions, or write a new question of your own. It must be within the course scope, have one unambiguous numeric answer, and include your own derivation.</p><p><strong>The two notebook examples are for illustration only. Do not submit them or their numerical or wording variants as any of your own questions, or use their recorded results as your experiment evidence.</strong> You may investigate the same ML topics and adapt the repair ideas.</p><ol class="step-flow">
-<li>Solve the question and independently check the answer. Use a second derivation or a numerical checker. An unchecked answer from another LLM is not an answer key.</li>
-<li>Run the <strong>unmodified Qwen3-1.7B baseline</strong>, defined in Section 6, and inspect its complete response. Identify the exact incorrect step.</li>
-<li>Keep the complete response as evidence. Repeat the selected anchor as part of the final evaluation in Section 5.</li>
-<li>Make related variants and explain what changes: numbers, wording, representation, or a mathematical assumption.</li>
-</ol><p>An ambiguous question, unfinished generation, or parsing failure is not evidence of a mathematical mistake. Fix invalid questions before testing repairs, and disclose changes to your A1 wording. Report baseline outcomes honestly. Do not selectively report failures.</p><p>A1 and A2 use the same base model and live inference settings. Inspect your actual baseline response to confirm a mathematical mistake. If it answers correctly, choose another valid question. A failure against a different model, or an unreadable answer, is not sufficient evidence.</p><p>Use the A1 topic blocks: <code class="inline">regression_prob</code>, <code class="inline">classification</code>, <code class="inline">pac_learning</code>, <code class="inline">nn_backprop</code>, <code class="inline">kernels_svm</code>, and <code class="inline">unsupervised</code>.</p>
-</section>
-<section id="3-example-from-failure-to-repair">
-<div class="sec-head">
-<span class="sec-tag">3</span>
-<h2>Example: from failure to repair</h2>
-</div>
-<p>The notebook contains two complete questions, checked solutions, and actual Qwen3-1.7B responses. The recorded baseline and repair runs use the A1-aligned configuration in Section 6 on an NVIDIA GeForce RTX 4060. Responses can differ across runtimes. Inspect the results from your own setup.</p><div class="table-wrap"><table>
-<thead>
-<tr>
-<th>Example</th>
-<th>Original answer</th>
-<th>Correct answer</th>
-<th>Observable mistake</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Gaussian mean with unequal known variances</td>
-<td>3</td>
-<td>57/31 ≈ 1.83871</td>
-<td>Uses the ordinary mean instead of weighting by inverse variance.</td>
-</tr>
-<tr>
-<td>Bernoulli naive Bayes with observed zero features</td>
-<td>0.2727</td>
-<td>9/65 ≈ 0.13846</td>
-<td>Fails to complement the probability of the observed zero X3=0 in class 0.</td>
-</tr>
-</tbody>
-</table></div><p>The example repair appends a <strong>general likelihood reference card</strong> to each question. The same Qwen3-1.7B then generates a new response with unchanged weights. The card contains formulas, not the answers to the example questions. Full question texts, solutions, and complete original and repaired responses appear directly in the notebook.</p><p>In the recorded demonstration, the reference card repairs the Gaussian answer (<code class="inline">57/31</code>, scored <code class="inline">correct</code>) but the Bernoulli answer remains wrong (<code class="inline">0.6</code>, scored <code class="inline">incorrect</code>). The Gaussian response uses a boxed fraction after <code class="inline">Final Answer:</code>, which the extractor accepts. Report unsuccessful repairs as well as successes. A correct reference formula does not guarantee that the model applies it correctly.</p><p>These examples show the workflow. Develop your own investigation, use a control, and evaluate variants of your own anchor.</p>
-</section>
-<section id="4-build-your-open-repair">
-<div class="sec-head">
-<span class="sec-tag">4</span>
-<h2>Build your open repair</h2>
-</div>
-<p>Choose one primary method or a justified combination. The following suggestions are <strong>not an exhaustive list</strong>:</p><ul>
-<li>A reusable reasoning or condition-checking prompt.</li>
-<li>Worked examples, correction notes, or retrieval from a frozen reference collection.</li>
-<li>Numerical or symbolic tools, with their role made explicit.</li>
-<li>A verifier, selector, or multi-call procedure.</li>
-<li>LoRA or another parameter-efficient finetuning method.</li>
-<li>Any other justified inference-time method, test-time scaling strategy (such as generating and selecting among candidates), or training approach based on Qwen3-1.7B.</li>
-</ul><p>During development, you may use anchor and development questions and their solutions for training or fixed examples. Keep held-out and regression questions and solutions out of training, example/reference collections, and repair tuning. Final scores on anchors and development variants measure performance on seen material. Held-out results test transfer.</p><p>Your repair must run automatically on a new question. It may select a rule or reference from the question text, but must not receive that new question's answer key, grading feedback, or manually written hints. Directly returning stored answers or looking up question IDs is not a repair.</p><p>Keep <strong>Qwen3-1.7B as the target model</strong>. Its weights may be trained for your repair, but the comparison baseline must remain unmodified. Do not replace it with a stronger model at evaluation. If a tool computes the final answer, distinguish the raw model response from the final system response. Cite the references and data your method uses.</p><p>Include <strong>one meaningful control or ablation</strong>. A control helps explain what your repair contributes: compare a targeted mathematical reminder with generic checking, or a verifier with a method using the same call budget. An ablation removes a component, such as the reference card. A card that adds both formulas and a request for concise reasoning does not isolate either effect on its own. Choose one suitable comparison. You do not need to implement every suggestion.</p>
-</section>
-<section id="5-freeze-and-evaluate">
-<div class="sec-head">
-<span class="sec-tag">5</span>
-<h2>Freeze and evaluate</h2>
-</div>
-<p>Use a small <strong>6-question evaluation set</strong>. Each group answers a different question about your repair:</p><div class="table-wrap"><table>
-<thead>
-<tr>
-<th>Group</th>
-<th class="num" style="text-align: right;">Number</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Original anchor</td>
-<td class="num mono" style="text-align: right;">1</td>
-<td>The baseline gets this wrong. Establish the mistake you want to fix.</td>
-</tr>
-<tr>
-<td>Development variant</td>
-<td class="num mono" style="text-align: right;">1</td>
-<td>Try and improve your repair before the final test.</td>
-</tr>
-<tr>
-<td>Held-out variants</td>
-<td class="num mono" style="text-align: right;">2</td>
-<td>Check whether the frozen repair works beyond the questions used to develop it. Include one numerical/wording variant and one condition/structural variant of your anchor.</td>
-</tr>
-<tr>
-<td>Regression checks</td>
-<td class="num mono" style="text-align: right;">2</td>
-<td>Check that the repair preserves answers the baseline already gets right.</td>
-</tr>
-</tbody>
-</table></div><p><strong>Why these groups?</strong> Fixing only the original question could mean tailoring a prompt to that exact example. The development variant lets you improve the method, held-out variants test transfer, and regression checks reveal side effects. This is a small teaching experiment, not a comprehensive benchmark. Reuse your A1 anchor or write your own. You only need to author three related variants and select two regression checks.</p><p>A numerical/wording variant preserves the mathematical setup. A condition/structural variant changes an assumption or relationship so that the solution must be reconsidered, such as replacing a linear activation with a specified nonlinear activation in a gradient question. State which anchor each variant comes from and independently solve every variant. Held-out variants need not all defeat the baseline. Evaluate the fixed set regardless of its results.</p><p><strong>Regression checks</strong> are valid ML questions outside your target failure cases that the unmodified Qwen3-1.7B answers correctly. Here, a regression means a previously correct answer becomes wrong. For example, a likelihood hint might fix a probability question but interfere with a previously correct gradient calculation. The notebook supplies four candidate questions, or you may provide your own. Verify their solutions and select two using <strong>baseline results only</strong>, before evaluating the repair on them. A candidate that the baseline gets wrong is not a regression check. Keep the selected checks out of repair tuning, and do not replace a check because your repair fails it.</p><p>Write and verify the questions and solutions before testing. <strong>Held-out</strong> means their model outputs are not used to choose or adjust your repair. Freeze your prompt, code, reference collection, adapter, and settings before running these questions, then evaluate all of them. If you revise the method after inspecting those results, keep the original records, label that run as development evidence, and use fresh questions with new IDs for the final held-out test.</p><p>Run the baseline, primary repair, and control on all 6 questions. For single-call methods the main comparison takes <strong>18 calls</strong>. Repeat baseline and repair on the anchor in a fresh execution, adding two calls. Development trials and candidate screening may require additional calls. Use at most <strong>100 target-model calls overall</strong>, including retries, optional live example reruns, and all calls inside multi-call methods. Reading recorded examples uses no calls. This is a ceiling, not a target. Each call allows at most <strong>8192 output tokens</strong>. For trained methods, report training compute separately and use the same evaluation budget.</p><p>Reserve at least <strong>20 calls</strong> for the single-call final comparison and anchor repeats before spending the rest on screening and development. Multi-call methods require more. If only your repair changes during development, rerun only that method and retain the earlier baseline/control evidence. Notebook Section 5 gives a 31-call example budget and a repair-only iteration that adds two calls. The notebook shows saved calls across runs. Count interrupted calls without a saved response and calls made outside the runner too, and record those separately in the notebook.</p><p>For a fresh repeat, restart the Python kernel, reload the frozen method, and use a new run name. Reusing a previous run name resumes its saved results and does not count as a new run. Before leaving a temporary runtime, download the log backup described in the notebook. Restore it in a fresh session before continuing your experiments. Use the frozen final run for the main comparison. Report development trials and repeated checks separately.</p><p>Use the notebook's numeric scorer: tolerance is the larger of 1e-5 absolute and 1% relative. Keep <strong>incorrect</strong>, <strong>unparsed</strong>, <strong>truncated</strong>, and <strong>correct</strong> outcomes separate. Inspect suspicious extractions and reasoning steps. A clear final boxed answer may be mathematically correct despite a missing prefix. Preserve the automatic result and document any review, applying the same rules to every method. Do not extract provisional answers from unfinished thinking.</p><p>The extractor accepts the common A1 answer formats, including Markdown bold, Unicode minus, <code class="inline">x = 0.2</code>, trailing units, decimals, fractions, scientific notation, and numeric exponentials. A percent sign is ignored (<code class="inline">20%</code> is the number <code class="inline">20</code>). Radicals such as <code class="inline">sqrt(2)</code> are not parsed. Review a clear completed answer separately. Keep enough decimal precision for the tolerance, and keep the baseline's input instruction unchanged.</p><p>Report accuracy with numerators and denominators for each split, wrong-to-right and right-to-wrong transitions, completion and parsing rates, calls, tokens, time, and hardware. Include every assigned question in overall accuracy. Also report completed-response mathematical accuracy with its denominator. An unfinished response is unsuccessful delivery, but does not establish a mathematical error. Choose the primary <code class="inline">final_run</code> before evaluation, and report the required anchor repeats separately. Do not select the best run after seeing results.</p><p>For each method's final run, <strong>automatic accuracy</strong> is the number scored <code class="inline">correct</code> divided by 6. <strong>Completed-response mathematical accuracy</strong> uses all non-truncated responses as its denominator, including completed <code class="inline">unparsed</code> responses. Review these consistently to determine mathematical correctness. Keep this reviewed result separate from the automatic score. If no response completes, report N/A for this metric. For split-level automatic accuracy, replace 6 with that split's question count. The mathematical metric uses only completed responses in that split.</p><p>These metrics evaluate the <strong>delivered response</strong>. For ordinary prompting, that is the raw model response. If a tool or selector changes it, use the template's <code class="inline">final_system_response</code>, <code class="inline">system_predicted</code>, <code class="inline">system_status</code>, and <code class="inline">system_truncated</code> fields for the main comparison, and report the raw model scores separately. Preserve both texts and apply the same scorer.</p>
-</section>
-<section id="notebook">
-<div class="sec-head">
-<span class="sec-tag">6</span>
-<h2>Use the notebook</h2>
-</div>
-<p>Download <strong><a href="cs3264_assignment2.ipynb">cs3264_assignment2.ipynb</a></strong>. <a href="https://colab.research.google.com/github/haroldsoh/cs3264/blob/main/assignments/cs3264_assignment2.ipynb">Open it in Google Colab directly</a>, or open <strong><a href="https://colab.research.google.com/">Google Colab</a></strong>, choose <strong>File → Upload notebook</strong>, and select the downloaded file.</p><ul>
-<li><strong>Read the examples:</strong> the full questions, solutions, and recorded model responses are included directly in the notebook. Expand the response panels to read all of the text. No execution or external response files are needed to read them.</li>
-<li><strong>Rerun the examples (optional):</strong> choose <strong>Runtime → Change runtime type</strong> and pick a GPU. We suggest the <strong>T4</strong> when Colab offers it. Any other NVIDIA GPU, such as Colab's L4, also works, and Kaggle offers a T4 x2 runtime. The model uses about 4 GB of GPU memory. A T4 has no native BF16 arithmetic, so it runs this configuration more slowly than newer GPUs. Set <code class="inline">MODE="live"</code> and <code class="inline">INSTALL_INFERENCE_PACKAGES=True</code>, then run the cells in order. The model download is approximately 4 GB. Rerunning the examples uses four calls.</li>
-<li><strong>Run your own experiments:</strong> start with your candidate anchor in <code class="inline">MY_QUESTIONS</code>. Connect a GPU runtime (T4 suggested, as above), set <code class="inline">INSTALL_INFERENCE_PACKAGES=True</code>, and keep <code class="inline">MODE="recorded"</code> to skip rerunning the teaching examples. <code class="inline">run_my_questions</code> always makes live calls. Follow the staged calls in Section 5 of the notebook: baseline checks, regression screening, development, frozen evaluation, and repeat. Enter your repair in <code class="inline">PROMPTS["my_repair"]</code> before development, and add the remaining questions before the final evaluation. Adapt the runner for other approaches and use a new run name when changing an experiment.</li>
-</ul><p><strong>Unmodified baseline</strong> means the pretrained <strong>Qwen3-1.7B</strong> model (<code class="inline">Qwen/Qwen3-1.7B</code>), with its original weights and no repair prompt, examples, retrieval, tools, or additional model calls. It receives only the fixed system prompt, question text, and final-answer instruction printed in the notebook. Use the same live configuration as the published A1 notebook: <strong>BF16, Transformers 5.16.1, SDPA attention</strong>, batch size 1, greedy decoding, thinking enabled, and at most 8192 output tokens. Keep a matched runtime for baseline, control, and repair, and report any decoding changes that are part of your repair. The notebook saves settings and each completed live response with automatic start/finish timestamps. An unchanged run resumes its saved results and preserves those timestamps. The exported JSON retains these records for checking the sequence of development and final evaluation.</p><p>If a response genuinely reaches the token limit, it is marked as incomplete. Do not silently increase the baseline budget or treat a partial answer as final. A reusable concision prompt can be investigated as a repair under the same budget. Report completion improvement separately from mathematical error repair.</p><p>A single long response can take several minutes, depending on your GPU and the generated response length. The runner announces each new call. If a method changes decoding, record its actual differences in the optional <code class="inline">method_runtime_overrides</code> field described in the JSON template.</p><h3 id="computing-resources">Computing resources</h3><p><strong>Arrange your own computing access and start testing early.</strong> Allow time for usage limits, service interruptions, and account applications. Do not leave your experiments until the final few days before the deadline. Save completed results, avoid unnecessary reruns, and disconnect GPU runtimes when they are no longer needed.</p><ul>
-<li><strong>Google Colab:</strong> free GPU access has dynamic usage limits, with no guaranteed reset schedule or availability. See the <a href="https://research.google.com/colaboratory/faq.html#resource-limits">official resource-limit FAQ</a>.</li>
-<li><strong>Kaggle:</strong> offers free GPU access subject to a weekly quota and availability. Check your account's current allowance and the <a href="https://www.kaggle.com/docs/efficient-gpu-usage">GPU usage guide</a>.</li>
-<li><strong>NUS IT HPC:</strong> NUS lists undergraduates among the users of its <a href="https://research.nus.edu.sg/research-facilities/nus-information-technology-nus-it/">computing facilities</a>. Consult the <a href="https://nusit.nus.edu.sg/hpc/">HPC documentation</a> for current eligibility, registration, and resource policies, and arrange access independently.</li>
-</ul><p>The teaching team does not provide GPU resources or Colab credits, run experiments on students' behalf, or arrange computing access. Direct account, quota, and infrastructure enquiries to the relevant service provider. If you use another platform, follow its setup instructions and preserve the assignment's model and baseline settings. Training is optional. Choose a repair method that fits the resources available to you.</p>
-</section>
-<section id="7-what-to-submit">
-<div class="sec-head">
-<span class="sec-tag">7</span>
-<h2>What to submit</h2>
-</div>
-<p><strong>When:</strong> by <strong>Friday 13 November 2026, 23:59</strong> (Singapore time) — the same deadline as Assignment 1, the last Friday of lectures.</p><p>Upload <strong>one ZIP file</strong>, named <code class="inline">&lt;student_id&gt;_A2.zip</code>, through <strong>Canvas → Assignments → Assignment 2</strong>. Place the following <strong>four required files at the top level</strong> of the archive, using the same student ID. Include additional folders only when your implementation needs them.</p><p>Example archive layout:</p><pre class="code">A0123456X_A2.zip
+
+  <header class="doc-head">
+    <span class="eyebrow">Assignment 2 · 15% of final grade</span>
+    <h1>Repair the Model</h1>
+    <div class="doc-meta">
+      <span><b>Course:</b> <a href="https://haroldsoh.com/cs3264/">CS3264 Foundations of Machine Learning</a></span>
+      <span><b>Individual work</b></span>
+      <span><b>Deadline:</b> Friday 13 November 2026, 23:59 (same as Assignment 1)</span>
+      <span><a href="assignment-01.html">Assignment 1: Stump the Model ↗</a></span>
+    </div>
+  </header>
+
+  <div class="intro">
+    <p><strong>In one sentence:</strong> take a question that Qwen3-1.7B gets wrong, build a repair that makes it answer correctly, and test whether the repair also works on questions it has not seen.</p>
+    <p style="margin-bottom:0;">In Assignment 1 you found questions that the model gets wrong. In this assignment you fix one of those mistakes. The fix must be reusable: it has to work on new questions, not just the one you started from. You will test it the way an ML method is tested, with a baseline, a control, held-out questions, and a check that it does not break answers that were already right.</p>
+  </div>
+
+  <ol class="step-flow">
+      <li><strong>Diagnose</strong> — validate one question and find the exact step where the model goes wrong.</li>
+      <li><strong>Repair</strong> — design one method that can act on a new question.</li>
+      <li><strong>Evaluate</strong> — compare the baseline, your repair, and a control on six questions.</li>
+  </ol>
+
+  <div class="card">
+    <p><strong>Files:</strong> <a href="cs3264_assignment2.ipynb" download><code class="inline">cs3264_assignment2.ipynb</code></a> (notebook) · <a href="submission_template.json" download><code class="inline">submission_template.json</code></a> (JSON template) · <a href="https://colab.research.google.com/github/haroldsoh/cs3264/blob/main/assignments/cs3264_assignment2.ipynb">Open in Google Colab ↗</a></p>
+    <p style="margin-bottom:0;">Open the notebook in Colab with the link above, or upload the downloaded file with <strong>File → Upload notebook</strong>. Read the recorded examples first. You need a GPU runtime only when you run your own experiments (we suggest a T4, see Section 6).</p>
+  </div>
+
+  <section id="1-what-you-need-to-do">
+    <div class="sec-head">
+      <span class="sec-tag">1</span>
+      <h2>What you need to do</h2>
+    </div>
+
+    <p>Your task is to choose one ML question that the unmodified Qwen3-1.7B gets wrong, explain the mistake it makes, and build one repair that fixes it. Then compare three things on the same questions: the original model (the <strong>baseline</strong>), the model with your <strong>repair</strong>, and a <strong>control</strong> that lets you tell what your repair actually contributes.</p>
+    <p>Write up an explanation that is supported by your experimental results. Describe what fails, why your repair might help, and how the results support your reasoning. A careful, well-supported negative result earns full marks.</p>
+    <p>Training the model is optional. Prompting, worked examples, retrieval, tools, verification, and parameter-efficient finetuning are all acceptable repairs.</p>
+    <p>You submit one ZIP file through Canvas. It contains a short PDF report, your notebook with saved results, a JSON file of your experiment records, and a brief README (Section 7). Start small: read the notebook examples and test your candidate question first. You do not need all six evaluation questions before you begin.</p>
+  </section>
+  <section id="2-choose-and-validate-your-questions">
+    <div class="sec-head">
+      <span class="sec-tag">2</span>
+      <h2>Choose and validate your question</h2>
+    </div>
+
+    <p>Start from one of your A1 questions, or write a new one. The question must be within the course scope, have one unambiguous numeric answer, and come with your own derivation. Use the A1 topic names: <code class="inline">regression_prob</code>, <code class="inline">classification</code>, <code class="inline">pac_learning</code>, <code class="inline">nn_backprop</code>, <code class="inline">kernels_svm</code>, and <code class="inline">unsupervised</code>.</p>
+    <p>The two examples in the notebook are for illustration only. Do not submit them, or numerical or wording variants of them, as your own questions, and do not use their recorded responses as evidence. You may work on the same topics and adapt the repair ideas.</p>
+    <p>Then, in this order:</p>
+    <ol class="step-flow">
+      <li>Solve the question and check the answer a second way, with a second derivation or a numerical check. An unchecked answer from another LLM does not count as a check.</li>
+      <li>Run the unmodified baseline (defined in Section 6) and read its complete response. Find the exact step where it goes wrong.</li>
+      <li>Keep the complete response as evidence. You will run this question again in the final evaluation (Section 5).</li>
+      <li>Write related variants of the question and say what each one changes: the numbers, the wording, the representation, or a mathematical assumption.</li>
+    </ol>
+    <p>An ambiguous question, an unfinished response, or a parsing failure is not a mathematical mistake. Fix an invalid question before you test any repair, and say so if you changed your A1 wording. Report what the baseline did, including the cases where it got the answer right.</p>
+    <p>A1 and A2 use the same model and the same inference settings. Even so, check the actual baseline response. If the model answers your A1 question correctly here, choose another question. A failure on a different model, or an unreadable answer, is not enough.</p>
+  </section>
+  <section id="3-example-from-failure-to-repair">
+    <div class="sec-head">
+      <span class="sec-tag">3</span>
+      <h2>Example: from failure to repair</h2>
+    </div>
+
+    <p>The notebook contains two complete questions with checked solutions and the model's actual responses. They were recorded with the Section 6 settings on an NVIDIA GeForce RTX 4060. Responses can differ between GPUs, so look at the results from your own setup.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Example</th><th>Original answer</th><th>Correct answer</th><th>Observable mistake</th></tr></thead>
+        <tbody>
+          <tr><td>Gaussian mean with unequal known variances</td><td>3</td><td>57/31 ≈ 1.83871</td><td>Uses the ordinary mean instead of weighting by inverse variance.</td></tr>
+          <tr><td>Bernoulli naive Bayes with observed zero features</td><td>0.2727</td><td>9/65 ≈ 0.13846</td><td>Does not take the complement for the observed zero X3 = 0 in class 0.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The example repair appends a reference card of likelihood formulas to each question. The same model, with unchanged weights, then answers again. The card contains formulas, not the answers to the example questions. The full question texts, solutions, and both responses are in the notebook.</p>
+    <p>In the recording, the card fixes the Gaussian question (57/31, scored correct) but not the Bernoulli question (0.6, still wrong). The Gaussian response gives a boxed fraction after <code class="inline">Final Answer:</code>, which the extractor accepts. Report this kind of result too: giving the model the right formula does not guarantee that it applies the formula correctly.</p>
+    <p>These examples show the workflow. Do your own investigation, use a control, and evaluate variants of your own question.</p>
+  </section>
+  <section id="4-build-your-open-repair">
+    <div class="sec-head">
+      <span class="sec-tag">4</span>
+      <h2>Build your repair</h2>
+    </div>
+
+    <p>Choose one main method, or a combination you can justify. Some options:</p>
+    <ul>
+      <li>a reusable prompt that makes the model check a condition or reason in a particular way</li>
+      <li>worked examples, correction notes, or retrieval from a fixed reference collection</li>
+      <li>numerical or symbolic tools, with their role stated clearly</li>
+      <li>a verifier, a selector, or a multi-call procedure</li>
+      <li>LoRA or another parameter-efficient finetuning method</li>
+      <li>any other inference-time method, test-time scaling strategy (such as generating several candidates and selecting one), or training approach, as long as it is built on Qwen3-1.7B</li>
+    </ul>
+    <p>This list is not exhaustive.</p>
+    <p><strong>What your repair may use.</strong> While developing it, you may use the anchor question, the development variant, and their solutions, for training or as fixed examples. Keep the held-out and regression questions and their solutions out of training data, example collections, reference material, and tuning. Scores on the anchor and the development variant measure performance on material the repair has seen. Scores on the held-out questions measure transfer.</p>
+    <p><strong>What your repair must do.</strong> It must run on a new question with no help from you. It may pick a rule or a reference based on the question text. It must not receive the question's answer, grading feedback, or hints you wrote for that question. Returning stored answers, or looking up question IDs, is not a repair.</p>
+    <p><strong>Keep the target model fixed.</strong> The repair may train the weights of Qwen3-1.7B, but the baseline you compare against stays unmodified. Do not switch to a stronger model for evaluation. If a tool computes the final answer, record the raw model response and the final system response separately. Cite any references and data your method uses.</p>
+    <p><strong>Include one control or ablation.</strong> A control tells you what your repair contributes. For example, compare a targeted mathematical reminder with a generic "check your work" prompt, or compare a verifier with a method that uses the same number of calls. An ablation removes one component of your repair, such as the reference card. If your card both gives formulas and asks for concise reasoning, a single run cannot tell you which part helped. Choose one comparison that suits your method. You do not need to try all of these.</p>
+  </section>
+  <section id="5-freeze-and-evaluate">
+    <div class="sec-head">
+      <span class="sec-tag">5</span>
+      <h2>Freeze and evaluate</h2>
+    </div>
+
+    <p>You evaluate on six questions. Each group answers a different question about your repair:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Group</th><th class="num">Number</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Original anchor</td><td class="num mono">1</td><td>The baseline gets this wrong. It establishes the mistake you are fixing.</td></tr>
+          <tr><td>Development variant</td><td class="num mono">1</td><td>Use it to improve your repair before the final test.</td></tr>
+          <tr><td>Held-out variants</td><td class="num mono">2</td><td>Test whether the frozen repair works beyond the questions you developed it on. One numerical/wording variant and one condition/structural variant of your anchor.</td></tr>
+          <tr><td>Regression checks</td><td class="num mono">2</td><td>Test that the repair does not break answers the baseline already gets right.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Why these groups?</strong> A repair that fixes only the original question may just be tailored to that one example. The development variant lets you improve the method. The held-out variants test transfer. The regression checks reveal side effects. Six questions is a small experiment, and your conclusions should say so. You write the three variants and pick the two regression checks. The anchor can be your A1 question.</p>
+    <p><strong>Variants.</strong> A numerical/wording variant keeps the mathematics the same and changes the numbers or the wording. A condition/structural variant changes an assumption or a relationship so that the solution has to be reworked. For example, replace a linear activation with a named nonlinear one in a gradient question. Say which anchor each variant comes from and solve every variant yourself. The held-out variants do not all have to defeat the baseline. Evaluate the fixed set whatever the results are.</p>
+    <p><strong>Regression checks</strong> are valid ML questions outside your failure case that the unmodified model answers correctly. A regression is a previously correct answer that becomes wrong. For example, a likelihood hint might fix a probability question but break a gradient calculation that was right before. The notebook supplies four candidate questions, and you may also write your own. Verify their solutions, then run the baseline on them and pick two that it gets right. Do this before you test the repair on them. A candidate that the baseline gets wrong cannot be a regression check. Keep the two checks out of tuning, and do not swap one out because your repair fails it.</p>
+    <p><strong>Freeze before you test.</strong> Write and verify all six questions and solutions before you run the final evaluation. "Held-out" means that you never use those questions' model outputs to choose or adjust your repair. Freeze your prompt, code, reference collection, adapter, and settings, then evaluate all six questions. If you change the method after seeing the held-out results, keep the original records, label that run as development, and write fresh held-out questions with new IDs for the final test.</p>
+    <p><strong>Calls.</strong> Run the baseline, your repair, and the control on all six questions. For single-call methods that is 18 calls. Then repeat the baseline and the repair on the anchor in a fresh session, which adds two. Development and screening need more. You may use at most <strong>100 calls</strong> to the target model in total. This includes retries, optional reruns of the examples, and every call inside a multi-call method. Reading the recorded examples uses none. The limit is a ceiling, not a target. Each call may generate at most 8192 tokens. If you train, report the training compute separately and keep to the same evaluation budget.</p>
+    <p>Reserve at least 20 calls for the final comparison and the anchor repeats. If only your repair changes during development, rerun only the repair and keep the earlier baseline and control results. Notebook Section 5 shows a 31-call plan, with two calls per extra repair-only iteration. Count interrupted calls and any calls made outside the runner, and record them in the notebook.</p>
+    <p>For a fresh repeat, restart the kernel, reload the frozen method, and use a new run name. Reusing a run name resumes its saved results instead of running again. Before you leave a temporary runtime, download the log backup described in the notebook, and restore it in the next session before you continue. The frozen final run is your main comparison. Report development trials and repeats separately.</p>
+    <p><strong>Scoring.</strong> The notebook's scorer accepts an answer if it is within 1e-5 absolute or 1% relative of yours, whichever is larger. Keep the four outcomes separate: correct, incorrect, unparsed, and truncated. Look at any extraction that seems off, and read the reasoning. A response may give a clear boxed answer without the required prefix. Keep its automatic status, record your own review separately, and apply the same rule to every method. Never take a provisional number from unfinished thinking as the answer.</p>
+    <p>The extractor reads the same formats as the A1 extractor: Markdown bold, a Unicode minus sign, <code class="inline">x = 0.2</code>, trailing units, decimals, fractions, scientific notation, and exponentials such as <code class="inline">e^{-2}</code>. It ignores a percent sign, so <code class="inline">20%</code> is read as the number <code class="inline">20</code>. It does not read radicals such as <code class="inline">sqrt(2)</code>, so review those by hand. Give your answers enough decimal places for the tolerance. Do not change the baseline's instruction.</p>
+    <p><strong>What to report.</strong> For each group, give accuracy as a fraction (correct out of total), the wrong-to-right and right-to-wrong changes, how many responses completed and how many parsed, and the calls, tokens, time, and hardware used. Decide which run is your final run before you look at its results, and report the anchor repeats separately. Do not pick the best run afterwards.</p>
+    <p>Automatic accuracy for a method is the number of its six final responses scored correct, divided by 6. Completed-response mathematical accuracy counts only responses that finished (not truncated), including unparsed ones that you reviewed, and uses that number as the denominator. Report it next to the automatic accuracy, not instead of it. If no response finished, report N/A. For a single group, divide by that group's size instead of 6. A response that hit the token limit counts as not delivered. It is not evidence of a mathematical mistake.</p>
+    <p>These metrics score the delivered response. For ordinary prompting that is the raw model response. If a tool or a selector changes the delivered answer, use the template's <code class="inline">final_system_response</code>, <code class="inline">system_predicted</code>, <code class="inline">system_status</code>, and <code class="inline">system_truncated</code> fields for the main comparison, keep both texts, apply the same scorer to both, and report the raw model's scores separately.</p>
+  </section>
+  <section id="notebook">
+    <div class="sec-head">
+      <span class="sec-tag">6</span>
+      <h2>Use the notebook</h2>
+    </div>
+
+    <p>Download <a href="cs3264_assignment2.ipynb"><code class="inline">cs3264_assignment2.ipynb</code></a>. <a href="https://colab.research.google.com/github/haroldsoh/cs3264/blob/main/assignments/cs3264_assignment2.ipynb">Open it in Google Colab directly</a>, or open <a href="https://colab.research.google.com/">Google Colab</a>, choose <strong>File → Upload notebook</strong>, and select the file.</p>
+    <ul>
+      <li><strong>Read the examples.</strong> The full questions, solutions, and recorded responses are in the notebook. Expand the response panels to read everything. You do not need to run anything.</li>
+      <li><strong>Rerun the examples (optional).</strong> Choose <strong>Runtime → Change runtime type</strong> and pick a GPU. We suggest the T4 when Colab offers it. Any other NVIDIA GPU also works, such as Colab's L4 or Kaggle's T4 x2. The model needs about 4 GB of GPU memory. A T4 has no native BF16 arithmetic, so it is slower than newer GPUs. Set <code class="inline">MODE="live"</code> and <code class="inline">INSTALL_INFERENCE_PACKAGES=True</code> and run the cells in order. The model download is about 4 GB, and the rerun uses four calls.</li>
+      <li><strong>Run your own experiments.</strong> Put your candidate anchor in <code class="inline">MY_QUESTIONS</code>. Connect a GPU runtime, set <code class="inline">INSTALL_INFERENCE_PACKAGES=True</code>, and keep <code class="inline">MODE="recorded"</code> so the examples are not rerun. <code class="inline">run_my_questions</code> always calls the model. Follow the staged calls in Section 5 of the notebook: baseline check, regression screening, development, frozen evaluation, repeat. Enter your repair in <code class="inline">PROMPTS["my_repair"]</code> before development, and add the remaining questions before the final evaluation. If you use another kind of method, adapt the runner, and use a new run name whenever an experiment changes.</li>
+    </ul>
+    <p><strong>The unmodified baseline</strong> is the pretrained Qwen3-1.7B (<code class="inline">Qwen/Qwen3-1.7B</code>) with its original weights and nothing added: no repair prompt, examples, retrieval, tools, or extra calls. It sees only the fixed system prompt, the question text, and the final-answer instruction printed in the notebook. The settings are the same as the published A1 notebook: BF16, Transformers 5.16.1, SDPA attention, batch size 1, greedy decoding, thinking enabled, and at most 8192 output tokens. Use the same runtime for the baseline, the control, and the repair, and report any decoding change that is part of your repair. The notebook saves the settings and every completed response, with start and finish timestamps. An unchanged run resumes its saved results. The exported JSON keeps these records so a marker can check the order of development and final evaluation.</p>
+    <p>A response that reaches the token limit is marked incomplete. Do not raise the baseline's token budget, and do not treat a partial answer as final. A prompt that makes the model more concise can be investigated as a repair under the same budget. Report any improvement in completion separately from the repair of mathematical errors.</p>
+    <p>A long response can take several minutes, depending on your GPU and the length of the response. The runner announces each new call. If your method changes the decoding settings, record the changes in the <code class="inline">method_runtime_overrides</code> field described in the JSON template.</p>
+    <h3 id="computing-resources">Computing resources</h3>
+    <p>Arrange your own GPU access and start early. Free GPU time has limits and is sometimes unavailable, and accounts can take time to set up. Do not leave the experiments until the last few days. Save completed results, avoid reruns you do not need, and disconnect GPU runtimes when you are done.</p>
+    <ul>
+      <li><strong>Google Colab:</strong> free GPU access has usage limits that change over time, with no guaranteed availability. See the <a href="https://research.google.com/colaboratory/faq.html#resource-limits">resource-limits FAQ</a>.</li>
+      <li><strong>Kaggle:</strong> free GPU access with a weekly quota, subject to availability. Check your account's allowance and the <a href="https://www.kaggle.com/docs/efficient-gpu-usage">GPU usage guide</a>.</li>
+      <li><strong>NUS IT HPC:</strong> NUS <a href="https://research.nus.edu.sg/research-facilities/nus-information-technology-nus-it/">lists undergraduates</a> among the users of its computing facilities. Check the <a href="https://nusit.nus.edu.sg/hpc/">HPC documentation</a> for eligibility, registration, and resource policies, and apply yourself.</li>
+    </ul>
+    <p>The teaching team does not provide GPUs or Colab credits, does not run experiments for you, and does not arrange access. Send account, quota, and infrastructure questions to the provider. If you use another platform, follow its setup instructions and keep the assignment's model and baseline settings. Training is optional. Choose a repair method that fits the resources you have.</p>
+  </section>
+  <section id="7-what-to-submit">
+    <div class="sec-head">
+      <span class="sec-tag">7</span>
+      <h2>What to submit</h2>
+    </div>
+
+    <p><strong>When:</strong> by <strong>Friday 13 November 2026, 23:59</strong> (Singapore time), the same deadline as Assignment 1.</p>
+    <p>Upload one ZIP file named <code class="inline">&lt;student_id&gt;_A2.zip</code> through <strong>Canvas → Assignments → Assignment 2</strong>. The four required files go at the top level of the archive and use the same student ID. Add folders only if your method needs them.</p>
+    <pre class="code">A0123456X_A2.zip
 ├── README.md
 ├── A0123456X_A2_report.pdf
 ├── A0123456X_A2.ipynb
 ├── A0123456X_A2.json
 ├── code/                       # Optional
 └── assets/                     # Optional
-</pre><div class="table-wrap"><table>
-<thead>
-<tr>
-<th>File</th>
-<th>Purpose and contents</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code class="inline">README.md</code></td>
-<td>A brief guide to the package: student ID and repair method, file locations, dependencies, and instructions for viewing saved results and running the methods. Explain how to load any additional files. Do not repeat the report's analysis.</td>
-</tr>
-<tr>
-<td><code class="inline">&lt;student_id&gt;_A2_report.pdf</code></td>
-<td>Your analysis and conclusions: observed errors, repair and control rationale, results by group, and costs. At most <strong>four pages</strong>, excluding references. Layout and headings are flexible. No report template is required. Refer to question IDs when discussing examples.</td>
-</tr>
-<tr>
-<td><code class="inline">&lt;student_id&gt;_A2.ipynb</code></td>
-<td>Runnable code and saved outputs. Organize your work under <strong>Questions and solutions</strong>, <strong>Method and reproduction</strong>, <strong>Results</strong>, and <strong>Experiment evidence</strong>. Include independent checks, actual prompts/code, references or training data, and brief run instructions. This is the main execution entry point. It may call scripts included in the ZIP.</td>
-</tr>
-<tr>
-<td><code class="inline">&lt;student_id&gt;_A2.json</code></td>
-<td>Structured records for marking: questions and solutions, settings for each run, complete model responses and scores, costs, and any manual reviews. Export this from your experiments using the notebook helper.</td>
-</tr>
-</tbody>
-</table></div><p>Download <strong><a href="submission_template.json">submission_template.json</a></strong> for field explanations and a filled format example. Its two questions and six responses illustrate the structure only. The model responses are invented. Your final comparison must contain all six assigned questions and 18 question–method results. Include screening, development, and repeat evidence too, labelled separately. The complete file may therefore contain more than six questions and 18 results.</p><p>The JSON file is the structured record, while the notebook provides executable code and readable analysis. For the supplied single-call prompt runner, the notebook generates your completed JSON. The template is a reference, not a form to fill in by hand. For other methods, adapt the implementation and exporter while preserving the required fields. Use consistent question IDs, run names, and method names throughout the package. Preserve automatic scores and put manual reviews in their own records. Exporting records and marking tables requires no new model calls. Do not retype responses or submit the unchanged template. For multi-call or tool methods, retain intermediate calls and the final system answer as explained in the template.</p><p>Follow the notebook's submission steps to export your records and save the notebook with its outputs. After extracting the ZIP, markers must be able to view the results from the submitted JSON without a GPU, model download, or working log folder. Keep the JSON beside the notebook, and disable live experiment and training calls in the saved-results workflow. Check the mathematics and completeness of your evidence yourself. Passing the export checks does not establish either.</p><h3 id="files-for-your-repair-method">Files for your repair method</h3><p>Use relative paths for files in the ZIP. Include the files needed by your chosen method. Material already included in the notebook does not need a second copy.</p><div class="table-wrap"><table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Additional material, where applicable</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Prompting, verification, or multi-call methods</td>
-<td>Actual prompts and execution code, with intermediate calls retained in the JSON as explained in the template.</td>
-</tr>
-<tr>
-<td>Retrieval or tools</td>
-<td>Custom code, the reference collection used, and instructions to load or rebuild any required index.</td>
-</tr>
-<tr>
-<td>LoRA or other parameter-efficient finetuning</td>
-<td>Final adapter weights, configuration and loading code, plus training code, data and settings.</td>
-</tr>
-<tr>
-<td>Full finetuning</td>
-<td>Final trained model weights, necessary configuration and loading code, plus training code, data and settings.</td>
-</tr>
-</tbody>
-</table></div><p>For <strong>every trained method used in the final comparison, including a trained control</strong>, submit the exact trained artifact used for that evaluation. Include any modified tokenizer files. Markers must be able to load it without first repeating training. Training code alone is insufficient. Document training steps and compute in the notebook.</p><p>No separate question files, raw log folders, or screenshots are required. Do not include unmodified base-model downloads, caches, virtual environments, optimizer states, or unnecessary intermediate checkpoints.</p><p><strong>Large model files:</strong> Canvas has a <a href="https://community.instructure.com/en/kb/articles/387061-canvas-file-quotas">5 GB maximum upload size for most file types</a>. If a required model artifact would make the ZIP exceed that limit, provide a download link accessible to the marking team in <code class="inline">README.md</code>, identifying the exact files and how to load them. Keep these files unchanged after submission and accessible throughout marking and review. The report, notebook, complete JSON records, and execution code must remain in the ZIP.</p><p>Extract your ZIP into a fresh folder and check that the saved results can be opened and all included paths resolve. Upload the ZIP to Canvas and verify that the submitted filename and submission confirmation are shown. If you resubmit, upload a complete replacement ZIP.</p>
-</section>
-<section id="8-how-your-work-is-assessed">
-<div class="sec-head">
-<span class="sec-tag">8</span>
-<h2>How your work is assessed</h2>
-</div>
-<div class="table-wrap"><table>
-<thead>
-<tr>
-<th>Component</th>
-<th class="num" style="text-align: right;">Marks</th>
-<th>What we look for</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Mathematical understanding and failure analysis</td>
-<td class="num mono" style="text-align: right;">30</td>
-<td>Valid questions, correct derivations, and accurate identification of the model's errors.</td>
-</tr>
-<tr>
-<td>Repair design and justification</td>
-<td class="num mono" style="text-align: right;">25</td>
-<td>A motivated, reusable intervention with clear information and tool boundaries.</td>
-</tr>
-<tr>
-<td>Evaluation and generalization analysis</td>
-<td class="num mono" style="text-align: right;">30</td>
-<td>Meaningful controls, held-out tests, regression checks, repeated runs, and conclusions supported by the evidence.</td>
-</tr>
-<tr>
-<td>Reproducibility and cost reporting</td>
-<td class="num mono" style="text-align: right;">15</td>
-<td>A runnable submission, complete records, and honest accounting.</td>
-</tr>
-</tbody>
-</table></div><p>A well-supported negative result can earn full marks. More expensive methods and training do not earn extra marks by themselves. Accuracy on different self-selected questions is not a competition between students.</p><p>The frontier-model bonus described in Assignment 1 is applied separately to the A2 mark, with the final A2 mark capped at 100.</p>
-</section>
-<section id="9-before-you-submit">
-<div class="sec-head">
-<span class="sec-tag">9</span>
-<h2>Before you submit</h2>
-</div>
-<p>Confirm that your submission contains:</p><ul class="checklist">
-<li><strong>Validated mathematics:</strong> an original anchor question, correct derivations, and independent answer checks.</li>
-<li><strong>A clear comparison:</strong> the unmodified Qwen3-1.7B baseline, a reusable repair, and a meaningful control.</li>
-<li><strong>A frozen evaluation:</strong> held-out tests and regression checks excluded from tuning.</li>
-<li><strong>Complete evidence:</strong> full responses, regressions, incomplete generations, unsuccessful runs, and compute costs.</li>
-<li><strong>Reproducible work:</strong> executable files, exact settings, and concise reproduction instructions.</li>
-<li><strong>Supported conclusions:</strong> claims limited to what your experiments establish.</li>
-<li><strong>A complete ZIP:</strong> the four required files, any necessary method files, working relative paths or model-download links, and a confirmed Canvas submission.</li>
-</ul>
-</section>
-<footer>CS3264 · Foundations of Machine Learning · National University of Singapore</footer>
+</pre>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Purpose and contents</th></tr></thead>
+        <tbody>
+          <tr><td><code class="inline">README.md</code></td><td>A short guide to the package: your student ID, your repair method, where the files are, what to install, and how to view the saved results and run the methods. Explain how to load any extra files. Do not repeat the report's analysis.</td></tr>
+          <tr><td><code class="inline">&lt;student_id&gt;_A2_report.pdf</code></td><td>Your analysis and conclusions: the mistakes you observed, why you chose your repair and control, the results by group, and the costs. At most four pages, not counting references. Use any layout. Refer to questions by their IDs.</td></tr>
+          <tr><td><code class="inline">&lt;student_id&gt;_A2.ipynb</code></td><td>Runnable code with saved outputs. Organise it under Questions and solutions, Method and reproduction, Results, and Experiment evidence. Include your independent checks, the actual prompts or code, any references or training data, and short run instructions. This is the entry point, and it may call scripts in the ZIP.</td></tr>
+          <tr><td><code class="inline">&lt;student_id&gt;_A2.json</code></td><td>The structured records for marking: questions and solutions, the settings of each run, complete model responses with scores, costs, and any manual reviews. The notebook helper exports it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Download <a href="submission_template.json"><code class="inline">submission_template.json</code></a> for an explanation of every field and a filled example. The example has two questions and six responses to show the structure, and its responses are invented. Your final comparison must contain all six questions and 18 question–method results. Also include your screening, development, and repeat runs, labelled as such. The file will therefore contain more than six questions and 18 results.</p>
+    <p>The JSON file is the record. The notebook holds the code and the readable analysis. If you use the supplied single-call runner, the notebook generates the JSON for you. The template is a reference, not a form to fill in by hand. For other methods, adapt the implementation and the exporter and keep the required fields. Use the same question IDs, run names, and method names everywhere. Keep the automatic scores and put manual reviews in their own records. Exporting needs no new model calls. Do not retype responses, and do not submit the unchanged template. For multi-call or tool methods, keep the intermediate calls and the final system answer, as the template explains.</p>
+    <p>Follow the notebook's submission steps to export your records and save the notebook with its outputs. A marker must be able to open your results from the JSON alone, without a GPU, a model download, or your log folder. Keep the JSON next to the notebook and turn off live experiment and training calls in the saved-results workflow. The export checks test the format. Checking the mathematics and the completeness of your evidence is up to you.</p>
+    <h3 id="files-for-your-repair-method">Files for your repair method</h3>
+    <p>Use relative paths inside the ZIP. Include what your method needs. Anything already in the notebook does not need a second copy.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Additional material, where applicable</th></tr></thead>
+        <tbody>
+          <tr><td>Prompting, verification, or multi-call methods</td><td>The actual prompts and execution code, with the intermediate calls kept in the JSON as the template explains.</td></tr>
+          <tr><td>Retrieval or tools</td><td>Your code, the reference collection you used, and instructions for loading or rebuilding any index.</td></tr>
+          <tr><td>LoRA or other parameter-efficient finetuning</td><td>The final adapter weights, the configuration and loading code, and the training code, data, and settings.</td></tr>
+          <tr><td>Full finetuning</td><td>The final model weights, the configuration and loading code, and the training code, data, and settings.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>For every trained method in the final comparison, including a trained control, submit the exact artifact you evaluated, with any modified tokenizer files. A marker must be able to load it without training it again. Training code alone is not enough. Describe the training steps and compute in the notebook.</p>
+    <p>Do not include separate question files, raw log folders, or screenshots. Do not include base-model downloads, caches, virtual environments, optimizer states, or intermediate checkpoints.</p>
+    <p><strong>Large model files:</strong> Canvas allows uploads of at most <a href="https://community.instructure.com/en/kb/articles/387061-canvas-file-quotas">5 GB</a> for most file types. If a required model artifact would push the ZIP over that limit, put a download link that the marking team can open in <code class="inline">README.md</code>, name the exact files, and say how to load them. Do not change those files after submission, and keep them accessible throughout marking. The report, notebook, JSON records, and code always stay in the ZIP.</p>
+    <p>Before you upload, extract your ZIP into a fresh folder and check that the saved results open and every path resolves. After uploading, check that Canvas shows the file name and a submission confirmation. If you resubmit, upload a complete replacement ZIP.</p>
+  </section>
+  <section id="8-how-your-work-is-assessed">
+    <div class="sec-head">
+      <span class="sec-tag">8</span>
+      <h2>How your work is assessed</h2>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Component</th><th class="num">Marks</th><th>What we look for</th></tr></thead>
+        <tbody>
+          <tr><td>Mathematical understanding and failure analysis</td><td class="num mono">30</td><td>Valid questions, correct derivations, and a correct account of where the model goes wrong.</td></tr>
+          <tr><td>Repair design and justification</td><td class="num mono">25</td><td>A well-motivated, reusable repair, with clear limits on what information and tools it uses.</td></tr>
+          <tr><td>Evaluation and generalisation analysis</td><td class="num mono">30</td><td>A meaningful control, held-out tests, regression checks, repeated runs, and conclusions that the evidence supports.</td></tr>
+          <tr><td>Reproducibility and cost reporting</td><td class="num mono">15</td><td>A submission that runs, complete records, and honest accounting of calls, tokens, and time.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>A careful, well-supported negative result earns full marks. Expensive methods and training earn no extra marks on their own. Your questions are your own, so accuracy is not compared between students.</p>
+    <p>The frontier-model bonus from Assignment 1 is added to your A2 mark separately, and the A2 mark is capped at 100.</p>
+  </section>
+  <section id="9-before-you-submit">
+    <div class="sec-head">
+      <span class="sec-tag">9</span>
+      <h2>Before you submit</h2>
+    </div>
+
+    <p>Check that your submission has:</p>
+    <ul class="checklist">
+      <li><strong>Validated mathematics:</strong> an original anchor question, correct derivations, and an independent check of every answer</li>
+      <li><strong>A clear comparison:</strong> the unmodified Qwen3-1.7B baseline, a reusable repair, and a meaningful control</li>
+      <li><strong>A frozen evaluation:</strong> held-out tests and regression checks that were never used for tuning</li>
+      <li><strong>Complete evidence:</strong> full responses, regressions, incomplete generations, failed runs, and compute costs</li>
+      <li><strong>Reproducible work:</strong> executable files, exact settings, and short reproduction instructions</li>
+      <li><strong>Conclusions</strong> limited to what your experiments show</li>
+      <li><strong>A complete ZIP:</strong> the four required files, any method files, working relative paths or download links, and a Canvas submission confirmation</li>
+    </ul>
+  </section>
+
+  <footer>CS3264 · Foundations of Machine Learning · National University of Singapore</footer>
+
 </div>
 </body>
 </html>
