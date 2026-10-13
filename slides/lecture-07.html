@@ -1291,7 +1291,17 @@ const SLIDES = [
 `},
 
 {s:"Part III", t:"SGD can keep fluctuating near the minimum", draw:"noiseball7", html:`
-<div class="eyebrow">III-B · A concrete example</div><h2>SGD can keep fluctuating near the minimum</h2><div class="eq l7-eq n7-equation" style="font-size:27px"><span class="texd" data-tex="\\mathcal L(\\theta)=\\tfrac12\\theta^2"></span></div><div class="g7-split"><div><svg id="noiseball7" class="g7-figure" viewBox="0 0 620 300" role="img" aria-label="Parameter trajectories: full gradient descent settles at zero, while fixed-step SGD fluctuates near zero."></svg></div><div><div class="g7-control"><label for="noiseball7eta">Step size η: <output id="noiseball7etav">0.25</output></label><input id="noiseball7eta" type="range" min="0.05" max="0.9" step="0.05" value="0.25"></div><div class="g7-control"><label for="noiseball7batch">Batch size B: <output id="noiseball7batchv">1</output></label><input id="noiseball7batch" type="range" min="1" max="32" value="1"></div><p class="n7-small">Blue: full GD<br><span class="n7-error">Red: SGD</span></p><p class="n7-small">Shaded band: ± one long-run standard deviation.</p></div></div><p class="n7-centre-note">Full GD settles at the minimum. Fixed-step SGD keeps fluctuating.</p><!-- Instructor note: Independent Rademacher noise epsilon = ±1/sqrt(B). The stationary variance of theta(s+1)=(1-eta)theta(s)-eta epsilon(s) is eta/[B(2-eta)], for 0<eta<2. The shaded band is a standard deviation, not a hard bound. -->
+<div class="eyebrow">III-B · A concrete example</div><h2>SGD can keep fluctuating near the minimum</h2>
+<p class="n7-copy" style="font-size:23px;margin:0 0 12px">Two targets: <span class="tex" data-tex="t_1=+1,\\quad t_2=-1"></span>. The model predicts <span class="tex" data-tex="\\theta"></span> for both examples.</p>
+<div class="eq l7-eq n7-equation" style="font-size:25px;margin:12px 0 18px"><span class="texd" data-tex="\\ell_n(\\theta)=\\tfrac12(\\theta-t_n)^2,\\qquad \\mathcal L(\\theta)=\\tfrac12[\\ell_1(\\theta)+\\ell_2(\\theta)]=\\tfrac12\\theta^2+\\tfrac12"></span></div>
+<div class="g7-split" style="align-items:start"><div><svg id="noiseball7" class="g7-figure" viewBox="0 0 620 300" role="img" aria-label="Parameter trajectories for squared error on two targets, plus one and minus one: full gradient descent approaches zero; SGD samples targets uniformly with replacement and fluctuates around zero."></svg></div>
+<div><p class="n7-small" style="font-size:20px;margin:0 0 8px">Sample <span class="tex" data-tex="B"></span> examples uniformly, with replacement.</p>
+<div class="eq l7-eq n7-equation" style="font-size:23px;margin:8px 0 12px"><span class="texd" data-tex="g_s=\\frac1B\\sum_{b=1}^{B}(\\theta_s-t_{n_{s,b}})"></span></div>
+<div class="g7-control" style="margin:12px 0"><label for="noiseball7eta">Step size η: <output id="noiseball7etav">0.25</output></label><input id="noiseball7eta" type="range" min="0.05" max="0.9" step="0.05" value="0.25"></div>
+<div class="g7-control" style="margin:12px 0"><label for="noiseball7batch">Batch size B: <output id="noiseball7batchv">1</output></label><input id="noiseball7batch" type="range" min="1" max="32" value="1"></div>
+<p class="n7-small" style="margin:8px 0">Blue: full GD · <span class="n7-error">Red: SGD</span><br>Band: ± one long-run standard deviation.</p></div></div>
+<p class="n7-centre-note" style="font-size:23px;margin:16px 0 0">At <span class="tex" data-tex="\\theta=0"></span>, the individual gradients are −1 and +1. Their average is zero.</p>
+<!-- Instructor note: Squared error on targets t1 = +1 and t2 = -1, with a constant prediction theta. The average loss is theta^2/2 + 1/2 and its gradient is theta. Each SGD update averages B independently sampled example gradients, with replacement: g_s = theta_s - mean(targets). The target mean has expectation zero and variance 1/B. The update is theta(s+1) = (1-eta) theta(s) + eta mean(targets); no separate noise is injected. The stationary variance is eta/[B(2-eta)] for 0 < eta < 2. The band is a standard deviation, not a hard bound. -->
 `},
 
 {s:"Part III", t:"Why the sampled gradient is unbiased", html:`
@@ -5173,19 +5183,30 @@ g7Bind('stepg7eta','input',e=>stepg7Set(e.target.value));g7Bind('stepg7reset','c
 g7Bind('meang7one','click',()=>meang7Draw(1));g7Bind('meang7many','click',()=>meang7Draw(50));g7Bind('meang7reset','click',meang7Reset);
 g7Bind('boundg7eta','input',e=>boundg7Set('eta',e.target.value));g7Bind('boundg7batch','input',e=>boundg7Set('B',e.target.value));g7Bind('boundg7reset','click',boundg7Reset);
 
-/* Fixed-step GD versus unbiased SGD on L(theta) = theta^2/2.
-   The plotted stochastic trajectory and the standard-deviation band use the
-   same update/noise model. Seed is reset on control changes for comparison. */
+/* Squared error on two targets: +1 and -1; constant prediction theta.
+   L(theta) = theta^2/2 + 1/2. Each SGD update averages B independently
+   sampled example gradients, with replacement; no extra noise is injected.
+   The sample-target mean has variance 1/B, giving the long-run parameter
+   variance eta/[B(2-eta)]. Seed is reset on control changes for comparison. */
 let NOISEBALL7_ETA=.25, NOISEBALL7_B=1;
 function drawNoiseball7(){
   const svg=document.getElementById('noiseball7');if(!svg)return;
+  const targets=[1,-1];
   const F=g7Frame({W:620,H:300,x0:0,x1:100,y0:-1.1,y1:2.2,xt:[0,25,50,75,100],yt:[-1,0,1,2],xa:'Iteration',ya:'Parameter θ',left:58,top:32,bot:54});
   const rng=lcg5(7307),eta=NOISEBALL7_ETA,B=NOISEBALL7_B,sd=Math.sqrt(eta/(B*(2-eta)));
   let gd=2,sgd=2,d1='',d2='';
   for(let t=0;t<=100;t++){
     d1+=(t?' L':'M')+F.X(t).toFixed(2)+' '+F.Y(gd).toFixed(2);
     d2+=(t?' L':'M')+F.X(t).toFixed(2)+' '+F.Y(sgd).toFixed(2);
-    gd-=eta*gd;sgd-=eta*(sgd+(rng()<.5?-1:1)/Math.sqrt(B));
+    if(t===100)break;
+    let batchGradient=0;
+    for(let b=0;b<B;b++){
+      const target=targets[Math.floor(rng()*targets.length)];
+      batchGradient+=sgd-target;
+    }
+    batchGradient/=B;
+    gd-=eta*gd;
+    sgd-=eta*batchGradient;
   }
   svg.innerHTML=F.g+'<rect x="'+F.X(0)+'" y="'+F.Y(sd)+'" width="'+(F.X(100)-F.X(0))+'" height="'+(F.Y(-sd)-F.Y(sd))+'" fill="var(--s2)" opacity=".09"/>'+
    '<path d="'+d2+'" fill="none" stroke="var(--s2)" stroke-width="2"/>'+

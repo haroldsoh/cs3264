@@ -850,12 +850,33 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 </ol>
 <p>Return <span class="math inline">\theta_T</span>. For the analysis, each index is sampled independently of earlier sampling, with replacement. A <strong>minibatch</strong> averages several sampled gradients before making the update.</p>
 <h2 id="sgd-can-keep-fluctuating-near-the-minimum">SGD Can Keep Fluctuating Near the Minimum</h2>
-<p>Return to the simple quadratic loss</p>
-<p><span class="math display">\[\mathcal L(\theta)=\frac12\theta^2.\]</span></p>
-<p>Its minimum is at <span class="math inline">\theta=0</span>. With a suitable fixed step size, full gradient descent approaches zero. SGD uses a sampled gradient, which can be nonzero even when the full gradient is zero. If this sampling noise persists, the updates can keep moving the parameter away from the minimum.</p>
-<p>Smaller steps or larger batches can reduce these fluctuations. We want to explain why, and what kind of convergence we can still guarantee.</p>
-<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#91" target="_blank" rel="noopener">Slide 91</a>, compare the parameter values over successive updates. Change the step size and batch size, and observe how the spread of the SGD path changes.</p>
-<p>We will first show that the sampled gradient is correct on average. We will then account for how far individual samples can differ from that average.</p>
+<p>Consider two training examples with targets <span class="math inline">t_1=+1</span> and <span class="math inline">t_2=-1</span>. Our model predicts the same constant <span class="math inline">\theta</span> for both examples; it does not use the inputs. The loss on each example is squared error:</p>
+<p><span class="math display">\[\ell_1(\theta)=\frac12(\theta-1)^2,
+\qquad
+\ell_2(\theta)=\frac12(\theta+1)^2.\]</span></p>
+<p>The average training loss is</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal L(\theta)
+&amp;=\frac12[\ell_1(\theta)+\ell_2(\theta)]\\
+&amp;=\frac14[(\theta-1)^2+(\theta+1)^2]\\
+&amp;=\frac12\theta^2+\frac12.
+\end{aligned}\]</span></p>
+<p>Its minimum is at <span class="math inline">\theta=0</span>, the mean of the two targets. Its gradient is <span class="math inline">\theta</span>; the constant <span class="math inline">1/2</span> has no effect on the updates.</p>
+<p>Full gradient descent averages both example gradients:</p>
+<p><span class="math display">\[\nabla\mathcal L(\theta)
+=\frac12[(\theta-1)+(\theta+1)]=\theta.\]</span></p>
+<p>For an SGD update with <span class="math inline">B=1</span>, sample one of the two examples uniformly. The sampled gradient is <span class="math inline">\theta-1</span> if the target is <span class="math inline">+1</span>, and <span class="math inline">\theta+1</span> if the target is <span class="math inline">-1</span>. At <span class="math inline">\theta=0</span>, these gradients are <span class="math inline">-1</span> and <span class="math inline">+1</span>, even though their average is zero. Each example pulls the prediction towards its own target, so sampling can keep moving the parameter away from the minimum of the average loss.</p>
+<p>For a minibatch of size <span class="math inline">B</span>, independently sample <span class="math inline">B</span> example indices with replacement. Repeated indices are allowed, so <span class="math inline">B</span> can exceed the two-example dataset size. Average their gradients:</p>
+<p><span class="math display">\[\bar t_s=\frac1B\sum_{b=1}^{B}t_{n_{s,b}},
+\qquad
+g_s=\frac1B\sum_{b=1}^{B}(\theta_s-t_{n_{s,b}})
+=\theta_s-\bar t_s.\]</span></p>
+<p>The update is therefore</p>
+<p><span class="math display">\[\theta_{s+1}=\theta_s-\eta g_s
+=(1-\eta)\theta_s+\eta\bar t_s.\]</span></p>
+<p>All the randomness comes from sampling training examples. There is no additional random perturbation.</p>
+<p>Smaller steps or larger batches reduce the fluctuations. We will show that the sampled gradient is correct on average, and then account for how far individual samples can differ from that average.</p>
+<p><strong>Try it:</strong> on <a class="slide-link" href="../slides/lecture-07.html#91" target="_blank" rel="noopener">Slide 91</a>, compare the parameter values over successive updates. Change the step size and batch size, and observe how the spread of the SGD path changes. The demonstration samples the two examples with replacement and averages their gradients at each update.</p>
 <h2 id="the-sampled-gradient-is-unbiased">The Sampled Gradient is Unbiased</h2>
 <p>Our training objective is the average loss,</p>
 <p><span class="math display">\[\mathcal L(\theta)=\frac1N\sum_{n=1}^{N}\ell_n(\theta).\]</span></p>
@@ -889,7 +910,8 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 <p>Each individual loss favours its own minimum. Repeatedly choosing different examples can therefore make the parameter fluctuate around the minimum of their average.</p>
 <p>To analyse this, write the sampled gradient as</p>
 <p><span class="math display">\[\mathbf g_s=\nabla\mathcal L(\theta_s)+\boldsymbol\epsilon_s.\]</span></p>
-<p>The difference <span class="math inline">\boldsymbol\epsilon_s</span> is the <strong>sampling noise</strong>. From the unbiasedness proof,</p>
+<p>The difference <span class="math inline">\boldsymbol\epsilon_s</span> is the <strong>sampling noise</strong>. It is determined by the sampled examples, rather than an additional perturbation. In our two-target example, <span class="math inline">\epsilon_s=-\bar t_s</span>: the sampled gradient <span class="math inline">\theta_s-\bar t_s</span> differs from the full gradient <span class="math inline">\theta_s</span> by exactly the negative sampled-target mean.</p>
+<p>From the unbiasedness proof,</p>
 <p><span class="math display">\[\mathbb E[\boldsymbol\epsilon_s\mid\theta_s]=\mathbf0.\]</span></p>
 <p>Zero-mean noise follows from uniform sampling. We have proved this property.</p>
 <h2 id="the-additional-variance-assumption">The Additional Variance Assumption</h2>
@@ -985,20 +1007,27 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 <p>The optional SGD exercise in Tutorial 6 uses a bound on the <strong>second moment of the sampled gradient</strong>, <span class="math inline">\mathbb E[g_s^2\mid\theta_s]\leq\sigma^2</span>, in its scalar example. Here we assumed a bound on the <strong>noise variance</strong> instead. A second-moment bound also bounds the variance, but the two derivations give differently written bounds.</p>
 <p>The tutorial writes <span class="math inline">\alpha</span> for the step size and <span class="math inline">L</span> for the curvature bound. These correspond to <span class="math inline">\eta</span> and <span class="math inline">\beta</span> here. We use <span class="math inline">s</span> consistently for iterations, keeping <span class="math inline">t_n</span> for targets.</p>
 <h2 id="returning-to-the-quadratic-example">Returning to the Quadratic Example</h2>
-<p>We can now calculate the spread of the fluctuations in the quadratic example. Recall</p>
-<p><span class="math display">\[\mathcal L(\theta)=\frac12\theta^2.\]</span></p>
+<p>We can now calculate the spread of the fluctuations for the two-target dataset. Recall</p>
+<p><span class="math display">\[\mathcal L(\theta)=\frac12\theta^2+\frac12,
+\qquad t_1=+1,\quad t_2=-1.\]</span></p>
 <p>Full gradient descent follows</p>
 <p><span class="math display">\[\theta_{s+1}=(1-\eta)\theta_s.\]</span></p>
-<p>For <span class="math inline">0&lt;\eta&lt;2</span>, the factor has magnitude less than one, so the parameter approaches zero. For SGD, write the sampled gradient as <span class="math inline">\theta_s+\epsilon_s</span>. The update becomes</p>
-<p><span class="math display">\[\theta_{s+1}=(1-\eta)\theta_s-\eta\epsilon_s.\]</span></p>
-<p>Assume this noise is independent of earlier updates and has variance <span class="math inline">v^2/B</span>. Then <span class="math inline">\mathbb E[\theta_s]</span> still approaches zero, but</p>
+<p>For <span class="math inline">0&lt;\eta&lt;2</span>, the factor has magnitude less than one, so the parameter approaches zero.</p>
+<p>SGD samples <span class="math inline">B</span> examples independently with replacement at each update. Their target mean <span class="math inline">\bar t_s</span> gives the sampled gradient <span class="math inline">g_s=\theta_s-\bar t_s</span> and the update</p>
+<p><span class="math display">\[\theta_{s+1}=(1-\eta)\theta_s+\eta\bar t_s.\]</span></p>
+<p>Each sampled target is <span class="math inline">+1</span> or <span class="math inline">-1</span> with equal probability, so it has mean zero and variance one. Independence of the <span class="math inline">B</span> samples gives</p>
+<p><span class="math display">\[\mathbb E[\bar t_s]=0,
+\qquad
+\operatorname{Var}(\bar t_s)=\frac1{B^2}\sum_{b=1}^{B}1=\frac1B.\]</span></p>
+<p>This variance follows from the dataset and sampling procedure; it is not an arbitrary noise assumption. In the notation of the general bound, this example has <span class="math inline">v^2=1</span>.</p>
+<p>The new batch is independent of earlier updates. Thus <span class="math inline">\mathbb E[\theta_s]</span> approaches zero, while</p>
 <p><span class="math display">\[\operatorname{Var}(\theta_{s+1})
-=(1-\eta)^2\operatorname{Var}(\theta_s)+\frac{\eta^2v^2}{B}.\]</span></p>
+=(1-\eta)^2\operatorname{Var}(\theta_s)+\frac{\eta^2}{B}.\]</span></p>
 <p>At the limiting variance <span class="math inline">V</span>, the value no longer changes between steps:</p>
-<p><span class="math display">\[V=(1-\eta)^2V+\frac{\eta^2v^2}{B}.\]</span></p>
+<p><span class="math display">\[V=(1-\eta)^2V+\frac{\eta^2}{B}.\]</span></p>
 <p>Rearranging gives</p>
-<p><span class="math display">\[\boxed{V=\frac{\eta v^2}{B(2-\eta)}.}\]</span></p>
-<p>With positive noise variance and a fixed step size, the spread remains positive. Smaller steps or larger batches reduce it. The interval <span class="math inline">[-\sqrt V,\sqrt V]</span> is one long-run standard deviation on each side of zero. It describes the spread; it is not a boundary that contains every iterate.</p>
+<p><span class="math display">\[\boxed{V=\frac{\eta}{B(2-\eta)}.}\]</span></p>
+<p>For any finite <span class="math inline">B</span> and fixed step size <span class="math inline">0&lt;\eta&lt;2</span>, the spread remains positive. Smaller steps or larger batches reduce it. The shaded band on <a class="slide-link" href="../slides/lecture-07.html#91" target="_blank" rel="noopener">Slide 91</a> is <span class="math inline">[-\sqrt V,\sqrt V]</span>, one long-run standard deviation on each side of zero. It describes the spread; it is not a boundary that contains every iterate.</p>
 <p>This specific example gives the <strong>noise ball</strong> picture: parameters fluctuate around the minimum. The general SGD convergence bound makes a statement about gradients; it does not establish such a region in parameter space for every loss.</p>
 <hr />
 <h1 id="machine-learning--optimization">Machine Learning ≠ Optimization</h1>
@@ -1032,7 +1061,7 @@ u_r(x)=q(u_{r-1}(x)).\]</span></p>
 <p>These choices can favour some solutions even when we do not add an explicit penalty to the loss. This is called an <strong>implicit bias</strong> of the learning process, and it can act as a form of regularisation. However, not every such bias improves generalisation. The useful question is whether the solutions favoured by the training process match the structure of the prediction problem.</p>
 <hr />
 <h1 id="summary">Summary</h1>
-<p>The main ideas are:</p>
+<p>In this lesson, we were introduced to the key concepts behind neural networks. The main ideas are:</p>
 <ol type="1">
 <li><p><strong>Learned features.</strong> A neural network composes parameterised functions. Their intermediate outputs are the representations used by later computations. Learning changes both the features and the predictor.</p></li>
 <li><p><strong>MLP predictions.</strong> Compute each layer's weighted sums, biases, and activations in order. Choose the output and loss to match the task: a linear output and squared loss for regression, sigmoid and binary cross-entropy for binary classification, or softmax and cross-entropy for multiclass classification.</p></li>
