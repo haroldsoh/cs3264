@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 8 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 8: Neural Networks II — CNNs and Transformers">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+<style>
+.notes article .notes-figure{max-width:none}
+.notes article img{display:block;max-width:100%;height:auto;margin:20px auto 10px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-08.html" target="_blank" rel="noopener">Lecture 8 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h1"><a href="#network-structure-and-inductive-bias">Network Structure and Inductive Bias</a></li>
+<li class="toc-h2"><a href="#why-not-use-an-mlp-for-images">Why Not Use an MLP for Images?</a></li>
+<li class="toc-h1"><a href="#convolutional-neural-networks">Convolutional Neural Networks</a></li>
+<li class="toc-h2"><a href="#a-filter-looks-for-a-small-pattern">A Filter Looks for a Small Pattern</a></li>
+<li class="toc-h2"><a href="#one-dimensional-convolution">One-Dimensional Convolution</a></li>
+<li class="toc-h2"><a href="#sparse-connections-and-weight-sharing">Sparse Connections and Weight Sharing</a></li>
+<li class="toc-h2"><a href="#convolution-on-an-image">Convolution on an Image</a></li>
+<li class="toc-h2"><a href="#multiple-filters-and-channels">Multiple Filters and Channels</a></li>
+<li class="toc-h2"><a href="#translation-equivariance">Translation Equivariance</a></li>
+<li class="toc-h3"><a href="#equivariance-and-invariance">Equivariance and Invariance</a></li>
+<li class="toc-h2"><a href="#nonlinear-activations">Nonlinear Activations</a></li>
+<li class="toc-h2"><a href="#max-pooling">Max Pooling</a></li>
+<li class="toc-h2"><a href="#building-higher-level-features">Building Higher-Level Features</a></li>
+<li class="toc-h2"><a href="#learning-shared-weights">Learning Shared Weights</a></li>
+<li class="toc-h1"><a href="#other-symmetries-and-mirror-equivariance">Other Symmetries and Mirror Equivariance</a></li>
+<li class="toc-h2"><a href="#a-reflection-counterexample">A Reflection Counterexample</a></li>
+<li class="toc-h2"><a href="#designing-an-operation-that-is-mirror-equivariant">Designing an Operation That Is Mirror Equivariant</a></li>
+<li class="toc-h2"><a href="#what-does-a-flip-do-to-a-local-patch">What Does a Flip Do to a Local Patch?</a></li>
+<li class="toc-h2"><a href="#two-ways-to-make-the-local-response-invariant">Two Ways to Make the Local Response Invariant</a></li>
+<li class="toc-h3"><a href="#1-use-a-symmetric-kernel">1. Use a Symmetric Kernel</a></li>
+<li class="toc-h3"><a href="#2-use-a-kernel-and-its-reverse">2. Use a Kernel and Its Reverse</a></li>
+<li class="toc-h3"><a href="#from-local-responses-to-the-whole-feature-map">From Local Responses to the Whole Feature Map</a></li>
+<li class="toc-h2"><a href="#how-does-this-extend-to-images">How Does This Extend to Images?</a></li>
+<li class="toc-h2"><a href="#from-an-equivariant-map-to-an-invariant-label">From an Equivariant Map to an Invariant Label</a></li>
+<li class="toc-h2"><a href="#data-augmentation">Data Augmentation</a></li>
+<li class="toc-h2"><a href="#rotation-invariance-and-group-pooling">Rotation Invariance and Group Pooling</a></li>
+<li class="toc-h1"><a href="#sequence-data-and-recurrent-neural-networks">Sequence Data and Recurrent Neural Networks</a></li>
+<li class="toc-h2"><a href="#a-hidden-state-carries-information-forward">A Hidden State Carries Information Forward</a></li>
+<li class="toc-h2"><a href="#strengths-and-limitations-of-rnns">Strengths and Limitations of RNNs</a></li>
+<li class="toc-h1"><a href="#attention-and-transformers">Attention and Transformers</a></li>
+<li class="toc-h2"><a href="#attention-as-a-soft-dictionary-lookup">Attention as a Soft Dictionary Lookup</a></li>
+<li class="toc-h3"><a href="#queries-keys-and-values">Queries, Keys, and Values</a></li>
+<li class="toc-h2"><a href="#computing-self-attention">Computing Self-Attention</a></li>
+<li class="toc-h3"><a href="#step-1-token-embeddings-and-position-information">Step 1: Token Embeddings and Position Information</a></li>
+<li class="toc-h3"><a href="#step-2-compute-queries-keys-and-values">Step 2: Compute Queries, Keys, and Values</a></li>
+<li class="toc-h3"><a href="#step-3-compute-attention-weights">Step 3: Compute Attention Weights</a></li>
+<li class="toc-h3"><a href="#step-4-combine-the-value-vectors">Step 4: Combine the Value Vectors</a></li>
+<li class="toc-h2"><a href="#multi-head-attention">Multi-Head Attention</a></li>
+<li class="toc-h2"><a href="#a-transformer-block">A Transformer Block</a></li>
+<li class="toc-h3"><a href="#which-gradient-problems-remain">Which Gradient Problems Remain?</a></li>
+<li class="toc-h2"><a href="#why-position-information-matters">Why Position Information Matters</a></li>
+<li class="toc-h2"><a href="#predicting-the-next-token">Predicting the Next Token</a></li>
+<li class="toc-h2"><a href="#the-cost-of-full-attention">The Cost of Full Attention</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+<li class="toc-h2"><a href="#further-reading">Further Reading</a></li>
+</ol>
+</details>
+</aside>
+<article>
+<h1 id="lecture-8-neural-networks-ii--cnns-and-transformers">Lecture 8: Neural Networks II — CNNs and Transformers</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In Lecture 7, we introduced neural networks as a way to <strong>learn the features as well as the predictor</strong>. We studied the multilayer perceptron (MLP), worked out how to compute its predictions, and saw how backpropagation computes the gradients needed for learning.</p>
+<p>In this lecture, we ask another question:</p>
+<blockquote>
+<p>How should we arrange the computations in a neural network?</p>
+</blockquote>
+<p>The answer depends on the kind of data we have and the relationships we expect to find in it. In an image, nearby pixels often belong to the same object or pattern. In a sentence, the order of the words matters, but useful context may also be several words away.</p>
+<p>We will study three ways to give a network useful structure. <strong>Convolutional neural networks (CNNs)</strong> apply small filters across an image, using the same parameters at different locations. <strong>Recurrent neural networks (RNNs)</strong> read a sequence one element at a time and update a hidden state. <strong>Transformers</strong> use attention to combine information from different positions in a sequence.</p>
+<p>These are still neural networks. Their parameters are learnt from data using a loss function and gradient-based optimisation. What changes is the <strong>computation structure</strong>, and therefore the assumptions the model makes about the data. We will also design computations whose feature maps change predictably under a flip, then use pooling to obtain predictions that stay unchanged.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ul>
+<li>explain how network structure expresses assumptions about the data</li>
+<li>compute convolution, ReLU, and max-pooling outputs</li>
+<li>distinguish sparse connections from weight sharing</li>
+<li>explain the difference between equivariance and invariance</li>
+<li>design a mirror-equivariant operation and obtain invariant outputs by pooling</li>
+<li>describe how an RNN processes a sequence and explain its strengths and limitations</li>
+<li>compute self-attention in four steps, keeping track of the matrix dimensions</li>
+<li>explain the benefits of the Transformer architecture over the RNN.</li>
+</ul>
+<hr />
+<h1 id="network-structure-and-inductive-bias">Network Structure and Inductive Bias</h1>
+<p>Recall the three ingredients from Lecture 1: <strong>data, model, and loss</strong>. In Lecture 7, we kept the data and loss appropriate to the task, but made the model more flexible by learning a representation:</p>
+<p><span class="math display">\[y(\mathbf{x})
+=
+\mathbf{w}^{\top}\boldsymbol{\phi}_{\theta}(\mathbf{x}).\]</span></p>
+<p>The features <span class="math inline">\boldsymbol{\phi}_{\theta}(\mathbf{x})</span> are the results of parameterised computations. A network computes these features through a composition of functions:</p>
+<p><span class="math display">\[f_{\theta}
+=
+f_L\circ\cdots\circ f_2\circ f_1.\]</span></p>
+<p>The functions <span class="math inline">f_1,\ldots,f_L</span> do not all have to be fully connected layers. We can choose computations that use nearby inputs, reuse parameters, or combine information from different positions.</p>
+<p>The choice is called the network's <strong>architecture</strong>. It gives the model an <strong>inductive bias</strong>: a preference for particular kinds of relationships in the data.</p>
+<p>For example, suppose we want to recognise a wheel in a photograph. It would be useful to look at nearby pixels together. It would also be useful to recognise the same wheel pattern whether it appears on the left or right of the image. A model that builds in these assumptions may need fewer parameters, and fewer examples, than one that has to discover them entirely from data.</p>
+<p>An assumption can also be inappropriate. If the absolute position of a feature matters to the task, we may need to retain or supply position information. The architecture should match the problem we want to solve.</p>
+<h2 id="why-not-use-an-mlp-for-images">Why Not Use an MLP for Images?</h2>
+<p>A colour image with <span class="math inline">224\times224</span> pixels and three colour channels contains</p>
+<p><span class="math display">\[224\times224\times3
+=150{,}528\]</span></p>
+<p>input values.</p>
+<p>If the first hidden layer of an MLP has 1,000 units, a fully connected layer has</p>
+<p><span class="math display">\[150{,}528\times1{,}000
+=150{,}528{,}000\]</span></p>
+<p>weights, before counting the biases.</p>
+<p>There are two issues. First, the number of parameters is large. Second, the fully connected layer does not explicitly use the image's spatial structure. Every input pixel can connect to every hidden unit, and the weight on each connection is independent of the others.</p>
+<p>Flattening the image does not remove the pixel values, but it gives the network no built-in rule saying that neighbouring pixels should be processed together, or that the same pattern should be recognised at different locations.</p>
+<p>CNNs address these issues using <strong>local connections</strong> and <strong>shared parameters</strong>.</p>
+<hr />
+<h1 id="convolutional-neural-networks">Convolutional Neural Networks</h1>
+<h2 id="a-filter-looks-for-a-small-pattern">A Filter Looks for a Small Pattern</h2>
+<p>Suppose we want to recognise the letter X in an image. Comparing the entire image with a fixed template is fragile: a small change in the shape or position of the X can spoil the match.</p>
+<p>Instead, we can look for small pieces of the pattern, such as short diagonal lines. These pieces may occur in several places, and we can combine their responses to recognise a larger pattern.</p>
+<p>A <strong>filter</strong>, also called a <strong>kernel</strong>, is a small collection of weights. We apply it to a local region of the input. The resulting number describes how that region responds to the filter. Repeating the calculation at different locations gives a <strong>feature map</strong>.</p>
+<p>For the numerical examples, we will use fixed filter weights so that we can follow the arithmetic. In a trained CNN, the filter weights are usually parameters that the network learns.</p>
+<h2 id="one-dimensional-convolution">One-Dimensional Convolution</h2>
+<p>It is easiest to begin with a one-dimensional input. Consider</p>
+<p><span class="math display">\[\mathbf{x}
+=
+[0,0,0,1,0,1,1,1,0,0]\]</span></p>
+<p>and a filter</p>
+<p><span class="math display">\[\mathbf{w}=[1,-1,1].\]</span></p>
+<p>Place the filter over three neighbouring input values. Multiply matching entries, then add:</p>
+<p><span class="math display">\[y_i
+=
+w_1x_i+w_2x_{i+1}+w_3x_{i+2}.\]</span></p>
+<p>We then move the filter one position to the right and repeat. Moving by one position is called <strong>stride 1</strong>.</p>
+<p>For the first three output positions,</p>
+<p><span class="math display">\[\begin{aligned}
+y_1&amp;=1(0)-1(0)+1(0)=0,\\
+y_2&amp;=1(0)-1(0)+1(1)=1,\\
+y_3&amp;=1(0)-1(1)+1(0)=-1.
+\end{aligned}\]</span></p>
+<p>Continuing gives</p>
+<p><span class="math display">\[\boxed{
+\mathbf{y}
+=[0,1,-1,2,0,1,0,1].
+}\]</span></p>
+<p>There are eight outputs because there are eight positions where the three-entry filter fits completely inside the ten-entry input. In general, for an input of length <span class="math inline">N</span> and a filter of length <span class="math inline">K</span>, stride 1 with no padding gives <span class="math inline">N-K+1</span> outputs.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/convolution-1d.png" alt="A three-entry kernel applied to the last window of a one-dimensional input. Each output uses only its corresponding input window." /></p>
+<p><em>The highlighted window is <span class="math inline">[1,0,0]</span>. Its weighted sum is <span class="math inline">1\cdot1-1\cdot0+1\cdot0=1</span>, which gives the final output.</em></p>
+<p><strong>Optional exploration:</strong> the <a class="slide-link" href="../slides/lecture-08.html#21" target="_blank" rel="noopener">convolution demo</a> lets you step through the output positions.</p>
+<p>There is a small terminology point. The operation above is technically <strong>cross-correlation</strong>, because we use the weights in their given order. Mathematical convolution reverses the filter before applying it. Neural-network implementations commonly call the cross-correlation operation “convolution”, and we will follow that convention here.</p>
+<h2 id="sparse-connections-and-weight-sharing">Sparse Connections and Weight Sharing</h2>
+<p>Each output in our example depends on only three input values. This is a <strong>local</strong> interaction. A fully connected layer with ten inputs and eight outputs would instead contain</p>
+<p><span class="math display">\[10\times8=80\]</span></p>
+<p>connections.</p>
+<p>Our convolution has</p>
+<p><span class="math display">\[3\times8=24\]</span></p>
+<p>connections. This reduction comes from <strong>sparse connections</strong>: many of the possible input-output connections are absent.</p>
+<p>But how many independent weights does the convolution learn?</p>
+<p>Only <strong>three</strong>. We use the same <span class="math inline">w_1,w_2,w_3</span> at every location. This is <strong>weight sharing</strong>.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/shared-weights.png" alt="Connections from the input to the output of a convolution. The highlighted connections all use the middle kernel weight." /></p>
+<p><em>The purple connections all use <span class="math inline">w_2=-1</span>. They represent repeated uses of one parameter. Changing that parameter changes all these connections together.</em></p>
+<p>These are two different properties:</p>
+<ul>
+<li>Sparse connections restrict <strong>which inputs</strong> an output uses.</li>
+<li>Weight sharing restricts <strong>which connections can have different parameters</strong>.</li>
+</ul>
+<p>A locally connected layer could have 24 independent weights. The convolutional layer ties those connections together so that only three weights are independent.</p>
+<p>We can also write the operation as a matrix multiplication:</p>
+<p><span class="math display">\[\mathbf{y}=\mathbf{W}\mathbf{x},\]</span></p>
+<p>where, treating the input and output as column vectors,</p>
+<p><span class="math display">\[\mathbf{W}
+=
+\begin{bmatrix}
+w_1&amp;w_2&amp;w_3&amp;0&amp;0&amp;0&amp;0&amp;0&amp;0&amp;0\\
+0&amp;w_1&amp;w_2&amp;w_3&amp;0&amp;0&amp;0&amp;0&amp;0&amp;0\\
+0&amp;0&amp;w_1&amp;w_2&amp;w_3&amp;0&amp;0&amp;0&amp;0&amp;0\\
+\vdots&amp;&amp;&amp;\ddots&amp;\ddots&amp;\ddots&amp;&amp;&amp;&amp;\vdots\\
+0&amp;0&amp;0&amp;0&amp;0&amp;0&amp;0&amp;w_1&amp;w_2&amp;w_3
+\end{bmatrix}.\]</span></p>
+<p>The omitted rows continue the same shifted pattern. The matrix has shape <span class="math inline">8\times10</span>. Most of its entries are zero, and the same three weights appear repeatedly.</p>
+<p>So convolution is still a linear computation before we add an activation function. What makes it special is the structure imposed on the weight matrix.</p>
+<h2 id="convolution-on-an-image">Convolution on an Image</h2>
+<p>For an image, we move the filter in two spatial directions. With a <span class="math inline">3\times3</span> filter, each output is a weighted sum of a <span class="math inline">3\times3</span> input region.</p>
+<p>For a single input channel and a single filter,</p>
+<p><span class="math display">\[Y_{r,s}
+=
+\sum_{u=0}^{2}\sum_{v=0}^{2}
+W_{u,v}X_{r+u,s+v}.\]</span></p>
+<p>Here <span class="math inline">X_{r,s}</span> is an input pixel value, <span class="math inline">W_{u,v}</span> is a filter weight, and <span class="math inline">Y_{r,s}</span> is an output feature value. We omit the bias in this example.</p>
+<p>For example, take</p>
+<p><span class="math display">\[\mathbf{X}
+=
+\begin{bmatrix}
+1&amp;1&amp;1&amp;0&amp;0\\
+0&amp;1&amp;1&amp;1&amp;0\\
+0&amp;0&amp;1&amp;1&amp;1\\
+0&amp;0&amp;1&amp;1&amp;0\\
+0&amp;1&amp;1&amp;0&amp;0
+\end{bmatrix},
+\qquad
+\mathbf{W}
+=
+\begin{bmatrix}
+1&amp;0&amp;1\\
+0&amp;1&amp;0\\
+1&amp;0&amp;1
+\end{bmatrix}.\]</span></p>
+<p>For the top-left input window, the filter picks out the four corners and the centre. The output is</p>
+<p><span class="math display">\[1+1+1+0+1=4.\]</span></p>
+<p>Moving the filter through all valid locations gives</p>
+<p><span class="math display">\[\mathbf{Y}
+=
+\begin{bmatrix}
+4&amp;3&amp;4\\
+2&amp;4&amp;3\\
+2&amp;3&amp;4
+\end{bmatrix}.\]</span></p>
+<p>Notice that the output is smaller than the input. With no padding, the filter cannot be centred at every boundary location while remaining completely inside the image. <strong>Padding</strong> adds values around the boundary to allow more output locations. The padding rule affects what happens near the edges.</p>
+<h2 id="multiple-filters-and-channels">Multiple Filters and Channels</h2>
+<p>One filter produces one feature map. Different filters can respond to different patterns, so a convolutional layer usually learns several of them.</p>
+<p>The resulting feature maps form the output <strong>channels</strong>.</p>
+<p>For a colour image, there are already three input channels: red, green, and blue. A standard filter spans a local spatial region across all input channels. For example, a <span class="math inline">3\times3</span> filter applied to an RGB image has</p>
+<p><span class="math display">\[3\times3\times3=27\]</span></p>
+<p>weights. Its output at one spatial location adds the contributions from all three channels.</p>
+<p>If the layer learns <span class="math inline">C_{\mathrm{out}}</span> filters, it produces <span class="math inline">C_{\mathrm{out}}</span> output channels. With <span class="math inline">C_{\mathrm{in}}</span> input channels and <span class="math inline">K_h\times K_w</span> filters, a standard convolutional layer has</p>
+<p><span class="math display">\[K_hK_wC_{\mathrm{in}}C_{\mathrm{out}}\]</span></p>
+<p>filter weights. If we include one shared bias per output channel, we add <span class="math inline">C_{\mathrm{out}}</span> parameters.</p>
+<p>The same filters are used at every spatial location. The number of filter parameters therefore does not grow with the width and height of the input image.</p>
+<h2 id="translation-equivariance">Translation Equivariance</h2>
+<p>Suppose a pattern moves to the right in an image. We would like the filter response to move to the right as well.</p>
+<p>This property is called <strong>translation equivariance</strong>. More generally, a function <span class="math inline">f</span> is equivariant to a transformation <span class="math inline">g</span> if</p>
+<p><span class="math display">\[\boxed{
+f(g(\mathbf{x}))=g(f(\mathbf{x})).
+}\]</span></p>
+<p>In words, transforming the input and then applying the function gives the same result as applying the function and transforming its output.</p>
+<p>For convolution, the reason is weight sharing. The calculation used to detect a pattern does not change when the pattern moves.</p>
+<p>We can see this directly in one dimension. Let <span class="math inline">g_s</span> shift a sequence by <span class="math inline">s</span> positions:</p>
+<p><span class="math display">\[(g_s\mathbf{x})_i=x_{i-s}.\]</span></p>
+<p>Then, wherever the required indices are available,</p>
+<p><span class="math display">\[\begin{aligned}
+f(g_s\mathbf{x})_i
+&amp;=\sum_{j=1}^{K}w_jx_{i+j-1-s}\\
+&amp;=f(\mathbf{x})_{i-s}\\
+&amp;=(g_sf(\mathbf{x}))_i.
+\end{aligned}\]</span></p>
+<p>The shifted output contains the same responses, at shifted locations.</p>
+<p>There is a boundary condition in this statement. On an infinite grid, stride-1 convolution is exactly translation equivariant. For a finite image, the relationship holds where the relevant input windows remain available. Padding and cropping can change the behaviour near the edges. Subsampling can also break equivariance to a one-pixel shift.</p>
+<h3 id="equivariance-and-invariance">Equivariance and Invariance</h3>
+<p><strong>Invariance</strong> means the output does not change under the transformation:</p>
+<p><span class="math display">\[\boxed{
+f(g(\mathbf{x}))=f(\mathbf{x}).
+}\]</span></p>
+<p>The difference matters. For image classification, shifting a cat within the picture should ideally leave the class prediction “cat” unchanged. For a feature map, the responses should move with the cat.</p>
+<p>Convolution gives us a useful mechanism for equivariant feature extraction. It does not, by itself, make the entire CNN classifier invariant to translations.</p>
+<h2 id="nonlinear-activations">Nonlinear Activations</h2>
+<p>After convolution, we usually apply a nonlinear activation. A common choice is <strong>ReLU</strong>:</p>
+<p><span class="math display">\[\operatorname{ReLU}(a)=\max(0,a).\]</span></p>
+<p>It acts separately on every feature-map entry. Negative values become zero, and positive values remain unchanged.</p>
+<p>For example,</p>
+<p><span class="math display">\[\mathbf{A}
+=
+\begin{bmatrix}
+-2&amp;-1&amp;1&amp;2\\
+2&amp;-1&amp;-1&amp;1\\
+1&amp;-1&amp;-1&amp;-2\\
+-2&amp;-1&amp;-2&amp;-3
+\end{bmatrix}\]</span></p>
+<p>becomes</p>
+<p><span class="math display">\[\operatorname{ReLU}(\mathbf{A})
+=
+\begin{bmatrix}
+0&amp;0&amp;1&amp;2\\
+2&amp;0&amp;0&amp;1\\
+1&amp;0&amp;0&amp;0\\
+0&amp;0&amp;0&amp;0
+\end{bmatrix}.\]</span></p>
+<p>Recall from Lecture 7 that composing linear layers alone still gives a linear function. The activation lets the network build nonlinear relationships.</p>
+<p>ReLU also preserves the translation relationship of its input: shifting a feature map and applying the same pointwise activation gives the same result as applying the activation and shifting the map.</p>
+<h2 id="max-pooling">Max Pooling</h2>
+<p><strong>Pooling</strong> summarises a region of a feature map.</p>
+<p>For <strong>max pooling</strong>, we retain the largest value in each window. Using a <span class="math inline">2\times2</span> window with stride 2 on the ReLU output above gives</p>
+<p><span class="math display">\[\boxed{
+\begin{bmatrix}
+2&amp;2\\
+1&amp;0
+\end{bmatrix}.
+}\]</span></p>
+<p>For example, the top-left window is</p>
+<p><span class="math display">\[\begin{bmatrix}
+0&amp;0\\
+2&amp;0
+\end{bmatrix},\]</span></p>
+<p>so its pooled value is 2.</p>
+<p>Pooling reduces the number of spatial locations. It retains whether a strong response occurred in a region, but loses its exact location within that region.</p>
+<p>This can make some small changes in position less important. However, max pooling with stride 2 does not guarantee translation invariance. A one-pixel shift can move a response into a different pooling window and change the pooled output.</p>
+<h2 id="building-higher-level-features">Building Higher-Level Features</h2>
+<p>We can now compose the operations:</p>
+<p><span class="math display">\[\text{convolution}
+\;\longrightarrow\;
+\text{activation}
+\;\longrightarrow\;
+\text{pooling}.\]</span></p>
+<p>This pattern combines local feature extraction, a nonlinearity, and a reduction in spatial resolution. Pooling is optional. A layer can also pass its activated feature map directly to the next layer.</p>
+<p>A later convolutional layer takes the earlier feature maps as its inputs. Its local input window can therefore contain responses to several simpler patterns. By combining these responses, the later layer can recognise a more complicated pattern.</p>
+<p>For example, early features may respond to edges. Later features may combine edges into shapes or parts, and still later features may combine parts into objects.</p>
+<p class="notes-figure"><img src="../slides/media/l8-feature-map-cnn.png" alt="Learned features progressing from edges to parts of faces and then whole faces." /></p>
+<p><em>Earlier features can be combined into more complex patterns. Feature visualisations: Lee, Grosse, Ranganath and Ng (2009).</em></p>
+<p>This is a useful way to understand composition, although we should not assume that every unit in every trained network corresponds to a neatly named object part.</p>
+<p>As layers are stacked, an output can depend on a larger region of the original image. This region is called its <strong>receptive field</strong>. Local computations can therefore build features that use a much wider context.</p>
+<p><strong>Optional exploration:</strong> <a href="https://poloclub.github.io/cnn-explainer/">CNN Explainer</a> shows how feature maps change through a small trained network.</p>
+<h2 id="learning-shared-weights">Learning Shared Weights</h2>
+<p>Weight sharing also affects the gradient calculation.</p>
+<p>Recall from Lecture 7 that the gradient for an ordinary weighted connection is the receiving unit's error signal multiplied by the input to that connection. A shared filter weight appears in several connections, so its total gradient collects the contribution from every use.</p>
+<p>For a one-dimensional pre-activation</p>
+<p><span class="math display">\[a_i=\sum_{j=1}^{K}w_jx_{i+j-1}+b,\]</span></p>
+<p>define <span class="math inline">\delta_i=\partial\mathcal{L}/\partial a_i</span> for the data loss. Then</p>
+<p><span class="math display">\[\boxed{
+\frac{\partial\mathcal{L}}{\partial w_j}
+=
+\sum_i\delta_ix_{i+j-1}.
+}\]</span></p>
+<p>Each term is still error signal times input. We add them because they all affect the same parameter. The optimiser makes one update to <span class="math inline">w_j</span>, which changes every connection that uses it.</p>
+<hr />
+<h1 id="other-symmetries-and-mirror-equivariance">Other Symmetries and Mirror Equivariance</h1>
+<p>Translation is one possible transformation of an image. We may also care about reflection or rotation, depending on the task. Building in one symmetry does not automatically give us all the others.</p>
+<p>An ordinary convolution need not be equivariant to reflection. The following example shows why.</p>
+<h2 id="a-reflection-counterexample">A Reflection Counterexample</h2>
+<p>Use stride 1 with no padding and take</p>
+<p><span class="math display">\[\mathbf{x}=[0,1,0,0],
+\qquad
+\mathbf{w}=[1,2].\]</span></p>
+<p>Convolving first gives</p>
+<p><span class="math display">\[f(\mathbf{x})=[2,1,0].\]</span></p>
+<p>Flipping this output gives</p>
+<p><span class="math display">\[\operatorname{flip}(f(\mathbf{x}))=[0,1,2].\]</span></p>
+<p>If we instead flip the input first,</p>
+<p><span class="math display">\[\operatorname{flip}(\mathbf{x})=[0,0,1,0],\]</span></p>
+<p>and apply the same filter, we obtain</p>
+<p><span class="math display">\[f(\operatorname{flip}(\mathbf{x}))=[0,2,1].\]</span></p>
+<p>The outputs differ. The order in which we apply the two operations matters.</p>
+<p>Intuitively, the filter has an orientation: it gives a different weight to the left and right entries. Reflecting the input reverses those roles.</p>
+<h2 id="designing-an-operation-that-is-mirror-equivariant">Designing an Operation That Is Mirror Equivariant</h2>
+<p>We want to design a computation <span class="math inline">f</span> for which</p>
+<p><span class="math display">\[f(R\mathbf{x})=R f(\mathbf{x}),\]</span></p>
+<p>where <span class="math inline">R</span> reverses the entries of a vector. The output feature map should reverse when the input reverses.</p>
+<p>Start with a one-dimensional input. Assume stride 1 and <strong>equal zero-padding on both ends</strong>. Equal padding matters because padding and then reversing must give the same input as reversing and then padding. Unequal padding can break this relationship. For the small numerical examples below, we use no padding. The same reasoning applies when we add equal numbers of zeros at both ends.</p>
+<h2 id="what-does-a-flip-do-to-a-local-patch">What Does a Flip Do to a Local Patch?</h2>
+<p>Consider the input</p>
+<p><span class="math display">\[\mathbf{x}=[1,2,3,4,5,6].\]</span></p>
+<p>The two-entry patch starting at position 2 is <span class="math inline">[2,3]</span>. Reversing the input gives</p>
+<p><span class="math display">\[R\mathbf{x}=[6,5,4,3,2,1].\]</span></p>
+<p>The corresponding patch is now <span class="math inline">[3,2]</span>, starting at position 4. Two things happened:</p>
+<ol type="1">
+<li>The entries <strong>within the patch reversed</strong>.</li>
+<li>The patch <strong>moved to the corresponding mirrored position</strong>.</li>
+</ol>
+<p>Convolution slides the same local computation across the input. If a patch and its reverse give the same response, that response will appear at the mirrored output position. Applying this reasoning to every patch gives a mirror-equivariant feature map.</p>
+<p>Write <span class="math inline">\rho(\mathbf{p})</span> for the response to a local patch <span class="math inline">\mathbf{p}</span>. The property we need is</p>
+<p><span class="math display">\[\boxed{\rho(R\mathbf{p})=\rho(\mathbf{p})}\]</span></p>
+<p>for every patch. The patch itself changes when we reverse it. We require its <strong>response</strong> to stay the same.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/mirror-patch.png" alt="Reversing the input changes the patch at position 2 from 2,3 to 3,2 at position 4. Equal local responses appear at mirrored output positions." /></p>
+<p><em>If the patch and its reverse both produce response <span class="math inline">r</span>, that response moves from output position 2 to output position 4. The other patches follow the same rule.</em></p>
+<h2 id="two-ways-to-make-the-local-response-invariant">Two Ways to Make the Local Response Invariant</h2>
+<h3 id="1-use-a-symmetric-kernel">1. Use a Symmetric Kernel</h3>
+<p>An ordinary filter computes the dot product</p>
+<p><span class="math display">\[\rho_{\mathbf{w}}(\mathbf{p})=\mathbf{w}^{\top}\mathbf{p}.\]</span></p>
+<p>Choose weights that read the same forwards and backwards:</p>
+<p><span class="math display">\[\mathbf{w}=R\mathbf{w}.\]</span></p>
+<p>For two weights, this requires <span class="math inline">w_1=w_2</span>. Using <span class="math inline">\mathbf{w}=[1,1]</span> gives</p>
+<p><span class="math display">\[\begin{aligned}
+\rho_{\mathbf{w}}([2,3])&amp;=1\cdot2+1\cdot3=5,\\
+\rho_{\mathbf{w}}([3,2])&amp;=1\cdot3+1\cdot2=5.
+\end{aligned}\]</span></p>
+<p>Reversing the patch exchanges the two inputs, but they receive the same weight. The response stays unchanged. For a longer kernel, opposite entries must match. For example, <span class="math inline">[1,2,1]</span> is symmetric.</p>
+<h3 id="2-use-a-kernel-and-its-reverse">2. Use a Kernel and Its Reverse</h3>
+<p>We can also start with any kernel <span class="math inline">\mathbf{w}</span>. Apply both <span class="math inline">\mathbf{w}</span> and <span class="math inline">R\mathbf{w}</span> to each patch, then combine their responses using an operation that does not depend on their order.</p>
+<p>For <span class="math inline">\mathbf{w}=[1,2]</span> and <span class="math inline">R\mathbf{w}=[2,1]</span>, the patch <span class="math inline">[2,3]</span> gives responses 8 and 7. Reversing the patch gives responses 7 and 8.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/paired-kernels.png" alt="A kernel and its reverse produce responses 8 and 7 for one patch, and 7 and 8 for the mirrored patch. Both maximum outputs are 8." /></p>
+<p><em>The individual responses swap. Their maximum remains 8. Their sum is 15 in either order, and their mean is 7.5 in either order.</em></p>
+<p>We combine the responses <strong>at the same spatial position</strong>. We keep a separate output for every patch, so the result is still a feature map.</p>
+<h3 id="from-local-responses-to-the-whole-feature-map">From Local Responses to the Whole Feature Map</h3>
+<p>Return to the input <span class="math inline">\mathbf{x}=[0,1,0,0]</span> and kernel <span class="math inline">\mathbf{w}=[1,2]</span> from the counterexample. Apply both kernels with stride 1 and no padding:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Response map from <span class="math inline">[1,2]</span></th>
+<th>Response map from <span class="math inline">[2,1]</span></th>
+<th>Sum at each position</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">\mathbf{x}=[0,1,0,0]</span></td>
+<td><span class="math inline">[2,1,0]</span></td>
+<td><span class="math inline">[1,2,0]</span></td>
+<td><span class="math inline">[3,3,0]</span></td>
+</tr>
+<tr>
+<td><span class="math inline">R\mathbf{x}=[0,0,1,0]</span></td>
+<td><span class="math inline">[0,2,1]</span></td>
+<td><span class="math inline">[0,1,2]</span></td>
+<td><span class="math inline">[0,3,3]</span></td>
+</tr>
+</tbody>
+</table>
+<p>The summed map reverses with the input. Taking the mean gives <span class="math inline">[1.5,1.5,0]</span> and <span class="math inline">[0,1.5,1.5]</span>. Taking the maximum at each position gives <span class="math inline">[2,2,0]</span> and <span class="math inline">[0,2,2]</span>. Both also reverse correctly.</p>
+<p>To write the argument compactly, let <span class="math inline">C_{\mathbf{w}}</span> denote convolution with kernel <span class="math inline">\mathbf{w}</span>. Reversing the input reverses each patch and its position, so</p>
+<p><span class="math display">\[C_{\mathbf{w}}(R\mathbf{x})=R\,C_{R\mathbf{w}}(\mathbf{x}).\]</span></p>
+<p>Define the sum of the two response maps as</p>
+<p><span class="math display">\[F(\mathbf{x})=C_{\mathbf{w}}(\mathbf{x})+C_{R\mathbf{w}}(\mathbf{x}).\]</span></p>
+<p>Reversing the input exchanges the roles of the kernels and reverses the output maps:</p>
+<p><span class="math display">\[\begin{aligned}
+F(R\mathbf{x})
+&amp;=R\,C_{R\mathbf{w}}(\mathbf{x})+R\,C_{\mathbf{w}}(\mathbf{x})\\
+&amp;=R\left[C_{\mathbf{w}}(\mathbf{x})+C_{R\mathbf{w}}(\mathbf{x})\right]\\
+&amp;=R\,F(\mathbf{x}).
+\end{aligned}\]</span></p>
+<p>The mean and elementwise maximum work because exchanging their two arguments leaves the result unchanged.</p>
+<p>For a sum, we could equivalently use the single symmetric kernel <span class="math inline">\mathbf{w}+R\mathbf{w}</span>. For example, <span class="math inline">[1,2]+[2,1]=[3,3]</span>. Taking the maximum instead gives a nonlinear local computation.</p>
+<p><strong>Optional exploration:</strong> the <a class="slide-link" href="../slides/lecture-08.html#76" target="_blank" rel="noopener">mirror-equivariance demo</a> lets you change the weights and compare the individual and combined response maps.</p>
+<h2 id="how-does-this-extend-to-images">How Does This Extend to Images?</h2>
+<p>In two dimensions, we must specify the direction of the flip. A left–right flip reverses the entries within each row. An up–down flip reverses the order of the rows.</p>
+<p>For a <strong>left–right symmetric kernel</strong>, every row reads the same forwards and backwards. Consider</p>
+<p><span class="math display">\[\mathbf{W}=\begin{bmatrix}1&amp;1\\2&amp;2\end{bmatrix}.\]</span></p>
+<p>A left–right flip leaves this kernel unchanged. An up–down flip changes it to</p>
+<p><span class="math display">\[\begin{bmatrix}2&amp;2\\1&amp;1\end{bmatrix}.\]</span></p>
+<p>The top and bottom rows have different weights. We therefore get left–right equivariance, but up–down equivariance is not guaranteed. An up–down symmetric kernel would also need matching rows from top to bottom.</p>
+<p>The figure below uses stride 1 with no padding. The same kernel is applied to the original image and to the flipped image.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/mirror-2d.png" alt="A left-right symmetric kernel is applied to an image and its up-down flip. The output from the flipped input is 4,9;7,8, whereas flipping the original output gives 5,6;5,10." /></p>
+<p><em>The lower path flips the input up–down before applying the kernel. The map on the far right instead flips the original output. The two maps differ, so this operation is not up–down equivariant.</em></p>
+<p>For example, the original top-left output is <span class="math inline">1\cdot1+1\cdot2+2\cdot0+2\cdot1=5</span>. After flipping the input up–down, the new top-left patch gives <span class="math inline">1\cdot2+1\cdot0+2\cdot0+2\cdot1=4</span>.</p>
+<p>For a left–right flip, the two paths agree:</p>
+<p><span class="math display">\[\begin{bmatrix}10&amp;5\\6&amp;5\end{bmatrix}.\]</span></p>
+<p>The guarantee depends on which symmetry we build into the kernel.</p>
+<h2 id="from-an-equivariant-map-to-an-invariant-label">From an Equivariant Map to an Invariant Label</h2>
+<p>Suppose we have a feature map satisfying <span class="math inline">f(R\mathbf{x})=R f(\mathbf{x})</span>. The entries move when the input is flipped. For a classification task, we may want the final label to stay the same.</p>
+<p>Reflection reorders the feature-map entries. Taking their sum, mean, or maximum gives the same result after this reordering. Define</p>
+<p><span class="math display">\[g(\mathbf{x})=\operatorname{pool}(f(\mathbf{x})).\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[\begin{aligned}
+g(R\mathbf{x})
+&amp;=\operatorname{pool}(f(R\mathbf{x}))\\
+&amp;=\operatorname{pool}(R f(\mathbf{x}))\\
+&amp;=\operatorname{pool}(f(\mathbf{x}))\\
+&amp;=g(\mathbf{x}).
+\end{aligned}\]</span></p>
+<p>Here we pool over <strong>all spatial positions</strong>, separately for each feature channel. A classifier that uses only this pooled representation gives the same prediction after reflection.</p>
+<p>There are two distinct combinations in our construction:</p>
+<ul>
+<li>Combining the <strong>two kernel responses at each position</strong> gives a mirror-equivariant feature map.</li>
+<li>Combining <strong>all positions in that map</strong> gives a mirror-invariant representation.</li>
+</ul>
+<p>Global pooling discards spatial arrangement. This is useful when location should not affect the label. Keep the feature map when the output needs to retain location information. Ordinary local pooling does not automatically make the final prediction invariant.</p>
+<h2 id="data-augmentation">Data Augmentation</h2>
+<p>We can also show the model reflected examples during training. This is <strong>data augmentation</strong>. For classification, flip the image and keep its label when the flip preserves the class. Train on both the original and flipped examples.</p>
+<p>This encourages the same prediction for both orientations. It does not guarantee exact invariance for every input.</p>
+<h2 id="rotation-invariance-and-group-pooling">Rotation Invariance and Group Pooling</h2>
+<p>Suppose an image can appear at any of four orientations separated by 90°, and its class should be the same in all four. Let <span class="math inline">h(\mathbf{x})</span> be a score from any fixed network. Its score may change when the image rotates.</p>
+<p>Write <span class="math inline">R</span> for a 90° rotation in this section. Evaluate the same network at each orientation:</p>
+<p><span class="math display">\[h(\mathbf{x}),\quad h(R\mathbf{x}),\quad
+h(R^2\mathbf{x}),\quad h(R^3\mathbf{x}).\]</span></p>
+<p>Define their mean as</p>
+<p><span class="math display">\[\boxed{g(\mathbf{x})=\frac14\sum_{k=0}^{3}h(R^k\mathbf{x}).}\]</span></p>
+<p>Four turns return the original image, so <span class="math inline">R^4\mathbf{x}=\mathbf{x}</span>. Rotating the starting image cycles the same four scores:</p>
+<p><span class="math display">\[\begin{aligned}
+g(R\mathbf{x})
+&amp;=\frac14\left[h(R\mathbf{x})+h(R^2\mathbf{x})+h(R^3\mathbf{x})+h(R^4\mathbf{x})\right]\\
+&amp;=g(\mathbf{x}).
+\end{aligned}\]</span></p>
+<p>A sum or maximum also works because reordering the scores leaves it unchanged. This guarantee covers rotations by multiples of 90°. It does not guarantee invariance to other angles.</p>
+<p>This is an example of <strong>group pooling</strong>: combine responses associated with all the transformations in a group. Here the group consists of the four rotations, including doing nothing. Composing or undoing these rotations gives another member of the same group. Rotating the input therefore only reorders the transformations we evaluate.</p>
+<p>For mirror invariance, the group has two members: doing nothing and flipping. With <span class="math inline">R</span> now denoting reflection, we can similarly define</p>
+<p><span class="math display">\[g(\mathbf{x})=\frac12\left[h(\mathbf{x})+h(R\mathbf{x})\right].\]</span></p>
+<p>Flipping the input exchanges the two scores, so their mean stays unchanged. The same idea applies to a vector of class scores by combining corresponding entries.</p>
+<p>Pooling over transformations and pooling over all positions of an equivariant feature map both obtain invariance by combining values whose order changes. They combine different things: orientations in the rotation construction, and spatial positions in the feature-map construction.</p>
+<p><strong>Optional exploration:</strong> the <a class="slide-link" href="../slides/lecture-08.html#82" target="_blank" rel="noopener">rotation demo</a> lets you compare a single orientation score with the mean or maximum over all four orientations.</p>
+<p>The common idea is to build a useful assumption into the computation, then reason about what that computation guarantees.</p>
+<hr />
+<h1 id="sequence-data-and-recurrent-neural-networks">Sequence Data and Recurrent Neural Networks</h1>
+<p>So far, our input has been an image. Now consider a sequence:</p>
+<p><span class="math display">\[\mathbf{x}_1,\mathbf{x}_2,\ldots,\mathbf{x}_T.\]</span></p>
+<p>The subscript indicates a position in the sequence. Examples include words in a sentence, prices over time, and a robot's sequence of actions.</p>
+<p>The order matters. “Dog bites man” and “man bites dog” contain the same words but describe different events. Similarly, a price increase followed by a decrease is different from a decrease followed by an increase.</p>
+<p>Sequences may also have different lengths. We would like to reuse the same computation and parameters across those lengths.</p>
+<h2 id="a-hidden-state-carries-information-forward">A Hidden State Carries Information Forward</h2>
+<p>An RNN processes the inputs one at a time. At position <span class="math inline">i</span>, it combines the current input with a <strong>hidden state</strong> from the previous position:</p>
+<p><span class="math display">\[\boxed{
+\mathbf{h}_i
+=
+\sigma\left(
+\mathbf{W}\mathbf{x}_i
++
+\mathbf{U}\mathbf{h}_{i-1}
++
+\mathbf{b}
+\right).
+}\]</span></p>
+<p>Here <span class="math inline">\sigma</span> is an activation function, such as tanh. It is applied componentwise.</p>
+<p>If <span class="math inline">\mathbf{x}_i\in\mathbb{R}^{D}</span> and <span class="math inline">\mathbf{h}_i\in\mathbb{R}^{H}</span>, then</p>
+<p><span class="math display">\[\mathbf{W}\in\mathbb{R}^{H\times D},
+\qquad
+\mathbf{U}\in\mathbb{R}^{H\times H},
+\qquad
+\mathbf{b}\in\mathbb{R}^{H}.\]</span></p>
+<p>The same parameters are used at every sequence position. We choose an initial state <span class="math inline">\mathbf{h}_0</span>, often a zero vector, and repeatedly apply the update.</p>
+<p>After the first input, <span class="math inline">\mathbf{h}_1</span> depends on <span class="math inline">\mathbf{x}_1</span>. After the second, <span class="math inline">\mathbf{h}_2</span> depends on <span class="math inline">\mathbf{x}_2</span> and <span class="math inline">\mathbf{h}_1</span>, and therefore indirectly on <span class="math inline">\mathbf{x}_1</span> as well.</p>
+<p>The hidden state is a vector of activations that forms a learnt summary of the inputs seen so far.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/rnn.png" alt="An RNN reads I, can, speak, English in order, forming hidden states h1 through h4. The next word, and, has not yet been processed." /></p>
+<p><em>After reading “English”, <span class="math inline">\mathbf{h}_4</span> summarises the first four inputs. The next update combines this state with the input for “and”. Each update needs the previous state.</em></p>
+<p>The network can use a state to produce an output at each position, or use the final state for a prediction about the whole sequence. The appropriate output and loss depend on the task, just as they did for the MLP.</p>
+<h2 id="strengths-and-limitations-of-rnns">Strengths and Limitations of RNNs</h2>
+<p>An RNN naturally uses order because the current state depends on the preceding state. It can process variable-length sequences, and its shared parameters do not have to grow with the sequence length.</p>
+<p>Three limitations follow from this computation.</p>
+<p>First, the gradient for an early computation can pass through many subsequent state updates. Repeated multiplication by derivatives can make the gradient very small or very large. These are the <strong>vanishing-gradient</strong> and <strong>exploding-gradient</strong> problems. Information from much earlier in the sequence can therefore be difficult to learn to use.</p>
+<p>Second, the basic RNN must pass information forward through a fixed-size state. In a model that uses only the final state, all relevant information from the input sequence must be represented there. This creates a <strong>memory bottleneck</strong>.</p>
+<p>Third, the state updates are sequential: we need <span class="math inline">\mathbf{h}_{i-1}</span> before computing <span class="math inline">\mathbf{h}_i</span>. We cannot compute all of these states independently at the same time.</p>
+<p>These limitations motivate a computation that can access different sequence positions more directly.</p>
+<hr />
+<h1 id="attention-and-transformers">Attention and Transformers</h1>
+<h2 id="attention-as-a-soft-dictionary-lookup">Attention as a Soft Dictionary Lookup</h2>
+<p>Suppose we want to translate a sentence. A simple approach would be to look up each word in a dictionary.</p>
+<p>Consider the sentence</p>
+<blockquote>
+<p>我给她买了一台电脑</p>
+</blockquote>
+<p>A literal lookup of the separate characters gives something like</p>
+<blockquote>
+<p>I give her buy _ one tower electricity brain.</p>
+</blockquote>
+<p>The intended sentence is “I bought her a computer.”</p>
+<p>The problem is that meaning depends on context and on combinations of characters. Looking up each item independently cannot decide which information to combine.</p>
+<p>Attention gives us a <strong>soft lookup</strong>. For the output currently being computed, we assign a weight to each input position and combine information using those weights.</p>
+<p>Different outputs can use different weights. When producing “computer”, the model can use the combination 电 and 脑. When producing “her”, different positions are useful.</p>
+<h3 id="queries-keys-and-values">Queries, Keys, and Values</h3>
+<p>A useful way to organise the lookup is to give it three ingredients:</p>
+<ul>
+<li>A <strong>query</strong> describes what information the current computation is looking for.</li>
+<li>A <strong>key</strong> describes information that can be compared with the query.</li>
+<li>A <strong>value</strong> contains the information we will combine.</li>
+</ul>
+<p>These are vector representations computed using learnt parameters.</p>
+<p>We compare a query with the keys, turn the comparison scores into weights, and use those weights to combine the values. A large weight means that a particular value contributes strongly to the current output.</p>
+<p>In <strong>self-attention</strong>, the queries, keys, and values are all computed from the same input sequence. Each position can obtain information from other positions in that sequence, including itself.</p>
+<hr />
+<h2 id="computing-self-attention">Computing Self-Attention</h2>
+<p>We can organise the calculation into four steps. We store one token representation per row.</p>
+<h3 id="step-1-token-embeddings-and-position-information">Step 1: Token Embeddings and Position Information</h3>
+<p>A <strong>token</strong> is one input unit. Depending on the application, it may be a word, a subword, or a character.</p>
+<p>We represent token <span class="math inline">i</span> using a vector <span class="math inline">\hat{\mathbf{e}}_i\in\mathbb{R}^{D}</span>. This is its <strong>embedding</strong>. The same token may occur at several positions, so the token embedding alone does not tell us where it appears.</p>
+<p>One way to supply position information is to add a position vector:</p>
+<p><span class="math display">\[\mathbf{e}_i
+=
+\hat{\mathbf{e}}_i+\mathbf{p}_i.\]</span></p>
+<p>Both vectors have dimension <span class="math inline">D</span>. The token embedding supplies information about the token, while <span class="math inline">\mathbf{p}_i</span> supplies information about its position.</p>
+<p>We then collect the vectors into a matrix with <strong>one row per token</strong>:</p>
+<p><span class="math display">\[\boxed{
+\mathbf{E}
+=
+\begin{bmatrix}
+\mathbf{e}_1^{\top}\\
+\mathbf{e}_2^{\top}\\
+\vdots\\
+\mathbf{e}_T^{\top}
+\end{bmatrix}
+\in\mathbb{R}^{T\times D}.
+}\]</span></p>
+<p>The individual <span class="math inline">\mathbf{e}_i</span> are column vectors. Taking their transposes places them in the rows of <span class="math inline">\mathbf{E}</span>. This convention determines where the transposes appear in the attention calculation.</p>
+<p>Adding position vectors is one way to provide position information. We use this construction throughout these notes.</p>
+<h3 id="step-2-compute-queries-keys-and-values">Step 2: Compute Queries, Keys, and Values</h3>
+<p>Use three parameter matrices to transform the input representations:</p>
+<p><span class="math display">\[\boxed{
+\mathbf{Q}=\mathbf{E}\mathbf{W}_Q,
+\qquad
+\mathbf{K}=\mathbf{E}\mathbf{W}_K,
+\qquad
+\mathbf{V}=\mathbf{E}\mathbf{W}_V.
+}\]</span></p>
+<p>For query and key dimension <span class="math inline">d_k</span>, and value dimension <span class="math inline">d_v</span>, the shapes are</p>
+<p><span class="math display">\[\mathbf{W}_Q,\mathbf{W}_K\in\mathbb{R}^{D\times d_k},
+\qquad
+\mathbf{W}_V\in\mathbb{R}^{D\times d_v},\]</span></p>
+<p>and therefore</p>
+<p><span class="math display">\[\mathbf{Q},\mathbf{K}\in\mathbb{R}^{T\times d_k},
+\qquad
+\mathbf{V}\in\mathbb{R}^{T\times d_v}.\]</span></p>
+<p>Queries and keys must have the same dimension because we will take their dot products. The values can have a different dimension.</p>
+<p>The matrices <span class="math inline">\mathbf{W}_Q,\mathbf{W}_K,\mathbf{W}_V</span> are <strong>parameters</strong> learnt during training. The matrices <span class="math inline">\mathbf{Q},\mathbf{K},\mathbf{V}</span> are the <strong>results</strong> of applying those parameters to the current input.</p>
+<p>The same projection matrices act on every row, so the parameters are shared across positions.</p>
+<h3 id="step-3-compute-attention-weights">Step 3: Compute Attention Weights</h3>
+<p>For query <span class="math inline">\mathbf{q}_i</span> at position <span class="math inline">i</span> and key <span class="math inline">\mathbf{k}_j</span> at position <span class="math inline">j</span>, compute a score</p>
+<p><span class="math display">\[a_{ij}
+=
+\frac{\mathbf{q}_i^{\top}\mathbf{k}_j}{\sqrt{d_k}}.\]</span></p>
+<p>The dot product measures the match in the learnt query-key space.</p>
+<p>Now apply softmax over the keys for each query:</p>
+<p><span class="math display">\[S_{ij}
+=
+\frac{\exp(a_{ij})}
+{\sum_{\ell=1}^{T}\exp(a_{i\ell})}.\]</span></p>
+<p>For a fixed <span class="math inline">i</span>, the weights are non-negative and sum to one:</p>
+<p><span class="math display">\[S_{ij}\geq0,
+\qquad
+\sum_{j=1}^{T}S_{ij}=1.\]</span></p>
+<p>In matrix form,</p>
+<p><span class="math display">\[\boxed{
+\mathbf{S}
+=
+\operatorname{softmax}_{\mathrm{row}}
+\left(
+\frac{\mathbf{Q}\mathbf{K}^{\top}}{\sqrt{d_k}}
+\right).
+}\]</span></p>
+<p>Since <span class="math inline">\mathbf{Q}</span> is <span class="math inline">T\times d_k</span> and <span class="math inline">\mathbf{K}^{\top}</span> is <span class="math inline">d_k\times T</span>, the score matrix and <span class="math inline">\mathbf{S}</span> both have shape <span class="math inline">T\times T</span>.</p>
+<p>Row <span class="math inline">i</span> contains the weights used by query <span class="math inline">i</span>. Column <span class="math inline">j</span> corresponds to key <span class="math inline">j</span> and, in the next step, value <span class="math inline">j</span>.</p>
+<h4 id="why-divide-by-the-square-root">Why Divide by the Square Root?</h4>
+<p>A dot product adds <span class="math inline">d_k</span> terms. As the dimension grows, the scores can become large in magnitude, making softmax very concentrated and its gradients small.</p>
+<p>Under the simplifying assumption that the query and key components are mutually independent, with mean zero and variance one, the dot product has variance <span class="math inline">d_k</span>. Dividing by <span class="math inline">\sqrt{d_k}</span> keeps its variance at one under these assumptions.</p>
+<p>This motivates the scale used in the computation. The divisor is the square root of the <strong>key dimension</strong>, not the number of tokens.</p>
+<h3 id="step-4-combine-the-value-vectors">Step 4: Combine the Value Vectors</h3>
+<p>The output at position <span class="math inline">i</span> is a weighted sum:</p>
+<p><span class="math display">\[\mathbf{o}_i
+=
+\sum_{j=1}^{T}S_{ij}\mathbf{v}_j.\]</span></p>
+<p>Collecting these outputs into rows gives</p>
+<p><span class="math display">\[\boxed{
+\mathbf{O}=\mathbf{S}\mathbf{V}.
+}\]</span></p>
+<p>The multiplication has shapes</p>
+<p><span class="math display">\[(T\times T)(T\times d_v)
+=
+T\times d_v.\]</span></p>
+<p>Each position now has a representation that combines information from the sequence. The weights depend on the input, so the combination can change from one example to another.</p>
+<p>For fixed value vectors, each output is a convex combination of those values because the weights are non-negative and sum to one. A complete Transformer also applies other computations, including output projections and nonlinear layers.</p>
+<p>The four steps together give</p>
+<p><span class="math display">\[\boxed{
+\mathbf{O}
+=
+\operatorname{softmax}_{\mathrm{row}}
+\left(
+\frac{
+(\mathbf{E}\mathbf{W}_Q)
+(\mathbf{E}\mathbf{W}_K)^{\top}
+}{\sqrt{d_k}}
+\right)
+\mathbf{E}\mathbf{W}_V.
+}\]</span></p>
+<p>The attention weights describe how much information to read from different positions. They are not, by themselves, probabilities of output words or class labels.</p>
+<hr />
+<h2 id="multi-head-attention">Multi-Head Attention</h2>
+<p>One attention head uses one set of query, key, and value projections. <strong>Multi-head attention</strong> learns several sets.</p>
+<p>For head <span class="math inline">j</span>,</p>
+<p><span class="math display">\[\mathbf{Q}_j=\mathbf{E}\mathbf{W}_{Q,j},
+\qquad
+\mathbf{K}_j=\mathbf{E}\mathbf{W}_{K,j},
+\qquad
+\mathbf{V}_j=\mathbf{E}\mathbf{W}_{V,j},\]</span></p>
+<p>and</p>
+<p><span class="math display">\[\mathbf{O}_j
+=
+\operatorname{softmax}_{\mathrm{row}}
+\left(
+\frac{\mathbf{Q}_j\mathbf{K}_j^{\top}}{\sqrt{d_k}}
+\right)\mathbf{V}_j.\]</span></p>
+<p>We concatenate the head outputs along their feature dimension and apply an output projection:</p>
+<p><span class="math display">\[\boxed{
+\mathbf{O}_{\mathrm{multi}}
+=
+\operatorname{Concat}
+(\mathbf{O}_1,\ldots,\mathbf{O}_h)\mathbf{W}_O.
+}\]</span></p>
+<p>If each head produces <span class="math inline">d_v</span> features, the concatenation has shape <span class="math inline">T\times hd_v</span>. Choosing <span class="math inline">\mathbf{W}_O\in\mathbb{R}^{hd_v\times D}</span> gives a <span class="math inline">T\times D</span> result.</p>
+<p>Different projections allow different heads to use different relationships in the same input. For example, one may put weight on nearby context while another uses information further away. These roles can emerge during learning. We do not assign them to the heads in advance.</p>
+<p class="notes-figure"><img src="../slides/media/l8-notes/multi-head-attention.png" alt="Three attention heads process the same input sequence. Their output matrices are concatenated and multiplied by an output projection matrix." /></p>
+<p><em>Each head has its own query, key, and value projections. Concatenation joins the head outputs along the feature dimension. The shared output projection combines those features.</em></p>
+<h2 id="a-transformer-block">A Transformer Block</h2>
+<p>A <strong>block</strong> is a group of computations that we repeat to build a deeper network. It takes a representation for every token and returns an updated representation for every token. Different blocks normally learn different parameters.</p>
+<p>A basic Transformer block has two main computations:</p>
+<ol type="1">
+<li><strong>Multi-head self-attention</strong> lets each token gather information from other tokens.</li>
+<li><strong>A feed-forward network</strong> is a small MLP applied separately to each token. It transforms that token's features after attention has supplied context. Within a block, the same MLP parameters are used at every position.</li>
+</ol>
+<p>For example, attention can bring information about “dog” into the representation of “bites”. The MLP then processes the resulting features at the “bites” position. Stacking blocks repeats this process, so later blocks work with representations that already contain context.</p>
+<p>There are two supporting operations. A <strong>residual connection</strong> adds the input of a computation to its output. For a function <span class="math inline">F</span>, this gives</p>
+<p><span class="math display">\[\mathbf{y}=\mathbf{x}+F(\mathbf{x}).\]</span></p>
+<p>The function learns an update to the existing representation. The addition also provides a direct route for gradients. This helps with training deep networks. <a href="https://arxiv.org/abs/1512.03385">He et al., <em>Deep Residual Learning</em></a>.</p>
+<p><strong>Layer normalisation</strong> centres and rescales the feature values within each token's vector, then applies a learnt scale and offset. It helps control the scale of the representations. It does not combine different tokens. <a href="https://arxiv.org/abs/1607.06450">Ba et al., <em>Layer Normalization</em></a>.</p>
+<p>Let <span class="math inline">\mathbf{H}\in\mathbb{R}^{T\times D}</span> contain the current token representations as rows. One arrangement, used in the original Transformer encoder, is</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbf{U}
+&amp;=\operatorname{LN}_1\!\left(\mathbf{H}+\operatorname{MultiHead}(\mathbf{H})\right),\\
+\mathbf{H}_{\mathrm{next}}
+&amp;=\operatorname{LN}_2\!\left(\mathbf{U}+\operatorname{FFN}(\mathbf{U})\right).
+\end{aligned}\]</span></p>
+<p>Here <span class="math inline">\operatorname{LN}</span> means layer normalisation and <span class="math inline">\operatorname{FFN}</span> is the MLP applied to each row. Both additions combine matrices of shape <span class="math inline">T\times D</span>. Each block returns that same shape, ready for the next block. Some variants place normalisation before attention and the MLP. <a href="https://arxiv.org/html/1706.03762v7#S3.SS1">Vaswani et al., §3.1</a>.</p>
+<p>Positions within an attention layer can be computed in parallel. The next block still needs the previous block's outputs.</p>
+<h3 id="which-gradient-problems-remain">Which Gradient Problems Remain?</h3>
+<p>The comparison with RNNs concerns the path <strong>between distant sequence positions</strong>. In a basic RNN, information from an early token must pass through successive state updates to reach a much later token. Full self-attention provides a direct connection between the two positions.</p>
+<p>This does not guarantee that all gradients will be well behaved. Two problems can remain:</p>
+<ul>
+<li><strong>Gradients can shrink or grow through network depth.</strong> Backpropagation still applies the chain rule through the stack of blocks. Small gradients can make some parameters learn slowly. Large gradients can cause unstable updates. Residual connections help, but do not guarantee a useful gradient at every parameter. For a scalar residual addition, <span class="math inline">y=x+F(x)</span> gives <span class="math inline">dy/dx=1+F&#39;(x)</span>, which can still be small or large.</li>
+<li><strong>Softmax can become saturated.</strong> If one attention score dominates, its weight is close to one and the other weights are close to zero. The derivatives of these weights with respect to the scores become small. Learning how to change the attention pattern can then be slow. This is one reason for dividing query–key dot products by <span class="math inline">\sqrt{d_k}</span>. It does not mean every gradient in the block vanishes. <a href="https://arxiv.org/html/1706.03762v7#S3.SS2.SSS1">Vaswani et al., §3.2.1</a>.</li>
+</ul>
+<p>The placement of normalisation also matters. Xiong et al. show that the original arrangement can have large expected parameter gradients near the output at initialisation. Starting with a large learning rate can then destabilise training. A learning-rate warm-up starts with small steps and gradually increases them. Moving normalisation inside the residual branches improves the initial gradient behaviour in their analysis. <a href="https://proceedings.mlr.press/v119/xiong20b.html">Xiong et al., <em>On Layer Normalization in the Transformer Architecture</em></a>.</p>
+<p>Attention shortens the route between distant tokens. Training the resulting deep network still requires care.</p>
+<h2 id="why-position-information-matters">Why Position Information Matters</h2>
+<p>Consider self-attention without position information, where every token can attend to every token. What happens if we reorder the input rows?</p>
+<p>The outputs are reordered in the same way.</p>
+<p>To see why, let <span class="math inline">\mathbf{P}</span> be a permutation matrix that reorders the rows of <span class="math inline">\mathbf{E}</span>. The new queries, keys, and values are</p>
+<p><span class="math display">\[\mathbf{Q}'=\mathbf{P}\mathbf{Q},
+\qquad
+\mathbf{K}'=\mathbf{P}\mathbf{K},
+\qquad
+\mathbf{V}'=\mathbf{P}\mathbf{V}.\]</span></p>
+<p>The score matrix becomes</p>
+<p><span class="math display">\[\mathbf{Q}'\mathbf{K}'^{\top}
+=
+\mathbf{P}\mathbf{Q}\mathbf{K}^{\top}\mathbf{P}^{\top}.\]</span></p>
+<p>This reorders the rows and columns of the original scores. Applying row-wise softmax therefore gives</p>
+<p><span class="math display">\[\mathbf{S}'=\mathbf{P}\mathbf{S}\mathbf{P}^{\top}.\]</span></p>
+<p>Finally,</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbf{O}'
+&amp;=\mathbf{S}'\mathbf{V}'\\
+&amp;=\mathbf{P}\mathbf{S}\mathbf{P}^{\top}
+  \mathbf{P}\mathbf{V}\\
+&amp;=\mathbf{P}\mathbf{S}\mathbf{V}\\
+&amp;=\mathbf{P}\mathbf{O}.
+\end{aligned}\]</span></p>
+<p>Thus this self-attention computation is <strong>permutation equivariant</strong>:</p>
+<p><span class="math display">\[\boxed{
+f(\mathbf{P}\mathbf{E})=\mathbf{P}f(\mathbf{E}).
+}\]</span></p>
+<p>Equivariance does not mean that the output matrix stays unchanged. It means that the output follows the same reordering as the input.</p>
+<p>Without position information, reordering “dog bites man” into “man bites dog” simply reorders the corresponding token outputs. The attention computation has no information saying which word came first.</p>
+<p>Position vectors address this issue. When we move a token to another position, it receives that position's vector. Swapping tokens while keeping the position vectors at their original locations changes the input beyond merely reordering the original rows.</p>
+<h2 id="predicting-the-next-token">Predicting the Next Token</h2>
+<p>For next-token prediction, a model should only use tokens that are already available. During training, the full sentence may be present, but a prediction at position <span class="math inline">i</span> must not read future tokens.</p>
+<p>A <strong>causal mask</strong> enforces this restriction. Before applying softmax, we set the score for an unavailable future position to <span class="math inline">-\infty</span>:</p>
+<p><span class="math display">\[a_{ij}=-\infty
+\qquad\text{for }j&gt;i.\]</span></p>
+<p>Its softmax weight is then zero. Each position can use the current token and earlier tokens to predict the next one.</p>
+<p>The final representation is passed through an output layer and a softmax over the vocabulary, giving</p>
+<p><span class="math display">\[p(t_{i+1}\mid t_1,\ldots,t_i).\]</span></p>
+<p>This returns us to the categorical distribution and cross-entropy from Lecture 3. For a known training sequence, the loss can sum the negative log probabilities of the observed next tokens.</p>
+<p>Attention weights decide which representations to combine. Vocabulary probabilities describe the model's prediction over possible next tokens.</p>
+<p>A causal mask depends on sequence order. The earlier permutation-equivariance argument assumed that every position could attend to every other position, so it does not apply to arbitrary reorderings with this fixed mask.</p>
+<p>With all training tokens available, masked attention can compute many positions in parallel. Generating new text one token at a time still requires the newly generated tokens before continuing.</p>
+<h2 id="the-cost-of-full-attention">The Cost of Full Attention</h2>
+<p>Full self-attention compares each of <span class="math inline">T</span> queries with <span class="math inline">T</span> keys. It therefore forms <span class="math inline">T^2</span> scores.</p>
+<p>The score calculation costs <span class="math inline">O(T^2d_k)</span> arithmetic operations, and explicitly storing the attention weights uses <span class="math inline">O(T^2)</span> entries. Combining values also involves all these query-value pairs.</p>
+<p>This allows direct interactions between distant positions, but it becomes expensive for long sequences.</p>
+<p>Transformers also do not eliminate every optimisation difficulty. Gradients still pass through the depth of the network. RNNs remain another useful architecture when their sequential computation and state representation suit the problem.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>A neural network learns representations through parameterised computations. The <strong>structure of those computations</strong> expresses assumptions about the data.</p>
+<table>
+<thead>
+<tr>
+<th>Architecture</th>
+<th>Main computation</th>
+<th>Assumption about the data</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CNN</td>
+<td>Apply local filters with shared weights</td>
+<td>Local patterns can occur at different locations</td>
+</tr>
+<tr>
+<td>RNN</td>
+<td>Update a hidden state in sequence order</td>
+<td>Earlier inputs provide context for later inputs</td>
+</tr>
+<tr>
+<td>Transformer</td>
+<td>Combine representations using attention</td>
+<td>Useful context can come from different, possibly distant positions</td>
+</tr>
+</tbody>
+</table>
+<p>For CNNs, keep the distinction between <strong>sparse connections</strong> and <strong>weight sharing</strong> clear. Convolution, activation, and pooling have different roles. Equivariance means the output transforms with the input. Invariance means the output stays unchanged. The symmetry depends on the whole computation, including padding and subsampling.</p>
+<p>For RNNs, understand how the current input and previous state determine the new state, and why this creates both useful memory and a sequential dependency.</p>
+<p>For attention, you should be able to follow the four steps:</p>
+<ol type="1">
+<li>Represent the tokens and supply position information.</li>
+<li>Compute queries, keys, and values using learnt projections.</li>
+<li>Compare queries with keys, scale the scores, and apply row-wise softmax.</li>
+<li>Use the weights to combine the values.</li>
+</ol>
+<p>The reflection example shows how to reason from a local operation to the whole feature map. Make the local response invariant to patch reversal, then apply that operation at every position. The resulting map is mirror-equivariant. Pooling over all positions can give an invariant prediction. Pooling over a complete set of transformed inputs is another way to obtain invariance.</p>
+<p>The architecture defines which computations are available and how information can move through the network. Data and the loss then determine how we learn the parameters of those computations.</p>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><strong>PRML §5.5.6</strong> gives a short treatment of convolutional networks. It does not cover Transformers.</li>
+<li><a href="https://poloclub.github.io/cnn-explainer/">CNN Explainer</a> lets you inspect a small trained CNN.</li>
+<li>Vaswani et al., <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>, introduces the Transformer. Sections 3.2–3.5 expand on attention, feed-forward networks, embeddings, and position information.</li>
+<li>Cohen and Welling, <a href="https://proceedings.mlr.press/v48/cohenc16.html">Group Equivariant Convolutional Networks</a>, develops equivariant convolutions and pooling over transformations.</li>
+</ul>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
