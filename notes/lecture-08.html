@@ -74,7 +74,7 @@
 <li class="toc-h2"><a href="#multi-head-attention">Multi-Head Attention</a></li>
 <li class="toc-h2"><a href="#a-transformer-block">A Transformer Block</a></li>
 <li class="toc-h3"><a href="#which-gradient-problems-remain">Which Gradient Problems Remain?</a></li>
-<li class="toc-h2"><a href="#why-position-information-matters">Why Position Information Matters</a></li>
+<li class="toc-h2"><a href="#position-information-and-permutation-equivariance">Position Information and Permutation Equivariance</a></li>
 <li class="toc-h2"><a href="#predicting-the-next-token">Predicting the Next Token</a></li>
 <li class="toc-h2"><a href="#the-cost-of-full-attention">The Cost of Full Attention</a></li>
 <li class="toc-h1"><a href="#summary">Summary</a></li>
@@ -664,7 +664,7 @@ T\times d_v.\]</span></p>
 \right)
 \mathbf{E}\mathbf{W}_V.
 }\]</span></p>
-<p>The attention weights describe how much information to read from different positions. They are not, by themselves, probabilities of output words or class labels.</p>
+<p>The attention weights describe how much information to read from different positions. Note that attention weights are not probabilities of output words or class labels.</p>
 <hr />
 <h2 id="multi-head-attention">Multi-Head Attention</h2>
 <p>One attention head uses one set of query, key, and value projections. <strong>Multi-head attention</strong> learns several sets.</p>
@@ -693,6 +693,7 @@ T\times d_v.\]</span></p>
 <p class="notes-figure"><img src="../slides/media/l8-notes/multi-head-attention.png" alt="Three attention heads process the same input sequence. Their output matrices are concatenated and multiplied by an output projection matrix." /></p>
 <p><em>Each head has its own query, key, and value projections. Concatenation joins the head outputs along the feature dimension. The shared output projection combines those features.</em></p>
 <h2 id="a-transformer-block">A Transformer Block</h2>
+<p><em>Note: Residual connections and layer normalization are optional extra material</em></p>
 <p>A <strong>block</strong> is a group of computations that we repeat to build a deeper network. It takes a representation for every token and returns an updated representation for every token. Different blocks normally learn different parameters.</p>
 <p>A basic Transformer block has two main computations:</p>
 <ol type="1">
@@ -718,11 +719,11 @@ T\times d_v.\]</span></p>
 <p>This does not guarantee that all gradients will be well behaved. Two problems can remain:</p>
 <ul>
 <li><strong>Gradients can shrink or grow through network depth.</strong> Backpropagation still applies the chain rule through the stack of blocks. Small gradients can make some parameters learn slowly. Large gradients can cause unstable updates. Residual connections help, but do not guarantee a useful gradient at every parameter. For a scalar residual addition, <span class="math inline">y=x+F(x)</span> gives <span class="math inline">dy/dx=1+F&#39;(x)</span>, which can still be small or large.</li>
-<li><strong>Softmax can become saturated.</strong> If one attention score dominates, its weight is close to one and the other weights are close to zero. The derivatives of these weights with respect to the scores become small. Learning how to change the attention pattern can then be slow. This is one reason for dividing query–key dot products by <span class="math inline">\sqrt{d_k}</span>. It does not mean every gradient in the block vanishes. <a href="https://arxiv.org/html/1706.03762v7#S3.SS2.SSS1">Vaswani et al., §3.2.1</a>.</li>
+<li><strong>Softmax can become saturated.</strong> If one attention score dominates, its weight is close to one and the other weights are close to zero. The derivatives of these weights with respect to the scores become small. Learning how to change the attention pattern can then be slow. This is one reason for dividing query–key dot products by <span class="math inline">\sqrt{d_k}</span>. <a href="https://arxiv.org/html/1706.03762v7#S3.SS2.SSS1">Vaswani et al., §3.2.1</a>.</li>
 </ul>
-<p>The placement of normalisation also matters. Xiong et al. show that the original arrangement can have large expected parameter gradients near the output at initialisation. Starting with a large learning rate can then destabilise training. A learning-rate warm-up starts with small steps and gradually increases them. Moving normalisation inside the residual branches improves the initial gradient behaviour in their analysis. <a href="https://proceedings.mlr.press/v119/xiong20b.html">Xiong et al., <em>On Layer Normalization in the Transformer Architecture</em></a>.</p>
+<p>The placement of normalisation also matters. The original arrangement can have large expected parameter gradients near the output at initialisation. Starting with a large learning rate can then destabilise training. A learning-rate warm-up starts with small steps and gradually increases them. <a href="https://proceedings.mlr.press/v119/xiong20b.html">Xiong et al., <em>On Layer Normalization in the Transformer Architecture</em></a>.</p>
 <p>Attention shortens the route between distant tokens. Training the resulting deep network still requires care.</p>
-<h2 id="why-position-information-matters">Why Position Information Matters</h2>
+<h2 id="position-information-and-permutation-equivariance">Position Information and Permutation Equivariance</h2>
 <p>Consider self-attention without position information, where every token can attend to every token. What happens if we reorder the input rows?</p>
 <p>The outputs are reordered in the same way.</p>
 <p>To see why, let <span class="math inline">\mathbf{P}</span> be a permutation matrix that reorders the rows of <span class="math inline">\mathbf{E}</span>. The new queries, keys, and values are</p>
@@ -750,10 +751,11 @@ T\times d_v.\]</span></p>
 <p><span class="math display">\[\boxed{
 f(\mathbf{P}\mathbf{E})=\mathbf{P}f(\mathbf{E}).
 }\]</span></p>
-<p>Equivariance does not mean that the output matrix stays unchanged. It means that the output follows the same reordering as the input.</p>
+<p>Permutation equivariance means that the output follows the same reordering as the input.</p>
 <p>Without position information, reordering “dog bites man” into “man bites dog” simply reorders the corresponding token outputs. The attention computation has no information saying which word came first.</p>
-<p>Position vectors address this issue. When we move a token to another position, it receives that position's vector. Swapping tokens while keeping the position vectors at their original locations changes the input beyond merely reordering the original rows.</p>
+<p>Position vectors enable self-attention and transformers to take into account position information (which is often necessary for good performance in many applications). When we move a token to another position, it receives that position's vector. Swapping tokens while keeping the position vectors at their original locations changes the input beyond merely reordering the original rows.</p>
 <h2 id="predicting-the-next-token">Predicting the Next Token</h2>
+<p><em>Note: Causal Masks are optional extra material</em></p>
 <p>For next-token prediction, a model should only use tokens that are already available. During training, the full sentence may be present, but a prediction at position <span class="math inline">i</span> must not read future tokens.</p>
 <p>A <strong>causal mask</strong> enforces this restriction. Before applying softmax, we set the score for an unavailable future position to <span class="math inline">-\infty</span>:</p>
 <p><span class="math display">\[a_{ij}=-\infty
