@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 9 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 9: Unsupervised Learning I — Clustering and Representation Learning">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+<style>
+.notes article .notes-figure{max-width:none}
+.notes article img{display:block;max-width:100%;height:auto;margin:20px auto 10px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-09.html" target="_blank" rel="noopener">Lecture 9 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h1"><a href="#unsupervised-learning">Unsupervised Learning</a></li>
+<li class="toc-h2"><a href="#data-without-supplied-targets">Data Without Supplied Targets</a></li>
+<li class="toc-h2"><a href="#self-supervised-learning">Self-Supervised Learning</a></li>
+<li class="toc-h1"><a href="#clustering-and-k-means">Clustering and K-Means</a></li>
+<li class="toc-h2"><a href="#what-makes-two-observations-similar">What Makes Two Observations Similar?</a></li>
+<li class="toc-h2"><a href="#the-k-means-model">The K-Means Model</a></li>
+<li class="toc-h2"><a href="#the-loss">The Loss</a></li>
+<li class="toc-h2"><a href="#assignment-step-choose-the-nearest-centre">Assignment Step: Choose the Nearest Centre</a></li>
+<li class="toc-h2"><a href="#update-step-compute-the-mean">Update Step: Compute the Mean</a></li>
+<li class="toc-h2"><a href="#a-numerical-example">A Numerical Example</a></li>
+<li class="toc-h2"><a href="#why-the-loss-cannot-increase">Why the Loss Cannot Increase</a></li>
+<li class="toc-h2"><a href="#assumptions-and-limitations">Assumptions and Limitations</a></li>
+<li class="toc-h1"><a href="#representation-learning-and-autoencoders">Representation Learning and Autoencoders</a></li>
+<li class="toc-h2"><a href="#many-measurements-few-underlying-variables">Many Measurements, Few Underlying Variables</a></li>
+<li class="toc-h2"><a href="#the-encoder-and-the-code">The Encoder and the Code</a></li>
+<li class="toc-h2"><a href="#reconstruction-as-a-training-task">Reconstruction as a Training Task</a></li>
+<li class="toc-h2"><a href="#reconstruction-loss">Reconstruction Loss</a></li>
+<li class="toc-h2"><a href="#inspecting-learned-codes">Inspecting Learned Codes</a></li>
+<li class="toc-h1"><a href="#a-linear-autoencoder-and-pca">A Linear Autoencoder and PCA</a></li>
+<li class="toc-h2"><a href="#a-running-example">A Running Example</a></li>
+<li class="toc-h2"><a href="#linear-encoder-and-decoder">Linear Encoder and Decoder</a></li>
+<li class="toc-h2"><a href="#encoding-and-decoding-one-point">Encoding and Decoding One Point</a></li>
+<li class="toc-h2"><a href="#different-lines-give-different-errors">Different Lines Give Different Errors</a></li>
+<li class="toc-h2"><a href="#centring-the-data">Centring the Data</a></li>
+<li class="toc-h2"><a href="#reconstruction-error-and-variance">Reconstruction Error and Variance</a></li>
+<li class="toc-h2"><a href="#principal-component-analysis">Principal Component Analysis</a></li>
+<li class="toc-h2"><a href="#more-than-one-code-coordinate">More Than One Code Coordinate</a></li>
+<li class="toc-h2"><a href="#pca-on-images">PCA on Images</a></li>
+<li class="toc-h2"><a href="#the-restriction-imposed-by-a-linear-decoder">The Restriction Imposed by a Linear Decoder</a></li>
+<li class="toc-h1"><a href="#neural-autoencoders">Neural Autoencoders</a></li>
+<li class="toc-h2"><a href="#a-nonlinear-decoder-can-reconstruct-a-curve">A Nonlinear Decoder Can Reconstruct a Curve</a></li>
+<li class="toc-h2"><a href="#training-both-networks">Training Both Networks</a></li>
+<li class="toc-h2"><a href="#comparing-linear-and-neural-reconstructions">Comparing Linear and Neural Reconstructions</a></li>
+<li class="toc-h2"><a href="#architecture-and-inductive-bias">Architecture and Inductive Bias</a></li>
+<li class="toc-h1"><a href="#overfitting-and-regularisation">Overfitting and Regularisation</a></li>
+<li class="toc-h2"><a href="#a-small-code-can-still-overfit">A Small Code Can Still Overfit</a></li>
+<li class="toc-h2"><a href="#example-handwritten-digits">Example: Handwritten Digits</a></li>
+<li class="toc-h2"><a href="#adding-a-penalty">Adding a Penalty</a></li>
+<li class="toc-h3"><a href="#penalties-on-weights">Penalties on Weights</a></li>
+<li class="toc-h3"><a href="#penalties-on-code-values">Penalties on Code Values</a></li>
+<li class="toc-h3"><a href="#penalties-on-sensitivity">Penalties on Sensitivity</a></li>
+<li class="toc-h2"><a href="#weight-decay-in-the-digit-experiment">Weight Decay in the Digit Experiment</a></li>
+<li class="toc-h1"><a href="#further-reading-other-losses-and-training-tasks">Further Reading: Other Losses and Training Tasks</a></li>
+<li class="toc-h2"><a href="#other-reconstruction-losses">Other Reconstruction Losses</a></li>
+<li class="toc-h2"><a href="#denoising-autoencoders">Denoising Autoencoders</a></li>
+<li class="toc-h2"><a href="#masked-prediction">Masked Prediction</a></li>
+<li class="toc-h2"><a href="#contrastive-learning">Contrastive Learning</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+<li class="toc-h1"><a href="#reading">Reading</a></li>
+</ol>
+</details>
+</aside>
+<article>
+<h1 id="lecture-9-unsupervised-learning-i--clustering-and-representation-learning">Lecture 9: Unsupervised Learning I — Clustering and Representation Learning</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In the earlier lectures, we learnt models from examples with supplied targets. For regression, the target was a number. For classification, it was a class label. Neural networks allowed us to learn features that helped predict those targets.</p>
+<p>Now suppose we have observations but no supplied targets. We might have photographs without class labels, documents without topic labels, or measurements without a prediction task. What should a model learn from them?</p>
+<p>This is the setting of <strong>unsupervised learning</strong>. We still need data, a model, and a loss. We must also choose what we want to learn from the observations.</p>
+<p>We will study two tasks. In <strong>clustering</strong>, we divide observations into groups. The result depends on what we mean by similarity. The k-means algorithm uses squared distance to a cluster centre. It alternates between assigning points to centres and moving the centres. Each step minimises the same loss while keeping the other variables fixed.</p>
+<p>In <strong>representation learning</strong>, we learn a code that describes each observation. An <strong>autoencoder</strong> learns its code by reconstructing the input. An encoder maps the input to the code, and a decoder maps the code to a reconstruction. We train both functions to reduce reconstruction error. We will learn about both linear and neural autoencoder models where the former has a direct connection to the famous principal component analysis (PCA). We will also learn about the different regularization techniques that can be used to prevent overfitting for the nonlinear models.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ol type="1">
+<li><strong>Explain</strong> why clustering needs a definition of similarity.</li>
+<li><strong>Explain</strong> how the assignment and update steps of k-means minimise its loss.</li>
+<li><strong>Describe</strong> an autoencoder and its reconstruction loss.</li>
+<li><strong>Relate</strong> a linear autoencoder to PCA, including the connection between reconstruction error and retained variance.</li>
+<li><strong>Explain</strong> how the decoder, architecture, and regularisation affect the learned codes.</li>
+</ol>
+<hr />
+<h1 id="unsupervised-learning">Unsupervised Learning</h1>
+<h2 id="data-without-supplied-targets">Data Without Supplied Targets</h2>
+<p>A supervised dataset contains input–target pairs:</p>
+<p><span class="math display">\[\mathcal{D}=\{(\mathbf{x}_n,t_n)\}_{n=1}^{N}.\]</span></p>
+<p>The target tells us what to predict. The loss measures how far our prediction is from that target.</p>
+<p>An unsupervised dataset contains observations:</p>
+<p><span class="math display">\[\mathcal{D}=\{\mathbf{x}_n\}_{n=1}^{N},
+\qquad \mathbf{x}_n\in\mathbb{R}^{D}.\]</span></p>
+<p>Here <span class="math inline">N</span> is the number of observations and <span class="math inline">D</span> is the number of input coordinates. There is no supplied target <span class="math inline">t_n</span>. We must decide what task to construct from the observations.</p>
+<p>Some common goals are:</p>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>What we want to learn</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clustering</td>
+<td>Groups of similar observations</td>
+<td>Group customers by what they buy</td>
+</tr>
+<tr>
+<td>Representation learning</td>
+<td>Features that describe an observation</td>
+<td>Represent an image by a vector of numbers</td>
+</tr>
+<tr>
+<td>Density modelling</td>
+<td>A probability distribution over observations</td>
+<td>Estimate which inputs are likely</td>
+</tr>
+<tr>
+<td>Generative modelling</td>
+<td>A model that can produce new observations</td>
+<td>Generate images resembling the training images</td>
+</tr>
+</tbody>
+</table>
+<p>These goals can be related. For example, learned features may make clustering easier. A probability model may also provide a way to generate data.</p>
+<p>The data alone do not tell us which task to choose. After choosing a task, we still need a model, a loss, and a method for learning the model's parameters.</p>
+<h2 id="self-supervised-learning">Self-Supervised Learning</h2>
+<p>The observations can sometimes provide their own targets. Consider the sentence</p>
+<blockquote>
+<p>The cat sat on the mat.</p>
+</blockquote>
+<p>We can use “The cat sat on the” as an input and “mat” as its prediction target. Repeating this construction across a text collection gives many training examples.</p>
+<p>A language model can learn a conditional distribution of the form</p>
+<p><span class="math display">\[p_{\theta}(\text{next token}\mid\text{previous tokens}).\]</span></p>
+<p>A token may be a word or part of a word. We use whole words in this example to keep the construction simple.</p>
+<p>This is <strong>self-supervised learning</strong>: the training targets come from the observed data. A person does not have to provide a separate next-token label for each example. Later stages of training can use other information, such as labelled demonstrations.</p>
+<p>Autoencoders use a similar idea. Their target is the input itself. They are commonly studied under unsupervised learning, and their reconstruction task is self-supervised.</p>
+<hr />
+<h1 id="clustering-and-k-means">Clustering and K-Means</h1>
+<h2 id="what-makes-two-observations-similar">What Makes Two Observations Similar?</h2>
+<p>Suppose we have six objects: a circle, a square, and a triangle, each in blue and red. We could group them by shape, giving three groups. We could group them by colour, giving two groups.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-grouping.png" alt="The same six objects grouped by shape or by colour." /></p>
+<p><em>Both groupings describe the same objects. Choosing between them requires a definition of similarity.</em></p>
+<p>Clustering asks us to find groups whose members are similar. Until we specify what similarity means, the task is <strong>underspecified</strong>. Different choices can give different answers.</p>
+<p>This also happens with numerical data. If we group customers using purchase records, should similarity depend on the total amount spent, the kinds of products bought, or how often they shop? Our choice of features and distance affects the answer.</p>
+<p>Supervised learning also needs modelling assumptions. The difference is that its supplied targets already identify a prediction task. In clustering, choosing what counts as a useful group is part of defining the task.</p>
+<h2 id="the-k-means-model">The K-Means Model</h2>
+<p>In k-means, we choose a number of clusters <span class="math inline">K</span>. Each cluster has a <strong>centre</strong>:</p>
+<p><span class="math display">\[\boldsymbol{\mu}_1,\ldots,\boldsymbol{\mu}_K\in\mathbb{R}^{D}.\]</span></p>
+<p>We also assign each observation to exactly one cluster. Define</p>
+<p><span class="math display">\[r_{nk}=
+\begin{cases}
+1 &amp; \text{if observation }n\text{ belongs to cluster }k,\\
+0 &amp; \text{otherwise}.
+\end{cases}\]</span></p>
+<p>For each observation,</p>
+<p><span class="math display">\[r_{nk}\in\{0,1\},
+\qquad
+\sum_{k=1}^{K}r_{nk}=1.\]</span></p>
+<p>The vector <span class="math inline">\mathbf{r}_n=(r_{n1},\ldots,r_{nK})</span> is a <strong>one-of-<span class="math inline">K</span> assignment</strong>, also called a one-hot assignment. For example, <span class="math inline">(0,1,0)</span> assigns the observation to cluster 2.</p>
+<p>The centres describe the groups. The assignments say which group each observation belongs to. Learning determines both.</p>
+<p>Here <span class="math inline">K</span> means the number of clusters. Later, in the autoencoder sections, we will use <span class="math inline">K</span> for the number of coordinates in a code. These are separate modelling choices.</p>
+<h2 id="the-loss">The Loss</h2>
+<p>A point should be close to its assigned centre. K-means measures this using squared Euclidean distance:</p>
+<p><span class="math display">\[\boxed{
+J(\mathbf{r},\boldsymbol{\mu})
+=\sum_{n=1}^{N}\sum_{k=1}^{K}
+r_{nk}\|\mathbf{x}_n-\boldsymbol{\mu}_k\|^2.
+}\]</span></p>
+<p>Only one <span class="math inline">r_{nk}</span> is 1 for each point, so each point contributes one squared distance. A smaller loss means that the points are closer to their assigned centres in total.</p>
+<p>We want to minimise <span class="math inline">J</span> over both the assignments and the centres. Solving for both at once is difficult. K-means instead alternates between two simpler problems:</p>
+<ol type="1">
+<li>Keep the centres fixed and choose the assignments.</li>
+<li>Keep the assignments fixed and choose the centres.</li>
+</ol>
+<h2 id="assignment-step-choose-the-nearest-centre">Assignment Step: Choose the Nearest Centre</h2>
+<p>When the centres are fixed, the assignment of one point does not affect the contribution of another. For point <span class="math inline">\mathbf{x}_n</span>, we need to choose which squared distance to include in the loss.</p>
+<p>Choose</p>
+<p><span class="math display">\[k_n=\arg\min_{j\in\{1,\ldots,K\}}
+\|\mathbf{x}_n-\boldsymbol{\mu}_j\|^2,\]</span></p>
+<p>then set</p>
+<p><span class="math display">\[r_{nk}=
+\begin{cases}
+1 &amp; k=k_n,\\
+0 &amp; k\ne k_n.
+\end{cases}\]</span></p>
+<p>This assigns the point to its nearest centre. If two centres are equally close, choose one using a consistent rule. The one-of-<span class="math inline">K</span> constraint still requires exactly one assignment.</p>
+<p>This step minimises <span class="math inline">J</span> over the assignments for the current centres.</p>
+<h2 id="update-step-compute-the-mean">Update Step: Compute the Mean</h2>
+<p>Now keep the assignments fixed. The terms involving centre <span class="math inline">\boldsymbol{\mu}_k</span> are</p>
+<p><span class="math display">\[J_k(\boldsymbol{\mu}_k)
+=\sum_{n=1}^{N}r_{nk}
+\|\mathbf{x}_n-\boldsymbol{\mu}_k\|^2.\]</span></p>
+<p>Different centres appear in separate terms, so we can optimise them independently. Differentiate with respect to <span class="math inline">\boldsymbol{\mu}_k</span>:</p>
+<p><span class="math display">\[\nabla_{\boldsymbol{\mu}_k}J_k
+=-2\sum_{n=1}^{N}r_{nk}
+(\mathbf{x}_n-\boldsymbol{\mu}_k).\]</span></p>
+<p>Setting the derivative to zero gives</p>
+<p><span class="math display">\[\sum_n r_{nk}\mathbf{x}_n
+=\left(\sum_n r_{nk}\right)\boldsymbol{\mu}_k.\]</span></p>
+<p>Thus</p>
+<p><span class="math display">\[\boxed{
+\boldsymbol{\mu}_k
+=\frac{\sum_n r_{nk}\mathbf{x}_n}
+{\sum_n r_{nk}}
+}.\]</span></p>
+<p>The denominator is the number of points assigned to cluster <span class="math inline">k</span>. The numerator is their sum. The best centre is therefore their <strong>mean</strong>.</p>
+<p>For a nonempty cluster, this quadratic loss has positive curvature, so the stationary point is its minimum. If a cluster has no assigned points, the formula has a zero denominator. An implementation must handle that case, for example by keeping the old centre or choosing a new starting point.</p>
+<h2 id="a-numerical-example">A Numerical Example</h2>
+<p>Consider four one-dimensional observations:</p>
+<p><span class="math display">\[1,\quad 2,\quad 8,\quad 9.\]</span></p>
+<p>Let <span class="math inline">K=2</span>, with initial centres <span class="math inline">\mu_1=0</span> and <span class="math inline">\mu_2=10</span>.</p>
+<p>The assignment step puts <span class="math inline">1</span> and <span class="math inline">2</span> in cluster 1, and <span class="math inline">8</span> and <span class="math inline">9</span> in cluster 2. The loss is</p>
+<p><span class="math display">\[J=(1-0)^2+(2-0)^2+(8-10)^2+(9-10)^2=10.\]</span></p>
+<p>The update step replaces the centres with the means:</p>
+<p><span class="math display">\[\mu_1=\frac{1+2}{2}=1.5,
+\qquad
+\mu_2=\frac{8+9}{2}=8.5.\]</span></p>
+<p>The new loss is</p>
+<p><span class="math display">\[J=(1-1.5)^2+(2-1.5)^2+(8-8.5)^2+(9-8.5)^2=1.\]</span></p>
+<p>The next assignment step leaves the groups unchanged, and the next update leaves the centres unchanged. The algorithm has converged.</p>
+<h2 id="why-the-loss-cannot-increase">Why the Loss Cannot Increase</h2>
+<p>The assignment step chooses the best assignments for the current centres. Keeping the old assignments was one available option, so the new assignments cannot give a larger loss.</p>
+<p>The same argument applies to the update step. Keeping the old centres was an available option, so replacing them with the cluster means cannot increase the loss.</p>
+<p>Thus the sequence of losses satisfies</p>
+<p><span class="math display">\[J^{(0)}\ge J^{(1)}\ge J^{(2)}\ge\cdots\ge 0.\]</span></p>
+<p>The loss decreases or stays the same, and it is bounded below by zero. The loss values therefore converge. In the usual algorithm, we stop once the assignments no longer change. Consistent handling of distance ties avoids unnecessary changes between equally good assignments.</p>
+<p>This does <strong>not</strong> mean that k-means finds the global minimum. The two steps optimise different variables in turn. A different initial choice of centres can lead to a different final grouping and a different loss.</p>
+<p>A common approach is to run k-means from several initial choices of centres and keep the result with the smallest <span class="math inline">J</span>.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-kmeans-steps.png" alt="A k-means run on two-dimensional observations, with centres marked by crosses and the loss after each step." /></p>
+<p><em>Each point has the colour of its assigned cluster. The crosses show the centres. The loss cannot increase during an assignment or update step.</em></p>
+<p><strong>Optional exploration:</strong> use the <a class="slide-link" href="../slides/lecture-09.html#12" target="_blank" rel="noopener">k-means demo</a> to run one step at a time. Predict which points will change cluster before the next assignment step. Then try a new start and compare the final losses.</p>
+<h2 id="assumptions-and-limitations">Assumptions and Limitations</h2>
+<p>K-means makes several choices explicit.</p>
+<p>First, we supply <span class="math inline">K</span>. The algorithm does not decide how many groups we want. Increasing <span class="math inline">K</span> cannot increase the smallest achievable training loss, since extra centres can represent more points separately. Training loss alone therefore does not tell us which <span class="math inline">K</span> is useful.</p>
+<p>Second, assignments are <strong>hard</strong>: each point belongs to exactly one cluster. This can be restrictive when a point lies between overlapping groups.</p>
+<p>Third, ordinary squared distance treats the input coordinates according to their numerical scales. Rescaling a feature can change the groups. For example, changing a length measurement from metres to millimetres multiplies its contribution to squared distance by a million. Choosing features and scales is part of choosing similarity.</p>
+<p>Finally, representing each cluster by one centre works best for compact groups. K-means often works poorly when groups have very different spreads or form long, curved shapes. A point from a broad group may be closer to another group's centre. The nearest-centre assignment then disagrees with the grouping we intended.</p>
+<p>The <a class="slide-link" href="../slides/lecture-09.html#22" target="_blank" rel="noopener">example of unequal cluster spreads</a> shows this effect. Gaussian mixture models provide a probabilistic alternative with soft assignments and more flexible cluster shapes. We will study them later.</p>
+<hr />
+<h1 id="representation-learning-and-autoencoders">Representation Learning and Autoencoders</h1>
+<h2 id="many-measurements-few-underlying-variables">Many Measurements, Few Underlying Variables</h2>
+<p>Consider a <span class="math inline">28\times28</span> image of a circle on a fixed background. The image contains</p>
+<p><span class="math display">\[28\times28=784\]</span></p>
+<p>pixel values. Yet three numbers can describe how to draw it: the horizontal position, vertical position, and radius.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-circle-factors.png" alt="Horizontal position, vertical position, and radius determine an image of a circle." /></p>
+<p><em>The image has 784 pixel values, but this example varies only three quantities. The drawing function converts those quantities into pixels.</em></p>
+<p>The three numbers are a <strong>representation</strong> of the image. They describe it more compactly than the full list of pixels.</p>
+<p>Here we already know how the image is produced. In a learning problem, we usually receive only the observations. We would like to learn a useful representation from them.</p>
+<p><strong>Optional exploration:</strong> change the position and radius in the <a class="slide-link" href="../slides/lecture-09.html#26" target="_blank" rel="noopener">circle demo</a>. Notice that moving one control changes many pixel values.</p>
+<h2 id="the-encoder-and-the-code">The Encoder and the Code</h2>
+<p>A representation-learning model maps an input to a feature vector:</p>
+<p><span class="math display">\[\mathbf{z}=f_{\phi}(\mathbf{x}),
+\qquad
+f_{\phi}:\mathbb{R}^{D}\to\mathbb{R}^{K}.\]</span></p>
+<p>We call <span class="math inline">f_{\phi}</span> the <strong>encoder</strong> and <span class="math inline">\mathbf{z}</span> the <strong>code</strong>. The parameters <span class="math inline">\phi</span> determine the encoder's computation.</p>
+<p>Often we choose <span class="math inline">K&lt;D</span>, so the code contains fewer numbers than the input. For example, an <span class="math inline">8\times8</span> greyscale image has <span class="math inline">D=64</span> pixel values. We might learn a code with <span class="math inline">K=2</span> coordinates.</p>
+<p>A representation does not have to be smaller than the input. The choice <span class="math inline">K&lt;D</span> is one restriction we will use in this lecture.</p>
+<p>In Lecture 7, we learnt features to help predict a supplied target. The prediction loss told the network which features were useful. With unlabelled data, we need another objective.</p>
+<h2 id="reconstruction-as-a-training-task">Reconstruction as a Training Task</h2>
+<p>An autoencoder adds a <strong>decoder</strong>:</p>
+<p><span class="math display">\[g_{\theta}:\mathbb{R}^{K}\to\mathbb{R}^{D}.\]</span></p>
+<p>The decoder takes the code and produces a reconstruction <span class="math inline">\hat{\mathbf{x}}</span> of the input:</p>
+<p><span class="math display">\[\boxed{
+\mathbf{z}=f_{\phi}(\mathbf{x}),
+\qquad
+\hat{\mathbf{x}}=g_{\theta}(\mathbf{z}).
+}\]</span></p>
+<p>The full computation is</p>
+<p><span class="math display">\[\mathbf{x}
+\;\xrightarrow{\ f_{\phi}\ }\;
+\mathbf{z}
+\;\xrightarrow{\ g_{\theta}\ }\;
+\hat{\mathbf{x}}.\]</span></p>
+<p>The encoder and decoder have different roles. The encoder chooses a description of the input. The decoder uses that description to reconstruct it.</p>
+<p>When <span class="math inline">K&lt;D</span>, the intermediate code is a <strong>bottleneck</strong>. The decoder receives fewer numbers for each observation than the original input contained. It also has its learned parameters, which are shared across observations. For example, those shared parameters could describe a common shape, while each code specifies how that shape varies in one image.</p>
+<h2 id="reconstruction-loss">Reconstruction Loss</h2>
+<p>We train the encoder and decoder together by comparing the reconstruction with the input. With squared error,</p>
+<p><span class="math display">\[\boxed{
+J(\phi,\theta)
+=\frac{1}{N}\sum_{n=1}^{N}
+\left\|\mathbf{x}_n-g_{\theta}(f_{\phi}(\mathbf{x}_n))\right\|^2.
+}\]</span></p>
+<p>The input supplies its own target. No separate class label is needed.</p>
+<p>If <span class="math inline">\hat{\mathbf{x}}_n</span> is close to <span class="math inline">\mathbf{x}_n</span>, the code contains enough information for the decoder to reconstruct that observation accurately. Training encourages the code to preserve information that reduces this error.</p>
+<p>This does not guarantee that the code preserves everything useful for another task. For example, a large background region can contribute more to pixel reconstruction error than a small object that determines an image's class. We should evaluate the learned features on the task for which we want to use them.</p>
+<p>As in Lecture 2, squared error corresponds to a Gaussian noise model with equal variance across coordinates. We can also use squared error directly as a measure of reconstruction quality. Other losses will express different preferences.</p>
+<h2 id="inspecting-learned-codes">Inspecting Learned Codes</h2>
+<p>With a two-dimensional code, we can plot each encoded observation as a point <span class="math inline">(z_1,z_2)</span>. Similar codes are close in this plot. We can also choose a code and pass it to the decoder to see the reconstructed image.</p>
+<p>The <a class="slide-link" href="../slides/lecture-09.html#27" target="_blank" rel="noopener">digit-code demo</a> does this for <span class="math inline">8\times8</span> handwritten digits. The plotted symbols identify which digit each test image contains. These labels help us read the plot, but the model did not use them during training.</p>
+<p>A learned coordinate need not correspond to a property we can name, such as position or stroke width. Different encoders and decoders can reconstruct the same observations using different codes.</p>
+<hr />
+<h1 id="a-linear-autoencoder-and-pca">A Linear Autoencoder and PCA</h1>
+<h2 id="a-running-example">A Running Example</h2>
+<p>Consider four observations in two dimensions:</p>
+<p><span class="math display">\[\mathbf{x}_1=\begin{bmatrix}2\\1\end{bmatrix},\quad
+\mathbf{x}_2=\begin{bmatrix}1\\1\end{bmatrix},\quad
+\mathbf{x}_3=\begin{bmatrix}-1\\-1\end{bmatrix},\quad
+\mathbf{x}_4=\begin{bmatrix}-2\\-1\end{bmatrix}.\]</span></p>
+<p>Their mean is zero, so the data are already <strong>centred</strong>. We want to describe each point using one number, then reconstruct the point from that number.</p>
+<p>The points lie near a line through the origin. We could use a point's position along a chosen line as its code. The decoder would then reconstruct a point on that line.</p>
+<h2 id="linear-encoder-and-decoder">Linear Encoder and Decoder</h2>
+<p>A linear autoencoder uses two matrices:</p>
+<p><span class="math display">\[\mathbf{z}=\mathbf{W}_e\mathbf{x},
+\qquad
+\hat{\mathbf{x}}=\mathbf{W}_d\mathbf{z},\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\mathbf{W}_e\in\mathbb{R}^{K\times D},
+\qquad
+\mathbf{W}_d\in\mathbb{R}^{D\times K}.\]</span></p>
+<p>The encoder maps <span class="math inline">D</span> input coordinates to <span class="math inline">K</span> code coordinates. The decoder maps those <span class="math inline">K</span> coordinates back to <span class="math inline">D</span> output coordinates.</p>
+<p>For our two-dimensional example, <span class="math inline">D=2</span> and <span class="math inline">K=1</span>. Choose a unit vector <span class="math inline">\mathbf{w}</span> along the reconstruction line and set</p>
+<p><span class="math display">\[\mathbf{W}_e=\mathbf{w}^{\top},
+\qquad
+\mathbf{W}_d=\mathbf{w},
+\qquad
+\|\mathbf{w}\|=1.\]</span></p>
+<p>The encoder computes the coordinate along the line:</p>
+<p><span class="math display">\[z=\mathbf{w}^{\top}\mathbf{x}.\]</span></p>
+<p>The decoder reconstructs the point as</p>
+<p><span class="math display">\[\hat{\mathbf{x}}=\mathbf{w}z.\]</span></p>
+<p>These formulas give the orthogonal projection of <span class="math inline">\mathbf{x}</span> onto the line. The unit-length condition matters: it makes <span class="math inline">z</span> the coordinate along a unit direction.</p>
+<h2 id="encoding-and-decoding-one-point">Encoding and Decoding One Point</h2>
+<p>Choose</p>
+<p><span class="math display">\[\mathbf{w}=\begin{bmatrix}0.8\\0.6\end{bmatrix}.\]</span></p>
+<p>It has unit length because <span class="math inline">0.8^2+0.6^2=1</span>. For <span class="math inline">\mathbf{x}=(2,1)^{\top}</span>, the code is</p>
+<p><span class="math display">\[z=0.8(2)+0.6(1)=2.2.\]</span></p>
+<p>Decoding gives</p>
+<p><span class="math display">\[\hat{\mathbf{x}}
+=\begin{bmatrix}0.8\\0.6\end{bmatrix}(2.2)
+=\begin{bmatrix}1.76\\1.32\end{bmatrix}.\]</span></p>
+<p>The <strong>residual</strong>, or reconstruction error vector, is</p>
+<p><span class="math display">\[\mathbf{x}-\hat{\mathbf{x}}
+=\begin{bmatrix}0.24\\-0.32\end{bmatrix}.\]</span></p>
+<p>Its squared length is</p>
+<p><span class="math display">\[\|\mathbf{x}-\hat{\mathbf{x}}\|^2
+=0.24^2+(-0.32)^2=0.16.\]</span></p>
+<p>The reconstruction lies on the chosen line. The residual is perpendicular to it. The component of the input perpendicular to the line cannot be represented by this decoder.</p>
+<h2 id="different-lines-give-different-errors">Different Lines Give Different Errors</h2>
+<p>We choose the line by minimising the average reconstruction error over all four observations:</p>
+<p><span class="math display">\[J(\mathbf{w})
+=\frac{1}{N}\sum_{n=1}^{N}
+\|\mathbf{x}_n-\mathbf{w}\mathbf{w}^{\top}\mathbf{x}_n\|^2,
+\qquad \|\mathbf{w}\|=1.\]</span></p>
+<p>For three possible directions, the errors are:</p>
+<table>
+<thead>
+<tr>
+<th>Direction <span class="math inline">\mathbf{w}</span></th>
+<th>Reconstruction line</th>
+<th style="text-align: right;">Average squared error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">(0,1)^{\top}</span></td>
+<td>Vertical</td>
+<td style="text-align: right;"><span class="math inline">2.5</span></td>
+</tr>
+<tr>
+<td><span class="math inline">(1,0)^{\top}</span></td>
+<td>Horizontal</td>
+<td style="text-align: right;"><span class="math inline">1.0</span></td>
+</tr>
+<tr>
+<td><span class="math inline">(0.8,0.6)^{\top}</span></td>
+<td>Sloping</td>
+<td style="text-align: right;"><span class="math inline">0.1</span></td>
+</tr>
+</tbody>
+</table>
+<p>For the vertical line, each reconstruction has horizontal coordinate zero. The residuals therefore contain the original horizontal coordinates, whose mean squared value is <span class="math inline">(4+1+1+4)/4=2.5</span>.</p>
+<p>For the horizontal line, each reconstruction has vertical coordinate zero. Every point has squared vertical coordinate 1, giving average error 1.</p>
+<p>The sloping line gives a much smaller error because it follows the direction in which these points vary most.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-reconstruction-lines.png" alt="The four observations projected onto a vertical line, a horizontal line, and a sloping line." /></p>
+<p><em>The dashed segments connect each observation to its reconstruction. The sloping line has the smallest error among these three choices.</em></p>
+<p>For separate linear encoder and decoder matrices, the loss is</p>
+<p><span class="math display">\[J(\mathbf{W}_e,\mathbf{W}_d)
+=\frac{1}{N}\sum_{n=1}^{N}
+\|\mathbf{x}_n-\mathbf{W}_d\mathbf{W}_e\mathbf{x}_n\|^2.\]</span></p>
+<p><strong>Optional exploration:</strong> rotate the line in the <a class="slide-link" href="../slides/lecture-09.html#40" target="_blank" rel="noopener">PCA demo</a>. Predict which direction will reduce the error, then use “Fit PCA” to check. The demo uses a larger dataset than our four-point example.</p>
+<h2 id="centring-the-data">Centring the Data</h2>
+<p>The example above has mean zero. For general data, first compute the training mean</p>
+<p><span class="math display">\[\bar{\mathbf{x}}=\frac{1}{N}\sum_{n=1}^{N}\mathbf{x}_n\]</span></p>
+<p>and subtract it:</p>
+<p><span class="math display">\[\tilde{\mathbf{x}}_n=\mathbf{x}_n-\bar{\mathbf{x}}.\]</span></p>
+<p>Fit the line to these centred observations. Encoding and reconstruction then become</p>
+<p><span class="math display">\[z=\mathbf{w}^{\top}(\mathbf{x}-\bar{\mathbf{x}}),
+\qquad
+\hat{\mathbf{x}}=\bar{\mathbf{x}}+\mathbf{w}z.\]</span></p>
+<p>Adding the mean back places the reconstruction line through the data mean. Use the same training mean when encoding new observations.</p>
+<p>In the derivation below, <span class="math inline">\mathbf{x}_n</span> denotes a centred observation, as it does in the slides.</p>
+<h2 id="reconstruction-error-and-variance">Reconstruction Error and Variance</h2>
+<p>Let</p>
+<p><span class="math display">\[z_n=\mathbf{w}^{\top}\mathbf{x}_n,
+\qquad
+\hat{\mathbf{x}}_n=\mathbf{w}z_n,
+\qquad
+\mathbf{e}_n=\mathbf{x}_n-\hat{\mathbf{x}}_n.\]</span></p>
+<p>Since <span class="math inline">\|\mathbf{w}\|=1</span>,</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\mathbf{e}_n
+=\mathbf{w}^{\top}\mathbf{x}_n
+-\mathbf{w}^{\top}\mathbf{w}z_n
+=z_n-z_n=0.\]</span></p>
+<p>The reconstruction and residual are perpendicular. Pythagoras gives</p>
+<p><span class="math display">\[\|\mathbf{x}_n\|^2
+=\|\hat{\mathbf{x}}_n\|^2+\|\mathbf{e}_n\|^2
+=z_n^2+\|\mathbf{e}_n\|^2.\]</span></p>
+<p>For the point <span class="math inline">(2,1)^{\top}</span>, this is</p>
+<p><span class="math display">\[5=4.84+0.16.\]</span></p>
+<p>Applying the same calculation to all four points gives:</p>
+<table>
+<thead>
+<tr>
+<th>Point</th>
+<th style="text-align: right;">Squared length <span class="math inline">|\mathbf{x}_n|^2</span></th>
+<th style="text-align: right;">Retained <span class="math inline">z_n^2</span></th>
+<th style="text-align: right;">Squared error <span class="math inline">|\mathbf{e}_n|^2</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">(2,1)</span></td>
+<td style="text-align: right;"><span class="math inline">5</span></td>
+<td style="text-align: right;"><span class="math inline">4.84</span></td>
+<td style="text-align: right;"><span class="math inline">0.16</span></td>
+</tr>
+<tr>
+<td><span class="math inline">(1,1)</span></td>
+<td style="text-align: right;"><span class="math inline">2</span></td>
+<td style="text-align: right;"><span class="math inline">1.96</span></td>
+<td style="text-align: right;"><span class="math inline">0.04</span></td>
+</tr>
+<tr>
+<td><span class="math inline">(-1,-1)</span></td>
+<td style="text-align: right;"><span class="math inline">2</span></td>
+<td style="text-align: right;"><span class="math inline">1.96</span></td>
+<td style="text-align: right;"><span class="math inline">0.04</span></td>
+</tr>
+<tr>
+<td><span class="math inline">(-2,-1)</span></td>
+<td style="text-align: right;"><span class="math inline">5</span></td>
+<td style="text-align: right;"><span class="math inline">4.84</span></td>
+<td style="text-align: right;"><span class="math inline">0.16</span></td>
+</tr>
+<tr>
+<td><strong>Average</strong></td>
+<td style="text-align: right;"><strong><span class="math inline">3.5</span></strong></td>
+<td style="text-align: right;"><strong><span class="math inline">3.4</span></strong></td>
+<td style="text-align: right;"><strong><span class="math inline">0.1</span></strong></td>
+</tr>
+</tbody>
+</table>
+<p>Because the observations are centred, their <strong>total variance</strong>, using the factor <span class="math inline">1/N</span>, is</p>
+<p><span class="math display">\[\frac{1}{N}\sum_n\|\mathbf{x}_n\|^2.\]</span></p>
+<p>This is the sum of the variances of the input coordinates. The codes also have mean zero, so their variance is <span class="math inline">\frac{1}{N}\sum_n z_n^2</span>.</p>
+<p>Averaging the Pythagorean identity and rearranging gives</p>
+<p><span class="math display">\[\boxed{
+\text{reconstruction error}
+=\text{total variance}-\text{retained variance}.
+}\]</span></p>
+<p>The total variance is fixed by the data. Therefore, <strong>minimising reconstruction error is equivalent to maximising retained variance</strong>.</p>
+<h2 id="principal-component-analysis">Principal Component Analysis</h2>
+<p>Define the covariance matrix of the centred observations as</p>
+<p><span class="math display">\[\mathbf{S}=\frac{1}{N}\sum_{n=1}^{N}
+\mathbf{x}_n\mathbf{x}_n^{\top}.\]</span></p>
+<p>The variance of the codes along direction <span class="math inline">\mathbf{w}</span> is</p>
+<p><span class="math display">\[\frac{1}{N}\sum_n z_n^2
+=\frac{1}{N}\sum_n(\mathbf{w}^{\top}\mathbf{x}_n)^2
+=\mathbf{w}^{\top}\mathbf{S}\mathbf{w}.\]</span></p>
+<p>We want to maximise this quantity subject to <span class="math inline">\|\mathbf{w}\|=1</span>.</p>
+<p>Let <span class="math inline">\mathbf{u}_j</span> be orthonormal eigenvectors of <span class="math inline">\mathbf{S}</span>, with eigenvalues <span class="math inline">\lambda_j</span>. Write a unit vector as</p>
+<p><span class="math display">\[\mathbf{w}=\sum_j a_j\mathbf{u}_j,
+\qquad \sum_j a_j^2=1.\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[\mathbf{w}^{\top}\mathbf{S}\mathbf{w}
+=\sum_j a_j^2\lambda_j
+\leq\max_j\lambda_j.\]</span></p>
+<p>We reach this maximum by choosing an eigenvector with the largest eigenvalue. This gives the <strong>first principal direction</strong>. Its projected coordinates are the first principal component scores.</p>
+<p>For our four points,</p>
+<p><span class="math display">\[\mathbf{S}
+=\begin{bmatrix}2.5&amp;1.5\\1.5&amp;1\end{bmatrix}.\]</span></p>
+<p>Its largest eigenvalue is approximately <span class="math inline">3.427</span>, with a unit eigenvector approximately</p>
+<p><span class="math display">\[\mathbf{w}_{\mathrm{PCA}}
+=\begin{bmatrix}0.851\\0.526\end{bmatrix}.\]</span></p>
+<p>The total variance is <span class="math inline">3.5</span>. The minimum reconstruction error is therefore approximately</p>
+<p><span class="math display">\[3.5-3.427=0.073.\]</span></p>
+<p>Our earlier direction <span class="math inline">(0.8,0.6)^{\top}</span> was close to the optimum, but its error of <span class="math inline">0.1</span> was slightly larger.</p>
+<p>The signs of a principal direction and its code can both be reversed without changing the reconstruction. If eigenvalues tie, more than one choice of principal directions can be equally good.</p>
+<h2 id="more-than-one-code-coordinate">More Than One Code Coordinate</h2>
+<p>For a <span class="math inline">K</span>-dimensional code, collect the <span class="math inline">K</span> leading orthonormal eigenvectors in</p>
+<p><span class="math display">\[\mathbf{W}\in\mathbb{R}^{D\times K},
+\qquad
+\mathbf{W}^{\top}\mathbf{W}=\mathbf{I}_K.\]</span></p>
+<p>For centred data,</p>
+<p><span class="math display">\[\boxed{
+\mathbf{z}=\mathbf{W}^{\top}\mathbf{x},
+\qquad
+\hat{\mathbf{x}}=\mathbf{W}\mathbf{z}.
+}\]</span></p>
+<p>For uncentred data, subtract the training mean before encoding and add it back after decoding.</p>
+<p>If the eigenvalues are ordered from largest to smallest, PCA retains variance <span class="math inline">\sum_{j=1}^{K}\lambda_j</span>. Its average squared reconstruction error is the sum of the remaining eigenvalues:</p>
+<p><span class="math display">\[J_{\min}=\sum_{j=K+1}^{D}\lambda_j.\]</span></p>
+<p>A linear autoencoder with separate encoder and decoder matrices can recover the same reconstruction subspace at a global minimum of squared loss. Its code coordinates need not be the usual PCA coordinates. Changing the basis of the code and making the corresponding change in the decoder can leave every reconstruction unchanged.</p>
+<p>PCA does not require Gaussian data. The derivation uses centring, orthogonal projection, and squared error.</p>
+<h2 id="pca-on-images">PCA on Images</h2>
+<p>An <span class="math inline">8\times8</span> greyscale digit image is a vector with 64 coordinates. A principal direction also has 64 entries, so we can arrange its entries in an <span class="math inline">8\times8</span> grid and display them as an image.</p>
+<p>The mean image describes the average pixel values. A principal direction describes a pattern of changes from that mean. Some entries can be positive and others negative.</p>
+<p>With one code coordinate,</p>
+<p><span class="math display">\[\hat{\mathbf{x}}=\bar{\mathbf{x}}+z_1\mathbf{w}_1.\]</span></p>
+<p>Increasing <span class="math inline">z_1</span> adds more of the first direction. Negative values subtract it. With two coordinates,</p>
+<p><span class="math display">\[\hat{\mathbf{x}}
+=\bar{\mathbf{x}}+z_1\mathbf{w}_1+z_2\mathbf{w}_2.\]</span></p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-digit-components.png" alt="The mean digit image, the first three PCA directions, and reconstructions along the first direction." /></p>
+<p><em>The first three directions retain about 15.5%, 13.8%, and 11.3% of the training variance. In the bottom row, only the first code coordinate changes. The other coordinates are zero.</em></p>
+<p>These directions were fitted to 1,000 training images. The quantity <span class="math inline">\sigma_1</span> in the figure is the training standard deviation of the first code coordinate. The <a class="slide-link" href="../slides/lecture-09.html#45" target="_blank" rel="noopener">PCA image slide</a> shows the same example.</p>
+<h2 id="the-restriction-imposed-by-a-linear-decoder">The Restriction Imposed by a Linear Decoder</h2>
+<p>For a linear decoder, the possible centred reconstructions are</p>
+<p><span class="math display">\[\{\mathbf{W}_d\mathbf{z}:\mathbf{z}\in\mathbb{R}^{K}\}.\]</span></p>
+<p>They lie in the subspace spanned by the columns of <span class="math inline">\mathbf{W}_d</span>. With one independent column, this is a line. With two independent columns, it is a plane. More generally, its dimension is at most <span class="math inline">K</span>.</p>
+<p>Learning can change which subspace we use. It cannot make a linear decoder produce a curve within a one-dimensional code model. This restriction is an <strong>inductive bias</strong>: it limits the relationships the model can represent.</p>
+<p>Feature scaling is another choice that affects the result. Since squared error uses numerical coordinate differences, rescaling a feature can change the principal directions. Standardising features by their training standard deviations is one option. Whether that is appropriate depends on what errors should matter for the task.</p>
+<hr />
+<h1 id="neural-autoencoders">Neural Autoencoders</h1>
+<h2 id="a-nonlinear-decoder-can-reconstruct-a-curve">A Nonlinear Decoder Can Reconstruct a Curve</h2>
+<p>Suppose the observations lie on the curve</p>
+<p><span class="math display">\[\mathbf{x}=\begin{bmatrix}z\\z^2\end{bmatrix}.\]</span></p>
+<p>Each point has two coordinates, but one number <span class="math inline">z</span> determines both. A linear decoder with a one-dimensional code cannot reconstruct the whole curve. A nonlinear decoder can.</p>
+<p>For this example, we can write down an exact encoder and decoder:</p>
+<p><span class="math display">\[f(\mathbf{x})=x_1,
+\qquad
+ g(z)=\begin{bmatrix}z\\z^2\end{bmatrix}.\]</span></p>
+<p>For <span class="math inline">\mathbf{x}=(1,1)^{\top}</span>, the encoder produces <span class="math inline">z=1</span>. The decoder maps that code back to <span class="math inline">(1,1)^{\top}</span>. The same construction works for every point on the curve.</p>
+<p>Usually, we do not know these functions in advance. A <strong>neural autoencoder</strong> represents them using neural networks:</p>
+<p><span class="math display">\[\mathbf{z}=f_{\phi}(\mathbf{x}),
+\qquad
+\hat{\mathbf{x}}=g_{\theta}(\mathbf{z}).\]</span></p>
+<p>For example, both functions could be MLPs. Their nonlinearities allow the reconstructions to lie on a curve or a curved surface.</p>
+<p>The <a class="slide-link" href="../slides/lecture-09.html#49" target="_blank" rel="noopener">curve demo</a> shows the known function <span class="math inline">g(z)=(z,z^2)^{\top}</span>. Changing <span class="math inline">z</span> moves the point along the curve. Adding noise shows why real observations might lie near a curve rather than exactly on it.</p>
+<h2 id="training-both-networks">Training Both Networks</h2>
+<p>We can use the same squared reconstruction loss as before:</p>
+<p><span class="math display">\[J(\phi,\theta)
+=\frac{1}{N}\sum_{n=1}^{N}
+\|\mathbf{x}_n-g_{\theta}(f_{\phi}(\mathbf{x}_n))\|^2.\]</span></p>
+<p>For each input, the encoder computes a code, the decoder computes a reconstruction, and the loss compares that reconstruction with the input. Backpropagation computes gradients through both networks. Gradient descent or another gradient-based optimiser updates both sets of parameters.</p>
+<p>The model changes from the linear autoencoder. The reconstruction task can remain the same.</p>
+<h2 id="comparing-linear-and-neural-reconstructions">Comparing Linear and Neural Reconstructions</h2>
+<p>Consider a separate dataset of observations near a curve. We fit both a linear autoencoder and a neural autoencoder, each with one code coordinate.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-curve-reconstructions.png" alt="Linear and neural reconstructions of observations near a curve." /></p>
+<p><em>The linear reconstructions lie on a line. The neural reconstructions follow a curve. The highlighted observation and its reconstruction show the error for one input.</em></p>
+<p>In this experiment, the neural network has layer widths <span class="math inline">2,12,1,12,2</span>. The single central unit is the code. Both models use 96 training points and are evaluated on 95 separate test points.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th style="text-align: right;">Training reconstruction error</th>
+<th style="text-align: right;">Test reconstruction error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linear autoencoder (PCA)</td>
+<td style="text-align: right;"><span class="math inline">0.2870</span></td>
+<td style="text-align: right;"><span class="math inline">0.2794</span></td>
+</tr>
+<tr>
+<td>Neural autoencoder</td>
+<td style="text-align: right;"><span class="math inline">0.0002</span></td>
+<td style="text-align: right;"><span class="math inline">0.0003</span></td>
+</tr>
+</tbody>
+</table>
+<p>The errors are average squared Euclidean distances. The neural model's lower test error shows that its additional flexibility helps on this dataset. It does not imply that a neural autoencoder will always outperform PCA.</p>
+<p><strong>Optional exploration:</strong> use the <a class="slide-link" href="../slides/lecture-09.html#53" target="_blank" rel="noopener">linear and neural reconstruction demo</a> to select a point and show the residuals. Compare training and test observations.</p>
+<h2 id="architecture-and-inductive-bias">Architecture and Inductive Bias</h2>
+<p>We must choose the computations inside the encoder and decoder. The architectures from Lectures 7 and 8 express different assumptions.</p>
+<p>An <strong>MLP</strong> uses fully connected layers. In one dense layer, every input coordinate can affect every output unit, with a separate weight for each connection. This gives flexibility but does not explicitly use an image's spatial structure.</p>
+<p>A <strong>CNN</strong> uses local filters with shared weights. Nearby pixels contribute to the same local computation, and the filter applies at multiple locations. This is useful when local patterns can occur in different parts of an image. A convolutional decoder can also share parameters when constructing different parts of an output image.</p>
+<p>A <strong>Transformer</strong> uses attention weights that depend on the input. It can combine information from distant positions, with the contribution of another position changing according to the current input. Position information is needed when order or spatial arrangement matters.</p>
+<p>These choices apply to both the encoder and the decoder. The encoder determines how the code is computed. The decoder determines which reconstructions that code can produce.</p>
+<hr />
+<h1 id="overfitting-and-regularisation">Overfitting and Regularisation</h1>
+<h2 id="a-small-code-can-still-overfit">A Small Code Can Still Overfit</h2>
+<p>An autoencoder with <span class="math inline">K&lt;D</span> is called <strong>undercomplete</strong>. Its small code restricts how many numbers pass from the encoder to the decoder, but this alone does not prevent memorisation.</p>
+<p>A real-valued coordinate can take many distinct values. A sufficiently flexible encoder can assign different codes to the training examples. A sufficiently flexible decoder can learn to reconstruct those examples from their codes. It may still reconstruct new inputs poorly.</p>
+<p>The capacity of both functions matters, as well as the size of the code. This is why we evaluate reconstruction on data that were not used to fit the model.</p>
+<h2 id="example-handwritten-digits">Example: Handwritten Digits</h2>
+<p>The digit experiment uses 1,797 images with <span class="math inline">8\times8</span> pixels. Pixel values are scaled to the interval <span class="math inline">[0,1]</span>. We split the data into:</p>
+<ul>
+<li>1,000 training images for fitting the model;</li>
+<li>200 validation images for choosing the regularisation strength;</li>
+<li>597 test images for evaluating the chosen model.</li>
+</ul>
+<p>Both PCA and the neural autoencoder use a two-dimensional code. The neural network has layer widths <span class="math inline">64,128,2,128,64</span>.</p>
+<p>Without regularisation, the errors are:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th style="text-align: right;">Training error</th>
+<th style="text-align: right;">Test error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PCA, <span class="math inline">K=2</span></td>
+<td style="text-align: right;"><span class="math inline">3.30</span></td>
+<td style="text-align: right;"><span class="math inline">3.46</span></td>
+</tr>
+<tr>
+<td>Neural autoencoder, <span class="math inline">K=2</span></td>
+<td style="text-align: right;"><span class="math inline">1.01</span></td>
+<td style="text-align: right;"><span class="math inline">3.47</span></td>
+</tr>
+</tbody>
+</table>
+<p>Here, error means the average over images of the <strong>sum of 64 squared pixel errors</strong>. It is not the average per pixel.</p>
+<p>The neural model fits the training images much better than PCA, but their test errors are almost the same. The gap between the neural model's training and test errors shows overfitting, despite its small code.</p>
+<p>We can also inspect the decoders by choosing a grid of two-dimensional codes and reconstructing an image at each grid point.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-digit-grid.png" alt="Images decoded from a grid of two-dimensional codes using PCA and an unregularised neural autoencoder." /></p>
+<p><em>The neural decoder produces more recognisable digit shapes at many grid points, but its test reconstruction error is similar to PCA's. Visual appearance and reconstruction error provide different information.</em></p>
+<p>These are outputs for chosen codes. They are not random samples from a learned probability distribution over images. An ordinary autoencoder does not specify how often each code should occur.</p>
+<h2 id="adding-a-penalty">Adding a Penalty</h2>
+<p>Regularisation adds a preference beyond fitting the training data. Write</p>
+<p><span class="math display">\[\boxed{
+J_{\mathrm{reg}}(\phi,\theta)
+=\frac{1}{N}\sum_{n=1}^{N}
+\|\mathbf{x}_n-g_{\theta}(f_{\phi}(\mathbf{x}_n))\|^2
++\lambda\,\Omega,
+}\]</span></p>
+<p>where <span class="math inline">\Omega</span> is a penalty and <span class="math inline">\lambda\ge0</span> controls its strength.</p>
+<p>A larger <span class="math inline">\lambda</span> gives the penalty more influence during training. Too much regularisation can make the model underfit. We choose <span class="math inline">\lambda</span> using validation data.</p>
+<h3 id="penalties-on-weights">Penalties on Weights</h3>
+<p>As in ridge regression, we can penalise squared weights:</p>
+<p><span class="math display">\[\Omega_{\mathrm{weights}}=\|\phi\|^2+\|\theta\|^2.\]</span></p>
+<p>Here the norms represent sums of squares of the weights being penalised. Bias terms can be excluded, as they are in the digit experiment.</p>
+<p>The penalty discourages large weights. Under ordinary gradient descent, a weight <span class="math inline">w</span> receives a contribution <span class="math inline">2\lambda w</span> to its gradient from this penalty. Its update includes the factor <span class="math inline">1-2\eta\lambda</span>, which shrinks the old weight when the step size <span class="math inline">\eta</span> is small enough. This explains the name <strong>weight decay</strong> in this setting.</p>
+<h3 id="penalties-on-code-values">Penalties on Code Values</h3>
+<p>We can encourage sparse codes using an absolute-value penalty:</p>
+<p><span class="math display">\[\Omega_{\mathrm{sparse}}
+=\sum_{n=1}^{N}\sum_{k=1}^{K}|z_{nk}|.\]</span></p>
+<p>Here <span class="math inline">z_{nk}</span> is coordinate <span class="math inline">k</span> of the code for observation <span class="math inline">n</span>. The penalty encourages many code entries to be small or zero. This is different from reducing <span class="math inline">K</span>: a long code can still be sparse if only a few entries are active for each input.</p>
+<h3 id="penalties-on-sensitivity">Penalties on Sensitivity</h3>
+<p>We may want small changes in the input to produce small changes in its code. One penalty is</p>
+<p><span class="math display">\[\Omega_{\mathrm{sensitivity}}
+=\sum_{n=1}^{N}\sum_{k=1}^{K}\sum_{d=1}^{D}
+\left(
+\frac{\partial f_{\phi,k}(\mathbf{x}_n)}{\partial x_{nd}}
+\right)^2.\]</span></p>
+<p>The derivative measures how code coordinate <span class="math inline">k</span> responds to a change in input coordinate <span class="math inline">d</span>, evaluated at observation <span class="math inline">n</span>. Penalising these derivatives encourages the encoder to be less sensitive to small input changes near the training observations. This is the idea behind a <strong>contractive autoencoder</strong>.</p>
+<p>These penalties have different effects. Weight penalties act on model parameters. Sparsity penalties act on code values. Sensitivity penalties act on how codes change with the input.</p>
+<p>The code penalties above are sums over training observations, matching the slides. If we instead average them over observations, we must adjust <span class="math inline">\lambda</span> to obtain the same overall penalty strength.</p>
+<h2 id="weight-decay-in-the-digit-experiment">Weight Decay in the Digit Experiment</h2>
+<p>The digit experiment trains the same network with several squared-weight penalty strengths. The smallest validation error occurs at <span class="math inline">\lambda=10^{-3}</span>.</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th style="text-align: right;">Training error</th>
+<th style="text-align: right;">Validation error</th>
+<th style="text-align: right;">Test error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No weight penalty, <span class="math inline">\lambda=0</span></td>
+<td style="text-align: right;"><span class="math inline">1.01</span></td>
+<td style="text-align: right;"><span class="math inline">3.23</span></td>
+<td style="text-align: right;"><span class="math inline">3.47</span></td>
+</tr>
+<tr>
+<td>Chosen penalty, <span class="math inline">\lambda=10^{-3}</span></td>
+<td style="text-align: right;"><span class="math inline">1.45</span></td>
+<td style="text-align: right;"><span class="math inline">2.17</span></td>
+<td style="text-align: right;"><span class="math inline">2.19</span></td>
+</tr>
+<tr>
+<td>Stronger penalty, <span class="math inline">\lambda=10^{-2}</span></td>
+<td style="text-align: right;"><span class="math inline">2.65</span></td>
+<td style="text-align: right;"><span class="math inline">2.84</span></td>
+<td style="text-align: right;"><span class="math inline">2.88</span></td>
+</tr>
+</tbody>
+</table>
+<p>These numbers report reconstruction error only. They exclude the penalty term used during training.</p>
+<p>With the chosen penalty, training error increases from <span class="math inline">1.01</span> to <span class="math inline">1.45</span>, but test error falls from <span class="math inline">3.47</span> to <span class="math inline">2.19</span>. The model fits the training images less closely and reconstructs new images more accurately.</p>
+<p>Increasing the penalty further raises both validation and test error. The stronger restriction prevents the model from fitting useful structure as well.</p>
+<p class="notes-figure"><img src="../slides/media/l9/notes-digit-regularisation.png" alt="Training and test reconstruction errors for different weight penalties, with decoded images from the selected model." /></p>
+<p><em>The dashed vertical line marks the penalty selected using validation data. The horizontal dashed line is PCA's test error. The images on the right come from the selected neural decoder.</em></p>
+<p>The <a class="slide-link" href="../slides/lecture-09.html#57" target="_blank" rel="noopener">weight-decay slide</a> shows this comparison. We use the validation set to select the penalty and the test set to assess the selected model, as in Lecture 5.</p>
+<hr />
+<h1 id="further-reading-other-losses-and-training-tasks">Further Reading: Other Losses and Training Tasks</h1>
+<p>The main lecture uses squared reconstruction error. We can also change how errors are measured, or construct a different task from the inputs. These are the extensions in <a class="slide-link" href="../slides/lecture-09.html#58" target="_blank" rel="noopener">the additional slides</a>.</p>
+<h2 id="other-reconstruction-losses">Other Reconstruction Losses</h2>
+<p><strong>Squared error</strong> adds squared coordinate differences:</p>
+<p><span class="math display">\[\ell(\mathbf{x},\hat{\mathbf{x}})
+=\sum_d(x_d-\hat{x}_d)^2.\]</span></p>
+<p>Large errors receive a large penalty. With fixed noise variance, this corresponds to a Gaussian observation model.</p>
+<p><strong>Absolute error</strong> uses</p>
+<p><span class="math display">\[\ell(\mathbf{x},\hat{\mathbf{x}})
+=\sum_d|x_d-\hat{x}_d|.\]</span></p>
+<p>It grows linearly with the size of an error, so an extreme error has less influence than under squared loss. It corresponds to a Laplace noise model with fixed scale.</p>
+<p><strong>Binary cross-entropy</strong> is appropriate when each target coordinate is binary and the decoder predicts its probability. For <span class="math inline">x_d\in\{0,1\}</span> and <span class="math inline">0&lt;\hat{x}_d&lt;1</span>,</p>
+<p><span class="math display">\[\ell(\mathbf{x},\hat{\mathbf{x}})
+=-\sum_d\left[
+x_d\log\hat{x}_d+(1-x_d)\log(1-\hat{x}_d)
+\right].\]</span></p>
+<p>Here <span class="math inline">\hat{x}_d</span> is the predicted probability that the target coordinate is 1. The output interpretation should agree with the loss.</p>
+<p><strong>Weighted squared error</strong> uses different positive weights for different coordinates:</p>
+<p><span class="math display">\[\ell(\mathbf{x},\hat{\mathbf{x}})
+=\sum_d a_d(x_d-\hat{x}_d)^2,
+\qquad a_d&gt;0.\]</span></p>
+<p>A larger <span class="math inline">a_d</span> makes errors in coordinate <span class="math inline">d</span> more costly. Choosing these weights is another way to express which differences matter.</p>
+<h2 id="denoising-autoencoders">Denoising Autoencoders</h2>
+<p>A denoising autoencoder receives a corrupted input but tries to reconstruct the clean observation. For additive noise,</p>
+<p><span class="math display">\[\tilde{\mathbf{x}}=\mathbf{x}+\boldsymbol{\eta}.\]</span></p>
+<p>The training objective is</p>
+<p><span class="math display">\[\min_{\phi,\theta}
+\frac{1}{N}\sum_{n=1}^{N}
+\mathbb{E}_{\boldsymbol{\eta}}\left[
+\|\mathbf{x}_n-g_{\theta}(f_{\phi}(\mathbf{x}_n+\boldsymbol{\eta}))\|^2
+\right].\]</span></p>
+<p>The expectation averages over the corruption we apply. We know the clean target because we start with an observation and add the noise ourselves.</p>
+<p>This task encourages the model to use relationships among input coordinates to recover the original observation. For an image, neighbouring pixels and repeated shapes can help reconstruct a corrupted region.</p>
+<p>Adding noise to the input is a separate choice from using squared error at the output. Squared error specifies how we score the reconstruction. Denoising specifies what information the encoder receives.</p>
+<h2 id="masked-prediction">Masked Prediction</h2>
+<p>Another task hides part of an observation and asks the model to predict the missing part. For example, we can show the top half of a digit image and use the bottom half as the target.</p>
+<p>The training data provide the hidden values before we mask them. The model must use the visible context to predict them. The same idea can be applied to missing words or image patches.</p>
+<h2 id="contrastive-learning">Contrastive Learning</h2>
+<p>We can also create two versions of the same observation, for example by shifting an image slightly. A contrastive objective encourages their representations to be similar and distinguishes them from representations of other observations.</p>
+<p>The comparison with other observations matters. If we only asked the two codes to agree, an encoder could output the same constant code for every input. A contrastive objective includes a way to discourage this collapse.</p>
+<p>The transformations express assumptions about what should stay the same. A small shift might preserve an image's identity, while a transformation that removes the object may not.</p>
+<p>The <a class="slide-link" href="../slides/lecture-09.html#59" target="_blank" rel="noopener">input and target examples</a> illustrate denoising, masking, and contrastive learning on a digit image. All three construct training tasks from the observations themselves.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>Clustering begins with a definition of similarity. K-means uses squared distance to cluster centres and assigns each observation to exactly one centre. Its assignment and update steps each minimise the same loss over one set of variables. The loss cannot increase, but different initial centres can lead to different final solutions.</p>
+<p>An autoencoder learns a representation by reconstructing its input. The encoder maps the input to a code. The decoder maps the code to a reconstruction. Reconstruction loss determines which errors training tries to reduce.</p>
+<p>A linear decoder restricts reconstructions to a subspace. With squared error, the best subspace retains the greatest variance and is the PCA subspace. A nonlinear decoder can reconstruct points along a curve while still using a small code.</p>
+<p>A small code alone does not prevent overfitting or guarantee useful features. We must also consider the capacity of the encoder and decoder, their architecture, and any regularisation. Validation data help us choose these settings. Separate test data tell us how well the chosen model reconstructs new observations.</p>
+<p>Next, we will study variational autoencoders. These introduce probability distributions over latent variables and a probabilistic model of how those variables produce observations.</p>
+<hr />
+<h1 id="reading">Reading</h1>
+<p><strong>PRML — Christopher Bishop, <em>Pattern Recognition and Machine Learning</em></strong></p>
+<ul>
+<li><strong>§9.1, K-means Clustering:</strong> the squared-distance objective and alternating updates.</li>
+<li><strong>§12.1.1–12.1.2, PCA:</strong> maximum retained variance and minimum reconstruction error.</li>
+<li><strong>§12.4.2, Autoassociative Neural Networks:</strong> the connection between autoencoders and dimensionality reduction.</li>
+</ul>
+<p>The <a href="https://www.microsoft.com/en-us/research/uploads/prod/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf">complete PRML textbook</a> is available from the author. The probabilistic PCA and mixture-model derivations are beyond this lecture's scope.</p>
+<p><strong>Goodfellow, Bengio, and Courville, <em>Deep Learning</em></strong></p>
+<p>Read the <a href="https://www.deeplearningbook.org/contents/autoencoders.html">Chapter 14 introduction and §14.1–14.2</a> for undercomplete and regularised autoencoders. For optional reading, see §14.6 on manifold learning, §14.7 on contractive autoencoders, and Chapter 15 on representation learning.</p>
+<p><strong>Optional: <em>An Introduction to Statistical Learning</em></strong></p>
+<p>Read <strong>Chapter 12</strong> in the second R edition or the Python edition for PCA and clustering. The <a href="https://www.statlearning.com/">authors' website</a> provides both editions.</p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
