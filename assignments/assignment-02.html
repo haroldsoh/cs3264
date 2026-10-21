@@ -359,6 +359,17 @@
     </div>
   </header>
 
+  <div class="callout">
+    <div class="callout-title">Updated 21 October 2026</div>
+    <p>This version replaces the one published on 12 October. Download the notebook and the JSON template again and use this version. The top of the notebook shows its version date.</p>
+    <p>What changed:</p>
+    <ul style="margin-bottom:0;">
+      <li>The notebook installs fixed package versions, the same as Assignment 1: PyTorch 2.11.0 with CUDA 12.8, Transformers 5.16.1, and Tokenizers 0.23.3. Section 6 says how to install them.</li>
+      <li>Two topic names were added for the updated syllabus: <code class="inline">autoencoders</code> and <code class="inline">diffusion_models</code> (Section 2).</li>
+      <li>The answer extractor and the export checks have small fixes.</li>
+    </ul>
+  </div>
+
   <div class="intro">
     <p><strong>In one sentence:</strong> take a question that Qwen3-1.7B gets wrong, build a repair that makes it answer correctly, and test whether the repair also works on questions it has not seen.</p>
     <p style="margin-bottom:0;">In Assignment 1 you found questions that the model gets wrong. In this assignment you fix one of those mistakes. The fix must be reusable: it has to work on new questions, not just the one you started from. You will test it the way an ML method is tested: against a baseline and a control, on new questions it has not seen, and on questions the model already gets right.</p>
