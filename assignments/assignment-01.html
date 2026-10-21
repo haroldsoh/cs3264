@@ -354,7 +354,7 @@
       <span><b>Course:</b> <a href="https://haroldsoh.com/cs3264/">CS3264 Foundations of Machine Learning</a></span>
       <span><b>Individual work</b></span>
       <span><b>Deadline:</b> Friday 13 November 2026, 23:59 (last Friday of lectures)</span>
-      <span><a href="assignment-02.html">Assignment 2: Repair the Model ↗</a></span>
+      <span><a href="https://haroldsoh.com/cs3264/assignments/assignment-02.html">Assignment 2: Repair the Model ↗</a></span>
     </div>
   </header>
 
@@ -384,7 +384,7 @@
       <span class="sec-tag">2</span>
       <h2>Topics you can write about</h2>
     </div>
-    <p>Pick a topic for each question from this fixed list — it must match one of these six blocks from the syllabus:</p>
+    <p>Pick one topic name from the list below for each question and use it in the <code class="inline">category</code> field. All previously allowed topics remain valid, including kernels and SVMs, which are no longer taught this semester. The list also covers the new topics in the updated course schedule.</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Topic name (use this exact word)</th><th>What it covers</th></tr></thead>
@@ -393,11 +393,15 @@
           <tr><td class="mono">classification</td><td>Classification, naive Bayes, overfitting, bias-variance (Weeks 3–5)</td></tr>
           <tr><td class="mono">pac_learning</td><td>Learning theory / PAC bounds (Week 6)</td></tr>
           <tr><td class="mono">nn_backprop</td><td>Neural networks, backpropagation, CNNs, transformers, SGD (Weeks 8–9)</td></tr>
-          <tr><td class="mono">kernels_svm</td><td>Kernels, support vector machines (Week 10)</td></tr>
-          <tr><td class="mono">unsupervised</td><td>k-means, EM, VAEs, KL divergence (Weeks 11–12)</td></tr>
+          <tr><td class="mono">kernels_svm</td><td>Kernels, support vector machines (still accepted)</td></tr>
+          <tr><td class="mono">unsupervised</td><td>k-means, PCA, Gaussian mixtures, EM, latent variable models, variational inference, VAEs, ELBO, KL divergence (Weeks 10–11)</td></tr>
+          <tr><td class="mono">autoencoders</td><td>Autoencoders: encoding and reconstruction (Week 10)</td></tr>
+          <tr><td class="mono">diffusion_models</td><td>Diffusion models, forward noising and denoising (Week 12)</td></tr>
         </tbody>
       </table>
     </div>
+    <p>Choose the topic that best matches the main concept tested. Use <code class="inline">unsupervised</code> for clustering, PCA, Gaussian mixtures, EM, latent variable models, variational inference, VAEs, the ELBO and KL divergence. Use <code class="inline">autoencoders</code> only for questions about autoencoders themselves, such as encoding and reconstruction. Do not assign different tags to similar questions just to meet the topic coverage requirement.</p>
+    <p>You do not need to replace questions that already meet the assignment requirements, and you do not have to use the new topics. The requirement remains <strong>6 questions, at least 4 different topics, and at most 2 questions per topic</strong>.</p>
   </section>
 
   <section>
@@ -432,7 +436,7 @@
         <tbody>
           <tr><td class="mono">student_id</td><td>Your matriculation number (e.g. <code class="inline">A0123456X</code>) — the same on all 6 lines</td></tr>
           <tr><td class="mono">question_number</td><td>Which question this is: 1 through 6</td></tr>
-          <tr><td class="mono">category</td><td>One of the six topic names from Section 2</td></tr>
+          <tr><td class="mono">category</td><td>One of the topic names listed in Section 2</td></tr>
           <tr><td class="mono">failure_mode</td><td>A short label for why you expect the model to fail — one of: <code class="inline">formula_confusion</code>, <code class="inline">sign_or_direction</code>, <code class="inline">multi_step_compounding</code>, <code class="inline">edge_case_or_degenerate</code>, <code class="inline">arithmetic_precision</code>, <code class="inline">definition_ambiguity</code>, or <code class="inline">other</code></td></tr>
           <tr><td class="mono">question_text</td><td>The question itself — nothing else. Do not add your own "give me the final answer" instruction; we add this automatically so every student's question looks the same to the model.</td></tr>
           <tr><td class="mono">derivation</td><td>Your full written solution, step by step</td></tr>
@@ -486,7 +490,7 @@
 
     <h3>Validate your question with the provided notebook</h3>
     <p>A ready-to-run notebook, <a href="cs3264_assignment1_test_your_question.ipynb"><code class="inline">cs3264_assignment1_test_your_question.ipynb</code></a>, is provided together with this document. <a href="https://colab.research.google.com/github/haroldsoh/cs3264/blob/main/assignments/cs3264_assignment1_test_your_question.ipynb">Open it directly in Google Colab</a> (free, needs only a Google account), go to <code class="inline">Runtime → Change runtime type</code> and select a T4 GPU, then paste in your question text, your final answer, and your tolerance. It downloads and runs the exact same model with the exact same settings used for grading — greedy decoding, thinking mode on, the same system prompt and the same fixed instruction appended to your question — and tells you directly whether the model matches your answer.</p>
-    <p>The notebook also runs your question a second time and checks the two runs agree. Because decoding is greedy, this confirms the result is deterministic on that machine. Grading is run on the same type of GPU as Colab's free tier (an NVIDIA T4) with the same software settings, so the notebook is the closest preview of grading you can get.</p>
+    <p>Section 1 of the notebook installs the reference package versions, including PyTorch 2.11.0 with CUDA 12.8 and Transformers 5.16.1. After installation, restart the session and continue with the import cell, which checks the versions. Grading uses an NVIDIA T4 with these pinned package versions. The notebook also repeats your question to check stability in your current runtime. Matching runs do not guarantee identical answers across different software versions or GPUs. If you checked a question with an earlier version of the notebook, run it again with this version.</p>
     <p style="margin-bottom:0;">The notebook reports one of four verdicts: <code class="inline">NOT STUMPED</code>, <code class="inline">STUMPED</code>, <code class="inline">STUMPED (no readable number)</code>, or <code class="inline">NO RESULT</code>. The last one means the model ran out of its 8192-token budget before finishing, usually because it fell into a repetition loop. Such a run earns no stump marks in grading (see Section 6), so if you see it, rewrite the question until the model commits to a definite answer.</p>
 
     <h3>A quick, informal check: Qwen Chat</h3>

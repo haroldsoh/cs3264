@@ -202,7 +202,7 @@
     "question_fields": {
       "id": "Unique, stable question ID across methods and repeats. Changes to question text, the answer, scoring settings or group/anchor assignment need a new ID and run name. Editing only derivation or independent_check does not; export your current notes using question_notes=MY_QUESTIONS.",
       "split": "The question group: anchor, development, heldout, or regression. This differs from a run stage: an anchor remains an anchor during a development run.",
-      "topic": "One of the six A1 topic names: regression_prob, classification, pac_learning, nn_backprop, kernels_svm, unsupervised. Name the topic in your report as well.",
+      "topic": "One of the A1 topic names: regression_prob, classification, pac_learning, nn_backprop, kernels_svm, unsupervised, autoencoders, diffusion_models. Name the topic in your report as well.",
       "anchor_id": "For a variant, the originating anchor ID; otherwise null. The referenced anchor must be in questions.",
       "variant_type": "numerical_wording or condition_structural for variants; otherwise null. The final anchor has one development variant and one held-out variant of each type.",
       "question": "Complete question text, including all assumptions and numeric values needed to solve it.",
