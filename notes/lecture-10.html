@@ -56,7 +56,9 @@
 <li class="toc-h1"><a href="#three-choices-for-the-approximate-posterior">Three Choices for the Approximate Posterior</a></li>
 <li class="toc-h2"><a href="#the-dataset-elbo">The Dataset ELBO</a></li>
 <li class="toc-h2"><a href="#attempt-1-fix-every-approximation-to-the-prior">Attempt 1: Fix Every Approximation to the Prior</a></li>
+<li class="toc-h3"><a href="#why-does-this-learn-the-average-image">Why Does This Learn the Average Image?</a></li>
 <li class="toc-h2"><a href="#attempt-2-fit-one-gaussian-per-image">Attempt 2: Fit One Gaussian per Image</a></li>
+<li class="toc-h3"><a href="#using-the-learnt-model">Using the Learnt Model</a></li>
 <li class="toc-h2"><a href="#attempt-3-predict-the-gaussian-with-an-encoder">Attempt 3: Predict the Gaussian with an Encoder</a></li>
 <li class="toc-h2"><a href="#comparing-the-two-fitted-families">Comparing the Two Fitted Families</a></li>
 <li class="toc-h1"><a href="#training-a-variational-autoencoder">Training a Variational Autoencoder</a></li>
@@ -75,9 +77,10 @@
 <article>
 <h1 id="lecture-10-unsupervised-learning-ii--variational-inference-and-variational-autoencoders">Lecture 10: Unsupervised Learning II — Variational Inference and Variational Autoencoders</h1>
 <h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
-<p>An autoencoder learns to reconstruct an input from a code, but its reconstruction objective does not specify how to sample codes for generating new observations. In this lecture, we introduce a probability model with a prior over codes and a likelihood for observations given a code.</p>
-<p>We use posterior inference to train the model, beginning with a noisy energy sensor whose reading depends on a cart's squared velocity. Its posterior has two peaks for the two directions of motion. <strong>Variational inference</strong> approximates this posterior with a simpler distribution whose parameters we fit by maximising the <strong>evidence lower bound (ELBO)</strong>.</p>
-<p>We then apply the same method to images, first fitting a separate Gaussian for each image and then using an encoder to predict its parameters. This gives a <strong>variational autoencoder (VAE)</strong>, which we train using the <strong>reparameterisation trick</strong> to pass reconstruction gradients through sampled codes.</p>
+<p>In Lecture 9, we learnt representations by reconstructing observations. An encoder mapped an image to a code, and a decoder used that code to reconstruct the image. We also tried choosing codes ourselves and looking at the resulting images.</p>
+<p>Now suppose we want to generate a new image. We need a way to sample a code, so we introduce a prior over codes and a likelihood for images given a code. To train this model, we will use the posterior distribution of each image's code.</p>
+<p>We begin with a simpler example: estimating a cart's velocity from a noisy energy reading. The posterior is easy to describe but harder to calculate. <strong>Variational inference</strong> lets us approximate it with a Gaussian, whose parameters we fit by maximising the <strong>evidence lower bound (ELBO)</strong>.</p>
+<p>We will then apply the same method to images and compare three choices for the approximate posterior. These lead to the <strong>variational autoencoder (VAE)</strong>, whose encoder predicts a Gaussian for each input image. The <strong>reparameterisation trick</strong> allows us to train this encoder and the decoder together using backpropagation.</p>
 <hr />
 <h2 id="learning-objectives">Learning Objectives</h2>
 <p>By the end of this lesson, you should be able to:</p>
@@ -116,12 +119,12 @@ p(x)=\int p(x\mid z)p(z)\,dz.\]</span></p>
 <hr />
 <h1 id="approximating-a-distribution">Approximating a Distribution</h1>
 <h2 id="a-family-and-an-objective">A Family and an Objective</h2>
-<p>We choose an approximate posterior <span class="math inline">q</span> from a family of distributions <span class="math inline">\mathcal{Q}</span>. For the sensor example, let</p>
+<p>For the sensor example, we will approximate the posterior with a Gaussian:</p>
 <p><span class="math display">\[q_{\mu,s}(z)=\mathcal{N}(z;\mu,s^2),
 \qquad \mu\in\mathbb{R},\quad s&gt;0.\]</span></p>
-<p>The mean <span class="math inline">\mu</span> controls the location and the standard deviation <span class="math inline">s</span> controls the spread, while the observed <span class="math inline">x</span> and known noise level <span class="math inline">\tau</span> stay fixed. Choosing an objective <span class="math inline">d</span> turns approximation into optimisation:</p>
-<p><span class="math display">\[q^*=\arg\min_{q\in\mathcal{Q}}d(q,p),\]</span></p>
-<p>where <span class="math inline">p</span> is the target distribution. A single Gaussian cannot reproduce both posterior peaks, so the objective will determine which approximation we obtain.</p>
+<p>Each choice of mean <span class="math inline">\mu</span> and standard deviation <span class="math inline">s</span> gives one distribution in our family <span class="math inline">\mathcal{Q}</span>. We want to find the pair that gives the best approximation, keeping the observed <span class="math inline">x</span> and known noise level <span class="math inline">\tau</span> fixed. If <span class="math inline">d(q,p)</span> measures the difference from the target <span class="math inline">p</span>, we can write this as</p>
+<p><span class="math display">\[q^*=\arg\min_{q\in\mathcal{Q}}d(q,p).\]</span></p>
+<p>A single Gaussian cannot reproduce both posterior peaks, so we need to decide how to measure the approximation error. We will use KL divergence.</p>
 <h2 id="kl-divergence-as-an-expectation">KL Divergence as an Expectation</h2>
 <p>The <strong>Kullback–Leibler divergence</strong>, or <strong>KL divergence</strong>, is</p>
 <p><span class="math display">\[\boxed{
@@ -310,7 +313,7 @@ p_{\theta}(\mathbf{x}\mid\mathbf{z})
 \mathbf{x};g_{\theta}(\mathbf{z}),\tau^2\mathbf{I}
 \big).
 }\]</span></p>
-<p>The prior specifies how to sample codes, and the CNN decoder outputs the mean image for the likelihood. Its weights are <span class="math inline">\theta</span>, while <span class="math inline">\tau</span> is a fixed observation noise standard deviation. The digit experiment uses <span class="math inline">d=16</span> latent coordinates, <span class="math inline">D=784</span> pixels for a <span class="math inline">28\times28</span> image, and <span class="math inline">\tau=0.5</span>.</p>
+<p>The prior specifies how to sample codes. Given a code, the CNN decoder <span class="math inline">g_{\theta}</span> produces the mean image, and <span class="math inline">\tau</span> sets the observation noise around that mean. We learn the decoder weights <span class="math inline">\theta</span> while keeping <span class="math inline">\tau</span> fixed. The digit experiment uses <span class="math inline">d=16</span> latent coordinates, <span class="math inline">D=784</span> pixels for a <span class="math inline">28\times28</span> image, and <span class="math inline">\tau=0.5</span>.</p>
 <p>The Gaussian log likelihood is</p>
 <p><span class="math display">\[\log p_{\theta}(\mathbf{x}\mid\mathbf{z})
 =-\frac{D}{2}\log(2\pi\tau^2)
@@ -331,13 +334,33 @@ p_{\theta}(\mathbf{x}\mid\mathbf{z}^{(k)}),
 <p><span class="math display">\[\mathcal{L}(\theta,q;\mathbf{x})
 =\mathbb{E}_q[\log p_{\theta}(\mathbf{x}\mid\mathbf{z})]
 -D_{\mathrm{KL}}[q(\mathbf{z})\|p(\mathbf{z})].\]</span></p>
-<p>With <span class="math inline">\theta</span> fixed, we optimise <span class="math inline">q</span> to approximate the posterior; we also optimise <span class="math inline">\theta</span> to learn the decoder. If <span class="math inline">q</span> matches the exact posterior, the ELBO equals the log likelihood. We will compare three choices for <span class="math inline">q</span>.</p>
+<p>There are now two sets of quantities to learn. With the decoder fixed, we fit <span class="math inline">q</span> to its posterior; with <span class="math inline">q</span> fixed, we improve the decoder's likelihood for the sampled codes. We use the ELBO for both, and it equals the log likelihood when <span class="math inline">q</span> matches the exact posterior.</p>
+<p>We still need to choose how to represent <span class="math inline">q</span>. The next three attempts use the same image model but make different choices for this distribution.</p>
 <hr />
 <h1 id="three-choices-for-the-approximate-posterior">Three Choices for the Approximate Posterior</h1>
 <h2 id="the-dataset-elbo">The Dataset ELBO</h2>
-<p>Each image has its own latent code, and we use independent approximate posteriors:</p>
-<p><span class="math display">\[q(\mathbf{z}_{1:N})=\prod_{n=1}^{N}q_n(\mathbf{z}_n).\]</span></p>
-<p>Here <span class="math inline">\mathbf{z}_{1:N}</span> denotes the codes for all <span class="math inline">N</span> images and <span class="math inline">q_n</span> is the distribution for image <span class="math inline">n</span>. With independent image–code pairs in the model, the dataset ELBO is a sum:</p>
+<p>So far, we have written the ELBO for one observation. For a dataset of <span class="math inline">N</span> images, each image <span class="math inline">\mathbf{x}_n</span> has its own code <span class="math inline">\mathbf{z}_n</span>. We assume that the image–code pairs are independent and choose an approximate posterior that also factorises across images:</p>
+<p><span class="math display">\[\begin{aligned}
+p_{\theta}(\mathbf{x}_{1:N},\mathbf{z}_{1:N})
+&amp;=\prod_{n=1}^{N}p_{\theta}(\mathbf{x}_n\mid\mathbf{z}_n)p(\mathbf{z}_n),\\
+q(\mathbf{z}_{1:N})&amp;=\prod_{n=1}^{N}q_n(\mathbf{z}_n).
+\end{aligned}\]</span></p>
+<p>Here <span class="math inline">\mathbf{x}_{1:N}</span> and <span class="math inline">\mathbf{z}_{1:N}</span> collect all the images and codes, while <span class="math inline">q_n</span> is the approximate posterior for image <span class="math inline">n</span>.</p>
+<p>Apply the ELBO to the whole dataset:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}_{\mathrm{data}}
+={}&amp;\mathbb{E}_q[\log p_{\theta}(\mathbf{x}_{1:N}\mid\mathbf{z}_{1:N})]\\
+&amp;-D_{\mathrm{KL}}[q(\mathbf{z}_{1:N})\|p(\mathbf{z}_{1:N})].
+\end{aligned}\]</span></p>
+<p>Taking the logarithm of each product gives a sum over images. Expanding the KL in the same way gives</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}_{\mathrm{data}}
+={}&amp;\mathbb{E}_q\left[\sum_{n=1}^{N}
+\log p_{\theta}(\mathbf{x}_n\mid\mathbf{z}_n)\right]\\
+&amp;-\mathbb{E}_q\left[\sum_{n=1}^{N}
+\log\frac{q_n(\mathbf{z}_n)}{p(\mathbf{z}_n)}\right].
+\end{aligned}\]</span></p>
+<p>We can take the sums outside the expectations. Each term depends on only one code <span class="math inline">\mathbf{z}_n</span>, so its expectation under the full <span class="math inline">q</span> reduces to an expectation under <span class="math inline">q_n</span>:</p>
 <p><span class="math display">\[\boxed{
 \mathcal{L}_{\mathrm{data}}
 =\sum_{n=1}^{N}\left(
@@ -345,27 +368,73 @@ p_{\theta}(\mathbf{x}\mid\mathbf{z}^{(k)}),
 -D_{\mathrm{KL}}[q_n\|p(\mathbf{z}_n)]
 \right).
 }\]</span></p>
+<p>Each image contributes its own expected log likelihood and prior KL. We will use this expression for all three attempts.</p>
 <h2 id="attempt-1-fix-every-approximation-to-the-prior">Attempt 1: Fix Every Approximation to the Prior</h2>
-<p>Set <span class="math inline">q_n(\mathbf{z}_n)=p(\mathbf{z}_n)=\mathcal{N}(\mathbf{0},\mathbf{I})</span>. Every prior KL is zero, giving</p>
-<p><span class="math display">\[\mathcal{L}_1(\theta)
-=-\frac{1}{2\tau^2}\sum_n
+<p>The simplest choice is to use the prior for every image:</p>
+<p><span class="math display">\[q_n(\mathbf{z}_n)=p(\mathbf{z}_n)=\mathcal{N}(\mathbf{0},\mathbf{I}).\]</span></p>
+<p>Substitute this into the dataset ELBO. The expectation is now under the prior, and every KL term is zero:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}_1(\theta)
+={}&amp;\sum_n\mathbb{E}_{p(\mathbf{z}_n)}
+[\log p_{\theta}(\mathbf{x}_n\mid\mathbf{z}_n)]\\
+&amp;-\sum_n\underbrace{D_{\mathrm{KL}}[p(\mathbf{z}_n)\|p(\mathbf{z}_n)]}_{0}\\
+={}&amp;\sum_n\mathbb{E}_{p(\mathbf{z}_n)}
+[\log p_{\theta}(\mathbf{x}_n\mid\mathbf{z}_n)].
+\end{aligned}\]</span></p>
+<p>Next, substitute the Gaussian log likelihood:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}_1(\theta)
+={}&amp;\sum_n\left(-\frac{D}{2}\log(2\pi\tau^2)\right)\\
+&amp;-\frac{1}{2\tau^2}\sum_n\mathbb{E}_{p(\mathbf{z}_n)}
+\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right]\\
+={}&amp;C-\frac{1}{2\tau^2}\sum_n
 \mathbb{E}_{p(\mathbf{z}_n)}
-\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right]+C,\]</span></p>
-<p>where <span class="math inline">C=-ND\log(2\pi\tau^2)/2</span> is constant. The sampled codes are independent of the target images, so the decoder must reconstruct all images from the same code distribution.</p>
-<p>For any fixed code, write the output as <span class="math inline">\mathbf{y}=g_{\theta}(\mathbf{z})</span>. Minimising its total squared error gives</p>
-<p><span class="math display">\[\nabla_{\mathbf{y}}\sum_n\|\mathbf{x}_n-\mathbf{y}\|^2
-=2N\mathbf{y}-2\sum_n\mathbf{x}_n=0,
-\qquad
-\mathbf{y}=\bar{\mathbf{x}}.\]</span></p>
-<p>The best output is therefore the average training image at every code. To learn different reconstructions, we need code distributions that depend on the input image.</p>
+\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right],
+\end{aligned}\]</span></p>
+<p>where <span class="math inline">C=-ND\log(2\pi\tau^2)/2</span>. Since <span class="math inline">C</span> and <span class="math inline">\tau</span> are fixed, maximising this ELBO is equivalent to</p>
+<p><span class="math display">\[\min_{\theta}\sum_n
+\mathbb{E}_{p(\mathbf{z}_n)}
+\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right].\]</span></p>
+<p>Only the decoder weights are learnt. For each target image, we draw a code from the same prior and train the decoder to reconstruct that target.</p>
+<h3 id="why-does-this-learn-the-average-image">Why Does This Learn the Average Image?</h3>
+<p>All images use the same prior, so we can take the sum inside a single expectation and write the total error as</p>
+<p><span class="math display">\[\mathbb{E}_{p(\mathbf{z})}\left[
+\sum_n\|\mathbf{x}_n-g_{\theta}(\mathbf{z})\|^2
+\right].\]</span></p>
+<p>For each code, the decoder output is compared with every target image. Write this output as <span class="math inline">\mathbf{y}=g_{\theta}(\mathbf{z})</span>. The error inside the expectation is</p>
+<p><span class="math display">\[\sum_{n=1}^{N}\|\mathbf{x}_n-\mathbf{y}\|^2.\]</span></p>
+<p>As in the k-means centre update from Lecture 9, differentiate and set the derivative to zero:</p>
+<p><span class="math display">\[2N\mathbf{y}-2\sum_{n=1}^{N}\mathbf{x}_n=0
+\quad\Longrightarrow\quad
+\mathbf{y}=\frac1N\sum_{n=1}^{N}\mathbf{x}_n=\bar{\mathbf{x}}.\]</span></p>
+<p>The best output is the average image at every code. We need a way to give different images different code distributions.</p>
 <h2 id="attempt-2-fit-one-gaussian-per-image">Attempt 2: Fit One Gaussian per Image</h2>
-<p>Give each image a separate diagonal Gaussian:</p>
+<p>Now give each image its own mean and standard deviation vectors:</p>
 <p><span class="math display">\[q_n(\mathbf{z}_n)
 =\mathcal{N}\big(
 \mathbf{z}_n;\boldsymbol{\mu}_n,
 \operatorname{diag}(\mathbf{s}_n^2)
 \big).\]</span></p>
-<p>Each mean and standard deviation vector has <span class="math inline">d</span> entries, and the diagonal covariance makes the coordinates independent under <span class="math inline">q_n</span>. The prior KL is a sum of the scalar Gaussian KLs derived earlier, so the ELBO becomes</p>
+<p>Both vectors have <span class="math inline">d</span> entries, and the diagonal covariance makes the coordinates independent under <span class="math inline">q_n</span>. We will learn these Gaussian parameters along with the decoder weights.</p>
+<p>First, consider the likelihood term for image <span class="math inline">n</span>. The same Gaussian likelihood calculation gives</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbb{E}_{q_n}[\log p_{\theta}(\mathbf{x}_n\mid\mathbf{z}_n)]
+={}&amp;-\frac{D}{2}\log(2\pi\tau^2)\\
+&amp;-\frac{1}{2\tau^2}\mathbb{E}_{q_n}
+\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right].
+\end{aligned}\]</span></p>
+<p>The expectation is now under the image's fitted <span class="math inline">q_n</span>. Samples can therefore concentrate on codes whose decoded images are close to <span class="math inline">\mathbf{x}_n</span>.</p>
+<p>Next, calculate the prior KL. Both <span class="math inline">q_n</span> and the standard normal prior factorise over coordinates, so their log-density ratio is a sum over <span class="math inline">j</span>. Taking its expectation gives a sum of scalar Gaussian KLs:</p>
+<p><span class="math display">\[\begin{aligned}
+D_{\mathrm{KL}}[q_n\|p(\mathbf{z}_n)]
+&amp;=\sum_{j=1}^{d}
+D_{\mathrm{KL}}\left[
+\mathcal{N}(\mu_{nj},s_{nj}^2)\|\mathcal{N}(0,1)
+\right]\\
+&amp;=\frac12\sum_{j=1}^{d}
+\left(\mu_{nj}^2+s_{nj}^2-1-\log s_{nj}^2\right).
+\end{aligned}\]</span></p>
+<p>The second line uses the Gaussian KL formula from the energy-sensor example. Combining the likelihood and KL terms, then summing over images, gives</p>
 <p><span class="math display">\[\boxed{
 \begin{aligned}
 \mathcal{L}_2
@@ -379,29 +448,70 @@ p_{\theta}(\mathbf{x}\mid\mathbf{z}^{(k)}),
 \Bigg)+C.
 \end{aligned}
 }\]</span></p>
-<p>We maximise this over the decoder weights and all <span class="math inline">2Nd</span> Gaussian parameters, keeping the standard deviations positive. Each image can now use a different region of code space, while the prior KL controls how far its Gaussian moves from the prior.</p>
-<p>This model can already generate new images using the prior and trained decoder. For a new observed image, we keep the decoder fixed and fit a fresh Gaussian by maximising that image's ELBO, which requires a separate optimisation for each input.</p>
+<p>We maximise this over</p>
+<p><span class="math display">\[\theta,\qquad
+\boldsymbol{\mu}_1,\ldots,\boldsymbol{\mu}_N,
+\qquad
+\mathbf{s}_1,\ldots,\mathbf{s}_N,\]</span></p>
+<p>with positive standard deviations. There are <span class="math inline">2Nd</span> Gaussian parameters in addition to the decoder weights. The reconstruction term encourages accurate reconstructions from the sampled codes, while the prior KL penalises moving each Gaussian away from the prior.</p>
+<h3 id="using-the-learnt-model">Using the Learnt Model</h3>
+<p>We can already generate new images by sampling from the prior and applying the trained decoder. For a new observed image, however, we have no fitted Gaussian yet. We keep the decoder fixed, initialise a new mean and standard deviation vector, and maximise that image's ELBO.</p>
+<p>This works, but it requires a new optimisation for every input. We can make inference faster by learning a function that predicts the Gaussian parameters.</p>
 <h2 id="attempt-3-predict-the-gaussian-with-an-encoder">Attempt 3: Predict the Gaussian with an Encoder</h2>
-<p>An encoder with weights <span class="math inline">\phi</span> predicts the means and standard deviations from the image:</p>
-<p><span class="math display">\[\boxed{
-q_{\phi}(\mathbf{z}\mid\mathbf{x})
+<p>Let an encoder with weights <span class="math inline">\phi</span> compute</p>
+<p><span class="math display">\[\boldsymbol{\mu}_n=\boldsymbol{\mu}_{\phi}(\mathbf{x}_n),
+\qquad
+\mathbf{s}_n=\mathbf{s}_{\phi}(\mathbf{x}_n).\]</span></p>
+<p>These outputs define the approximate posterior</p>
+<p><span class="math display">\[q_n(\mathbf{z}_n)
+=q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)
 =\mathcal{N}\big(
-\mathbf{z};\boldsymbol{\mu}_{\phi}(\mathbf{x}),
-\operatorname{diag}(\mathbf{s}_{\phi}(\mathbf{x})^2)
-\big).
+\mathbf{z}_n;\boldsymbol{\mu}_n,
+\operatorname{diag}(\mathbf{s}_n^2)
+\big).\]</span></p>
+<p>The encoder produces <span class="math inline">d</span> means and <span class="math inline">d</span> standard deviations, from which we sample a code. We will use <span class="math inline">\boldsymbol{\mu}_n</span> and <span class="math inline">\mathbf{s}_n</span> below to keep the equations readable, remembering that both now depend on <span class="math inline">\phi</span> and the input image.</p>
+<p>Start from the dataset ELBO and substitute the encoder's distribution:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}_3(\theta,\phi)
+={}&amp;\sum_n\mathbb{E}_{q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)}
+[\log p_{\theta}(\mathbf{x}_n\mid\mathbf{z}_n)]\\
+&amp;-\sum_n D_{\mathrm{KL}}[
+q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)\|p(\mathbf{z}_n)].
+\end{aligned}\]</span></p>
+<p>Replacing the Gaussian log likelihood gives</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}_3(\theta,\phi)
+={}&amp;C-\frac{1}{2\tau^2}\sum_n
+\mathbb{E}_{q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)}
+\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right]\\
+&amp;-\sum_n D_{\mathrm{KL}}[
+q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)\|p(\mathbf{z}_n)].
+\end{aligned}\]</span></p>
+<p>Each <span class="math inline">q_{\phi}</span> is still a diagonal Gaussian, so we use the same KL formula as in Attempt 2:</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathcal{L}_3(\theta,\phi)
+={}&amp;C-\frac{1}{2\tau^2}\sum_n
+\mathbb{E}_{q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)}
+\left[\|\mathbf{x}_n-g_{\theta}(\mathbf{z}_n)\|^2\right]\\
+&amp;-\frac12\sum_n\sum_{j=1}^{d}
+\left(\mu_{nj}^2+s_{nj}^2-1-\log s_{nj}^2\right).
+\end{aligned}
 }\]</span></p>
-<p>Its <span class="math inline">2d</span> outputs specify a distribution rather than one code. We use the same ELBO as Attempt 2, with the Gaussian parameters now supplied by the encoder, and optimise both <span class="math inline">\theta</span> and <span class="math inline">\phi</span>.</p>
-<p>This is <strong>amortised inference</strong>: one trained encoder provides approximate-posterior parameters for any input image in a single pass. Together with the prior and probabilistic decoder, it forms the <strong>variational autoencoder</strong>.</p>
+<p>We now optimise the two networks' weights:</p>
+<p><span class="math display">\[\max_{\theta,\phi}\ \mathcal{L}_3(\theta,\phi).\]</span></p>
+<p>Changing <span class="math inline">\theta</span> changes the decoded images. Changing <span class="math inline">\phi</span> changes the Gaussian parameters for all inputs, affecting both the sampled codes in the reconstruction term and the prior KL.</p>
+<p>This is <strong>amortised inference</strong>: the encoder learns to predict approximate-posterior parameters, so a new image requires one encoder pass. Together with the prior and probabilistic decoder, it forms the <strong>variational autoencoder</strong>.</p>
 <h2 id="comparing-the-two-fitted-families">Comparing the Two Fitted Families</h2>
-<p>For a fixed decoder and training set, Attempt 2 can choose any allowed Gaussian parameters for each image. An encoder's outputs are one such choice, so Attempt 2 can match or exceed Attempt 3's best ELBO when both are fully optimised. The benefit of the encoder is fast inference through a shared computation.</p>
-<p>Sharing encoder weights preserves the factorisation across images: for fixed inputs and weights, the sampled codes remain independent under <span class="math inline">\prod_n q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)</span>.</p>
+<p>Fix the decoder and compare the best training-set ELBOs available to Attempts 2 and 3. Attempt 2 can choose each image's Gaussian parameters independently. Any collection of encoder outputs from Attempt 3 is also an allowed choice in Attempt 2, so Attempt 2 can match or exceed Attempt 3's best ELBO when both are fully optimised.</p>
+<p>The encoder's advantage is fast inference for new images. Sharing its weights still leaves the approximate posterior factorised across images: for fixed inputs and weights, the sampled codes are independent under <span class="math inline">\prod_n q_{\phi}(\mathbf{z}_n\mid\mathbf{x}_n)</span>.</p>
 <hr />
 <h1 id="training-a-variational-autoencoder">Training a Variational Autoencoder</h1>
 <h2 id="the-gradient-through-sampling">The Gradient Through Sampling</h2>
-<p>The reconstruction term averages over codes drawn from the encoder's Gaussian:</p>
+<p>We now have an encoder and a decoder to train, as in Lecture 9. The extra computation is sampling a code from the encoder's Gaussian. This sample is used to estimate the reconstruction term:</p>
 <p><span class="math display">\[\mathbb{E}_{q_{\phi}(\mathbf{z}\mid\mathbf{x})}
 [\log p_{\theta}(\mathbf{x}\mid\mathbf{z})].\]</span></p>
-<p>If the sampling operation returns a code with no gradient connection to the Gaussian parameters, reconstruction gradients reach the decoder but stop before the encoder. The encoder then receives only the analytic prior-KL gradient, which pushes its outputs towards the prior and loses the information needed for reconstruction.</p>
+<p>Suppose the sampling operation treats the drawn code as fixed during backpropagation. The reconstruction loss can train the decoder, but its gradient stops at the sample and cannot train the encoder. The encoder receives only the gradient from the prior KL, which pushes each Gaussian towards the prior. To learn useful codes, we also need the reconstruction gradient to reach the encoder's means and standard deviations.</p>
 <h2 id="the-reparameterisation-trick">The Reparameterisation Trick</h2>
 <p>We can draw the same Gaussian code by sampling standard normal noise and transforming it:</p>
 <p><span class="math display">\[\boxed{
@@ -550,7 +660,7 @@ q_{\phi}(\mathbf{z}\mid\mathbf{x})
 </table>
 <hr />
 <h1 id="summary">Summary</h1>
-<p>Variational inference fits a tractable distribution to a posterior by maximising the ELBO. For a fixed model, the difference between log evidence and ELBO is the reverse KL to the posterior, so improving the bound improves the approximation.</p>
+<p>Variational inference fits a simpler distribution to a posterior by maximising the ELBO. For a fixed model, the difference between log evidence and ELBO is the reverse KL to the posterior, so improving the bound improves the approximation.</p>
 <p>A VAE applies this method to a model with a latent prior and neural decoder. Its encoder predicts approximate-posterior parameters for each input, and reparameterisation lets reconstruction gradients train both networks. We use the encoder for reconstruction and the prior for generation.</p>
 <p>Next, we will study diffusion models as another way to model and generate observations.</p>
 <hr />
