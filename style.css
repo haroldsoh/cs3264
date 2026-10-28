@@ -125,6 +125,13 @@ ul.plain li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;he
 .sched a{font-family:var(--font-sans);font-size:13px;text-decoration:none;white-space:nowrap}
 .sched a:hover{text-decoration:underline}
 .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* Paper titles are long (the Luo tutorial is 332px unbroken), and with nowrap the six-column
+   table only fits from 922px: a 768px iPad had to scroll it 154px sideways, and a phone card
+   51px. Reading links wrap up to 960px; wider screens keep the layout they had. The other
+   schedule links are short and stay unbroken. */
+@media (max-width:960px){
+  .sched td[data-l="Reading"] a{white-space:normal}
+}
 
 /* ---------- assessment bar ----------
    The four segment colours are deliberately NOT themed. They are data, so they must
@@ -199,9 +206,6 @@ footer a{color:var(--ink-soft)}
   .sched tr.brk,.sched tr.hi{padding-left:12px;border-left:3px solid var(--rule)}
   .sched tr.hi{border-left-color:var(--accent)}
   .sched a{font-size:15px}
-  /* Paper titles are wider than a phone (the Luo tutorial is 376px against a 323px cell
-     at 375px), so reading links wrap here; the short links elsewhere stay unbroken. */
-  .sched td[data-l="Reading"] a{white-space:normal}
 
   .stack{height:auto;flex-direction:column}
   .stack .seg{flex-direction:row;justify-content:space-between;padding:12px 18px}
