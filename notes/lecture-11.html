@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS3264 · Lecture 11 notes</title>
+<meta name="description" content="CS3264 Foundations of Machine Learning, lecture notes: Lecture 11: Unsupervised Learning III — Diffusion Models">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../slides/media/katex/katex.min.css">
+<link rel="stylesheet" href="notes.css">
+<style>
+.notes article .notes-figure{max-width:none}
+.notes article img{display:block;max-width:100%;height:auto;margin:20px auto 10px}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="../index.html">CS<span>3264</span></a>
+    <ul>
+      <li><a href="../index.html#schedule">Schedule</a></li>
+      <li><a href="../slides/lecture-11.html" target="_blank" rel="noopener">Lecture 11 slides</a></li>
+      <li><button id="themeBtn" type="button">&#9681;</button></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap notes">
+<aside class="toc" aria-label="Contents">
+<details open>
+<summary>Contents</summary>
+<ol class="toc-list">
+<li class="toc-h2"><a href="#summary-of-key-ideas">Summary of Key Ideas</a></li>
+<li class="toc-h2"><a href="#learning-objectives">Learning Objectives</a></li>
+<li class="toc-h1"><a href="#hierarchical-latent-variable-models">Hierarchical Latent-Variable Models</a></li>
+<li class="toc-h2"><a href="#generating-through-several-codes">Generating Through Several Codes</a></li>
+<li class="toc-h2"><a href="#a-hierarchy-of-t-levels">A Hierarchy of <span class="math inline">T</span> Levels</a></li>
+<li class="toc-h1"><a href="#attempt-1-a-hierarchical-vae">Attempt 1: A Hierarchical VAE</a></li>
+<li class="toc-h2"><a href="#learning-a-gaussian-at-each-level">Learning a Gaussian at Each Level</a></li>
+<li class="toc-h2"><a href="#expanding-the-elbo">Expanding the ELBO</a></li>
+<li class="toc-h2"><a href="#training-the-hierarchy">Training the Hierarchy</a></li>
+<li class="toc-h1"><a href="#attempt-2-a-fixed-forward-process">Attempt 2: A Fixed Forward Process</a></li>
+<li class="toc-h2"><a href="#adding-noise-to-images">Adding Noise to Images</a></li>
+<li class="toc-h2"><a href="#why-the-process-approaches-gaussian-noise">Why the Process Approaches Gaussian Noise</a></li>
+<li class="toc-h2"><a href="#learning-the-reverse-process">Learning the Reverse Process</a></li>
+<li class="toc-h1"><a href="#two-forms-of-the-diffusion-elbo">Two Forms of the Diffusion ELBO</a></li>
+<li class="toc-h2"><a href="#first-form-pairing-forward-and-reverse-densities">First Form: Pairing Forward and Reverse Densities</a></li>
+<li class="toc-h2"><a href="#second-form-reversing-the-forward-conditional">Second Form: Reversing the Forward Conditional</a></li>
+<li class="toc-h2"><a href="#reading-the-three-terms">Reading the Three Terms</a></li>
+<li class="toc-h1"><a href="#sampling-a-noisy-image-at-any-level">Sampling a Noisy Image at Any Level</a></li>
+<li class="toc-h2"><a href="#combining-the-gaussian-noise">Combining the Gaussian Noise</a></li>
+<li class="toc-h2"><a href="#choosing-the-schedule">Choosing the Schedule</a></li>
+<li class="toc-h1"><a href="#the-target-for-one-reverse-step">The Target for One Reverse Step</a></li>
+<li class="toc-h2"><a href="#conditioning-on-the-clean-image">Conditioning on the Clean Image</a></li>
+<li class="toc-h2"><a href="#completing-the-square">Completing the Square</a></li>
+<li class="toc-h2"><a href="#matching-two-gaussians">Matching Two Gaussians</a></li>
+<li class="toc-h1"><a href="#predicting-the-noise">Predicting the Noise</a></li>
+<li class="toc-h2"><a href="#expressing-the-reverse-mean-with-noise">Expressing the Reverse Mean with Noise</a></li>
+<li class="toc-h2"><a href="#the-weighted-noise-loss">The Weighted Noise Loss</a></li>
+<li class="toc-h2"><a href="#the-reconstruction-term-at-t1">The Reconstruction Term at <span class="math inline">t=1</span></a></li>
+<li class="toc-h2"><a href="#the-simple-loss">The Simple Loss</a></li>
+<li class="toc-h1"><a href="#training-and-generation">Training and Generation</a></li>
+<li class="toc-h2"><a href="#one-training-update">One Training Update</a></li>
+<li class="toc-h2"><a href="#generating-a-new-image">Generating a New Image</a></li>
+<li class="toc-h1"><a href="#extensions">Extensions</a></li>
+<li class="toc-h2"><a href="#conditioning-on-a-text-prompt">Conditioning on a Text Prompt</a></li>
+<li class="toc-h2"><a href="#predicting-the-clean-image-or-the-score">Predicting the Clean Image or the Score</a></li>
+<li class="toc-h1"><a href="#summary">Summary</a></li>
+<li class="toc-h1"><a href="#reading">Reading</a></li>
+</ol>
+</details>
+</aside>
+<article>
+<h1 id="lecture-11-unsupervised-learning-iii--diffusion-models">Lecture 11: Unsupervised Learning III — Diffusion Models</h1>
+<h2 id="summary-of-key-ideas">Summary of Key Ideas</h2>
+<p>In Lecture 10, we used a latent-variable model to generate images. We sampled a code from a Gaussian prior, then used a decoder to produce an image. An encoder helped us train the model by approximating the posterior over codes.</p>
+<p>Now suppose we generate an image through several intermediate codes. Each step produces a little more structure, until the final step produces the image. This gives a <strong>hierarchical latent-variable model</strong>. We can train it with a learned approximate posterior, as in a hierarchical VAE, or choose a fixed approximate posterior that makes the calculations easier.</p>
+<p>A <strong>denoising diffusion probabilistic model (DDPM)</strong> takes the second approach. Its fixed <strong>forward process</strong> gradually adds Gaussian noise to training images. We learn a <strong>reverse process</strong> that generates images by starting from Gaussian noise and taking many small steps towards the data.</p>
+<p>The ELBO connects this construction to a simple training task: predict the noise added to an image. We will derive this loss, explain how to train with one randomly chosen noise level per image, and then use the trained network repeatedly to generate new images.</p>
+<hr />
+<h2 id="learning-objectives">Learning Objectives</h2>
+<p>By the end of this lesson, you should be able to:</p>
+<ol type="1">
+<li><strong>Describe</strong> a hierarchical latent-variable model and how to sample from it.</li>
+<li><strong>Compare</strong> a learned hierarchical approximate posterior with the fixed forward process in DDPM.</li>
+<li><strong>Derive</strong> the two forms of the diffusion ELBO and explain why the second is convenient for training.</li>
+<li><strong>Calculate</strong> the distribution of a noisy image at any level without sampling the whole forward chain.</li>
+<li><strong>Derive</strong> the Gaussian target for a reverse step and its KL to the model distribution.</li>
+<li><strong>Explain</strong> how matching the Gaussian means becomes a weighted noise-prediction loss, and how the simple loss changes these weights.</li>
+<li><strong>Describe</strong> one training update and the complete generation procedure.</li>
+<li><strong>Explain</strong> prompt conditioning and the relationship between noise, clean-image and score predictions.</li>
+</ol>
+<hr />
+<h1 id="hierarchical-latent-variable-models">Hierarchical Latent-Variable Models</h1>
+<h2 id="generating-through-several-codes">Generating Through Several Codes</h2>
+<p>When we draw, we might begin with an overall shape and add details later. A hierarchy of codes gives a generative model several stages in which to build an image.</p>
+<p>For two levels, we sample</p>
+<p><span class="math display">\[\mathbf{z}_2\sim p(\mathbf{z}_2),
+\qquad
+\mathbf{z}_1\sim p_{\theta}(\mathbf{z}_1\mid\mathbf{z}_2),
+\qquad
+\mathbf{x}_0\sim p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1).\]</span></p>
+<p>The subscript 0 identifies the observed image. The joint distribution is</p>
+<p><span class="math display">\[p_{\theta}(\mathbf{x}_0,\mathbf{z}_1,\mathbf{z}_2)
+=p(\mathbf{z}_2)
+p_{\theta}(\mathbf{z}_1\mid\mathbf{z}_2)
+p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1).\]</span></p>
+<p>This is a <strong>Markov chain</strong>: once <span class="math inline">\mathbf{z}_1</span> is given, the distribution of <span class="math inline">\mathbf{x}_0</span> does not depend on <span class="math inline">\mathbf{z}_2</span>. Each transition can be a Gaussian whose mean is computed by a neural network. For example,</p>
+<p><span class="math display">\[p_{\theta}(\mathbf{z}_1\mid\mathbf{z}_2)
+=\mathcal{N}\big(\mathbf{z}_1;g_{\theta}(\mathbf{z}_2),\tau^2\mathbf{I}\big).\]</span></p>
+<p>We run the network to calculate the mean, then sample <span class="math inline">\mathbf{z}_1</span> around it. The latent codes are random variables; the network's hidden layers perform the calculations that determine their distributions.</p>
+<h2 id="a-hierarchy-of-t-levels">A Hierarchy of <span class="math inline">T</span> Levels</h2>
+<p>For <span class="math inline">T</span> levels, let <span class="math inline">\mathbf{z}_{1:T}</span> collect all the codes. The model becomes</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+p_{\theta}(\mathbf{x}_0,\mathbf{z}_{1:T})
+&amp;=p(\mathbf{z}_T)
+\left[\prod_{t=2}^{T}p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)\right]
+p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1),\\
+p(\mathbf{z}_T)&amp;=\mathcal{N}(\mathbf{0},\mathbf{I}).
+\end{aligned}
+}\]</span></p>
+<p>Generation proceeds from level <span class="math inline">T</span> down to the image at level 0. Following the slides, we use <span class="math inline">\mathbf{z}_t</span> for latent codes and <span class="math inline">\mathbf{x}_0</span> for the image. Diffusion papers often call the latent codes <span class="math inline">\mathbf{x}_t</span>.</p>
+<p>Our training data contain only images. Maximum likelihood would maximise <span class="math inline">\sum_n\log p_{\theta}(\mathbf{x}_0^{(n)})</span>, where</p>
+<p><span class="math display">\[p_{\theta}(\mathbf{x}_0)
+=\int p_{\theta}(\mathbf{x}_0,\mathbf{z}_{1:T})\,d\mathbf{z}_{1:T}.\]</span></p>
+<p>Integrating over all the codes is difficult for neural transitions, so we use the ELBO from Lecture 10, treating the whole collection of codes as one latent vector:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}(\theta,q;\mathbf{x}_0)
+={}&amp;\mathbb{E}_q[\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)]\\
+&amp;-D_{\mathrm{KL}}\big[q(\mathbf{z}_{1:T}\mid\mathbf{x}_0)
+\|p_{\theta}(\mathbf{z}_{1:T})\big].
+\end{aligned}\]</span></p>
+<p>Here the prior over the whole hierarchy is <span class="math inline">p_{\theta}(\mathbf{z}_{1:T})=p(\mathbf{z}_T)\prod_{t=2}^{T}p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)</span>. It includes the learned transitions between codes. The ELBO satisfies <span class="math inline">\mathcal{L}(\theta,q;\mathbf{x}_0)\leq\log p_{\theta}(\mathbf{x}_0)</span>, and we train by maximising this bound. We will compare two choices for <span class="math inline">q</span>.</p>
+<hr />
+<h1 id="attempt-1-a-hierarchical-vae">Attempt 1: A Hierarchical VAE</h1>
+<h2 id="learning-a-gaussian-at-each-level">Learning a Gaussian at Each Level</h2>
+<p>Our first choice uses inference networks with weights <span class="math inline">\phi</span>:</p>
+<p><span class="math display">\[q_{\phi}(\mathbf{z}_{1:T}\mid\mathbf{x}_0)
+=q_{\phi}(\mathbf{z}_T\mid\mathbf{x}_0)
+\prod_{t=2}^{T}q_{\phi}(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0).\]</span></p>
+<p>We first infer the top code from the image, then work down the hierarchy. At each lower level, the inference network uses both the code above it and the observed image to predict a Gaussian:</p>
+<p><span class="math display">\[q_{\phi}(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+=\mathcal{N}\big(
+\boldsymbol{\mu}_{\phi,t},
+\operatorname{diag}(\boldsymbol{\sigma}_{\phi,t}^{2})
+\big).\]</span></p>
+<p>Both parameter vectors are functions of <span class="math inline">(\mathbf{z}_t,\mathbf{x}_0)</span>. The top-level distribution is also a learned diagonal Gaussian. This construction gives a <strong>hierarchical variational autoencoder (HVAE)</strong>.</p>
+<h2 id="expanding-the-elbo">Expanding the ELBO</h2>
+<p>The factorisations of <span class="math inline">q_{\phi}</span> and <span class="math inline">p_{\theta}</span> give</p>
+<p><span class="math display">\[\begin{aligned}
+\log\frac{q_{\phi}(\mathbf{z}_{1:T}\mid\mathbf{x}_0)}
+{p_{\theta}(\mathbf{z}_{1:T})}
+={}&amp;\log\frac{q_{\phi}(\mathbf{z}_T\mid\mathbf{x}_0)}{p(\mathbf{z}_T)}\\
+&amp;+\sum_{t=2}^{T}
+\log\frac{q_{\phi}(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)}
+{p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)}.
+\end{aligned}\]</span></p>
+<p>Take the expectation under <span class="math inline">q_{\phi}</span>. The first term gives a KL over <span class="math inline">\mathbf{z}_T</span>. For each term in the sum, we first average over <span class="math inline">\mathbf{z}_{t-1}</span> with <span class="math inline">\mathbf{z}_t</span> held fixed, giving a conditional KL, then average over <span class="math inline">\mathbf{z}_t</span>. Substituting into the ELBO gives</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathcal{L}_{\mathrm{HVAE}}
+={}&amp;\mathbb{E}_{q_{\phi}}[\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)]\\
+&amp;-D_{\mathrm{KL}}[q_{\phi}(\mathbf{z}_T\mid\mathbf{x}_0)\|p(\mathbf{z}_T)]\\
+&amp;-\sum_{t=2}^{T}\mathbb{E}_{q_{\phi}(\mathbf{z}_t\mid\mathbf{x}_0)}
+\Big[D_{\mathrm{KL}}\big[
+q_{\phi}(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+\|p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)
+\big]\Big].
+\end{aligned}
+}\]</span></p>
+<p>The terms encourage image reconstruction, matching the top-level distribution to the prior, and matching each generative transition to its inference distribution. At each level, <span class="math inline">q_{\phi}</span> uses the observed image to infer a code, while <span class="math inline">p_{\theta}</span> must predict its distribution from <span class="math inline">\mathbf{z}_t</span> alone so that it can generate new images.</p>
+<h2 id="training-the-hierarchy">Training the Hierarchy</h2>
+<p>For each training image, we calculate the top-level Gaussian KL and sample <span class="math inline">\mathbf{z}_T</span>. We then work down through the inference distributions, calculating a Gaussian KL and sampling a code at each level. Finally, we evaluate the image log likelihood and subtract the KL terms.</p>
+<p>As in Lecture 10, we use reparameterised samples,</p>
+<p><span class="math display">\[\mathbf{z}_{t-1}
+=\boldsymbol{\mu}_{\phi,t}
++\boldsymbol{\sigma}_{\phi,t}\odot\boldsymbol{\epsilon}_t,
+\qquad
+\boldsymbol{\epsilon}_t\sim\mathcal{N}(\mathbf{0},\mathbf{I}),\]</span></p>
+<p>so backpropagation can update both <span class="math inline">\theta</span> and <span class="math inline">\phi</span>. Sampling the upper codes estimates the outer expectations; the conditional Gaussian KLs can be calculated analytically.</p>
+<p>Hierarchical VAEs can generate good images, as the NVAE examples in the slides show. Training both sets of distributions can be difficult, however: a large mismatch between an inference distribution and a generative transition can produce large KL gradients. This motivates our second choice, in which we fix <span class="math inline">q</span> and learn only the generative model.</p>
+<hr />
+<h1 id="attempt-2-a-fixed-forward-process">Attempt 2: A Fixed Forward Process</h1>
+<h2 id="adding-noise-to-images">Adding Noise to Images</h2>
+<p>For diffusion, every code has the same dimension <span class="math inline">D</span> as the image. Set <span class="math inline">\mathbf{z}_0=\mathbf{x}_0</span> and choose numbers <span class="math inline">0&lt;\alpha_t&lt;1</span>. Define</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathbf{z}_t
+&amp;=\sqrt{\alpha_t}\,\mathbf{z}_{t-1}
++\sqrt{1-\alpha_t}\,\boldsymbol{\eta}_t,\\
+\boldsymbol{\eta}_t&amp;\sim\mathcal{N}(\mathbf{0},\mathbf{I}),
+\end{aligned}
+}\]</span></p>
+<p>with independent noise at each step. We reduce the previous pixel values and add Gaussian noise, giving</p>
+<p><span class="math display">\[q(\mathbf{z}_t\mid\mathbf{z}_{t-1})
+=\mathcal{N}\big(\sqrt{\alpha_t}\,\mathbf{z}_{t-1},
+(1-\alpha_t)\mathbf{I}\big).\]</span></p>
+<p>The sequence <span class="math inline">\alpha_1,\ldots,\alpha_T</span> is the <strong>noise schedule</strong>. Papers often write <span class="math inline">\beta_t=1-\alpha_t</span> for the variance added at one step.</p>
+<p>The resulting approximate posterior is</p>
+<p><span class="math display">\[q(\mathbf{z}_{1:T}\mid\mathbf{x}_0)
+=q(\mathbf{z}_1\mid\mathbf{x}_0)
+\prod_{t=2}^{T}q(\mathbf{z}_t\mid\mathbf{z}_{t-1}).\]</span></p>
+<p>It has no learned parameters, but its distributions depend on the input image. We have chosen an image-dependent corruption process rather than fitting an encoder.</p>
+<p class="notes-figure"><img src="../slides/media/l11/notes-forward-process.png" alt="Two digit images gradually corrupted by the forward process, at levels 0, 100, 300, 500, 700 and 1000." /></p>
+<p><em>Each row is one forward trajectory from the lecture experiment. Pixel values are clipped to <span class="math inline">[-1,1]</span> for display.</em></p>
+<p><strong>Optional exploration:</strong> use the <a class="slide-link" href="../slides/lecture-11.html#29" target="_blank" rel="noopener">corruption demo</a> to change the amount of noise added at each step.</p>
+<h2 id="why-the-process-approaches-gaussian-noise">Why the Process Approaches Gaussian Noise</h2>
+<p>For a constant <span class="math inline">\alpha</span>, the mean and covariance satisfy</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbb{E}[\mathbf{z}_t]
+&amp;=\sqrt{\alpha}\,\mathbb{E}[\mathbf{z}_{t-1}],\\
+\operatorname{Cov}(\mathbf{z}_t)
+&amp;=\alpha\operatorname{Cov}(\mathbf{z}_{t-1})+(1-\alpha)\mathbf{I}.
+\end{aligned}\]</span></p>
+<p>Repeated multiplication shrinks the mean towards zero, while the covariance approaches <span class="math inline">\mathbf{I}</span>. Given a fixed image, every noisy code is Gaussian because it is a linear combination of independent Gaussian noises and a fixed vector. Later, we will derive its mean and covariance explicitly.</p>
+<p>We choose enough corruption steps that <span class="math inline">q(\mathbf{z}_T\mid\mathbf{x}_0)</span> is close to the standard normal prior. This makes the distribution at the end of the forward process close to the one from which generation starts.</p>
+<h2 id="learning-the-reverse-process">Learning the Reverse Process</h2>
+<p>The <strong>forward process</strong> increases <span class="math inline">t</span> and adds noise. The <strong>reverse process</strong> decreases <span class="math inline">t</span> and generates an image. We model its transitions as</p>
+<p><span class="math display">\[p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)
+=\mathcal{N}\big(\boldsymbol{\mu}_{\theta}(\mathbf{z}_t,t),
+\sigma_t^2\mathbf{I}\big),
+\qquad t\geq2,\]</span></p>
+<p>and use a Gaussian image likelihood <span class="math inline">p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)</span> at the last step. The means are learned and the variances <span class="math inline">\sigma_t^2</span> are fixed. Small forward noise steps make Gaussian reverse transitions a useful approximation.</p>
+<p>We train only <span class="math inline">\theta</span>. To obtain a convenient objective, we will write the ELBO in two ways.</p>
+<hr />
+<h1 id="two-forms-of-the-diffusion-elbo">Two Forms of the Diffusion ELBO</h1>
+<h2 id="first-form-pairing-forward-and-reverse-densities">First Form: Pairing Forward and Reverse Densities</h2>
+<p>Start from the joint-density form of the ELBO:</p>
+<p><span class="math display">\[\mathcal{L}
+=\mathbb{E}_q\left[
+\log\frac{p_{\theta}(\mathbf{x}_0,\mathbf{z}_{1:T})}
+{q(\mathbf{z}_{1:T}\mid\mathbf{x}_0)}
+\right].\]</span></p>
+<p>Expand the products, then group densities over the same code:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}
+=\mathbb{E}_q\Bigg[
+&amp;\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)
++\log\frac{p(\mathbf{z}_T)}{q(\mathbf{z}_T\mid\mathbf{z}_{T-1})}\\
+&amp;+\sum_{t=1}^{T-1}
+\log\frac{p_{\theta}(\mathbf{z}_t\mid\mathbf{z}_{t+1})}
+{q(\mathbf{z}_t\mid\mathbf{z}_{t-1})}
+\Bigg].
+\end{aligned}\]</span></p>
+<p>The first term is the expected reconstruction log likelihood. Averaging the second over <span class="math inline">\mathbf{z}_T</span> gives a negative KL to the prior, leaving an outer expectation over <span class="math inline">\mathbf{z}_{T-1}</span>.</p>
+<p>For the remaining terms, define</p>
+<p><span class="math display">\[C_t=\mathbb{E}_{q(\mathbf{z}_{t-1},\mathbf{z}_t,\mathbf{z}_{t+1}\mid\mathbf{x}_0)}
+\left[
+\log\frac{p_{\theta}(\mathbf{z}_t\mid\mathbf{z}_{t+1})}
+{q(\mathbf{z}_t\mid\mathbf{z}_{t-1})}
+\right].\]</span></p>
+<p>Then the first form is</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}
+={}&amp;\mathbb{E}_{q(\mathbf{z}_1\mid\mathbf{x}_0)}
+[\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)]\\
+&amp;-\mathbb{E}_{q(\mathbf{z}_{T-1}\mid\mathbf{x}_0)}
+\Big[D_{\mathrm{KL}}[q(\mathbf{z}_T\mid\mathbf{z}_{T-1})\|p(\mathbf{z}_T)]\Big]
++\sum_{t=1}^{T-1}C_t.
+\end{aligned}\]</span></p>
+<p>The slides call <span class="math inline">C_t</span> a <strong>consistency term</strong> because it compares the forward and reverse densities at the same code. It involves three adjacent codes. If we hold the two neighbours fixed, the distribution used to average over the middle code is</p>
+<p><span class="math display">\[q(\mathbf{z}_t\mid\mathbf{z}_{t-1},\mathbf{z}_{t+1}).\]</span></p>
+<p>This differs from <span class="math inline">q(\mathbf{z}_t\mid\mathbf{z}_{t-1})</span> in the denominator, so the inner average is not a KL between the two displayed densities. We would like an expression that requires sampling one code and calculating a Gaussian KL.</p>
+<h2 id="second-form-reversing-the-forward-conditional">Second Form: Reversing the Forward Conditional</h2>
+<p>For <span class="math inline">t\geq2</span>, the Markov property and Bayes' rule give</p>
+<p><span class="math display">\[q(\mathbf{z}_t\mid\mathbf{z}_{t-1})
+=\frac{
+q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+q(\mathbf{z}_t\mid\mathbf{x}_0)
+}{q(\mathbf{z}_{t-1}\mid\mathbf{x}_0)}.\]</span></p>
+<p>Separate the first forward factor <span class="math inline">q(\mathbf{z}_1\mid\mathbf{x}_0)</span> and expand the ELBO again:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}
+=\mathbb{E}_q\Bigg[
+&amp;\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)
++\log\frac{p(\mathbf{z}_T)}{q(\mathbf{z}_1\mid\mathbf{x}_0)}\\
+&amp;+\sum_{t=2}^{T}
+\log\frac{p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)}
+{q(\mathbf{z}_t\mid\mathbf{z}_{t-1})}
+\Bigg].
+\end{aligned}\]</span></p>
+<p>Substituting the identity above splits each term in the sum into</p>
+<p><span class="math display">\[\begin{aligned}
+\log\frac{p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)}
+{q(\mathbf{z}_t\mid\mathbf{z}_{t-1})}
+={}&amp;\log\frac{p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)}
+{q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)}\\
+&amp;+\log\frac{q(\mathbf{z}_{t-1}\mid\mathbf{x}_0)}
+{q(\mathbf{z}_t\mid\mathbf{x}_0)}.
+\end{aligned}\]</span></p>
+<p>The second part telescopes when summed over levels:</p>
+<p><span class="math display">\[\begin{aligned}
+\sum_{t=2}^{T}\log\frac{q(\mathbf{z}_{t-1}\mid\mathbf{x}_0)}{q(\mathbf{z}_t\mid\mathbf{x}_0)}
+&amp;=\log\frac{q(\mathbf{z}_1\mid\mathbf{x}_0)}{q(\mathbf{z}_2\mid\mathbf{x}_0)}
++\cdots\\
+&amp;\quad+
+\log\frac{q(\mathbf{z}_{T-1}\mid\mathbf{x}_0)}{q(\mathbf{z}_T\mid\mathbf{x}_0)}\\
+&amp;=\log\frac{q(\mathbf{z}_1\mid\mathbf{x}_0)}{q(\mathbf{z}_T\mid\mathbf{x}_0)}.
+\end{aligned}\]</span></p>
+<p>Combining this with <span class="math inline">\log[p(\mathbf{z}_T)/q(\mathbf{z}_1\mid\mathbf{x}_0)]</span> leaves <span class="math inline">\log[p(\mathbf{z}_T)/q(\mathbf{z}_T\mid\mathbf{x}_0)]</span>. The ELBO is now</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}
+=\mathbb{E}_q\Bigg[
+&amp;\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)
++\log\frac{p(\mathbf{z}_T)}{q(\mathbf{z}_T\mid\mathbf{x}_0)}\\
+&amp;+\sum_{t=2}^{T}
+\log\frac{p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)}
+{q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)}
+\Bigg].
+\end{aligned}\]</span></p>
+<p>For each term in the sum, condition on <span class="math inline">\mathbf{z}_t</span>. The inner expectation is now under exactly the distribution in the denominator, so</p>
+<p><span class="math display">\[\begin{aligned}
+&amp;\mathbb{E}_{q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)}
+\left[\log\frac{p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)}
+{q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)}\right]\\
+&amp;\qquad=-D_{\mathrm{KL}}\big[
+q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+\|p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)
+\big].
+\end{aligned}\]</span></p>
+<p>This gives the second form:</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathcal{L}(\theta;\mathbf{x}_0)
+={}&amp;\mathbb{E}_{q(\mathbf{z}_1\mid\mathbf{x}_0)}
+[\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)]\\
+&amp;-D_{\mathrm{KL}}[q(\mathbf{z}_T\mid\mathbf{x}_0)\|p(\mathbf{z}_T)]\\
+&amp;-\sum_{t=2}^{T}\mathbb{E}_{q(\mathbf{z}_t\mid\mathbf{x}_0)}
+\Big[D_{\mathrm{KL}}\big[
+q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+\|p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t)
+\big]\Big].
+\end{aligned}
+}\]</span></p>
+<h2 id="reading-the-three-terms">Reading the Three Terms</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>What it encourages</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reconstruction</td>
+<td>The final reverse step assigns high likelihood to the clean image.</td>
+</tr>
+<tr>
+<td>Prior matching</td>
+<td>The endpoint of corruption is close to the distribution used to start generation.</td>
+</tr>
+<tr>
+<td>Denoising matching</td>
+<td>Each learned reverse step matches the known distribution of the previous code given the current code and clean image.</td>
+</tr>
+</tbody>
+</table>
+<p>The prior KL has no <span class="math inline">\theta</span> dependence because the forward process and top-level prior are fixed. For each denoising term, we sample <span class="math inline">\mathbf{z}_t</span> and calculate a Gaussian KL. This has the same structure as the HVAE objective, but the target distributions come from the fixed corruption process.</p>
+<p>The <a class="slide-link" href="../slides/lecture-11.html#39" target="_blank" rel="noopener">ELBO derivation in the slides</a> shows the cancellation and the two chains visually.</p>
+<hr />
+<h1 id="sampling-a-noisy-image-at-any-level">Sampling a Noisy Image at Any Level</h1>
+<h2 id="combining-the-gaussian-noise">Combining the Gaussian Noise</h2>
+<p>Training would be expensive if we had to generate all <span class="math inline">T</span> forward codes for every image. Fortunately, we can sample any level directly.</p>
+<p>Expand the first two forward steps:</p>
+<p><span class="math display">\[\begin{aligned}
+\mathbf{z}_2
+&amp;=\sqrt{\alpha_2}\,\mathbf{z}_1
++\sqrt{1-\alpha_2}\,\boldsymbol{\eta}_2\\
+&amp;=\sqrt{\alpha_1\alpha_2}\,\mathbf{x}_0
++\sqrt{\alpha_2(1-\alpha_1)}\,\boldsymbol{\eta}_1
++\sqrt{1-\alpha_2}\,\boldsymbol{\eta}_2.
+\end{aligned}\]</span></p>
+<p>The two noise vectors are independent standard normals. Their weighted sum is Gaussian with zero mean and covariance</p>
+<p><span class="math display">\[\big[\alpha_2(1-\alpha_1)+(1-\alpha_2)\big]\mathbf{I}
+=(1-\alpha_1\alpha_2)\mathbf{I}.\]</span></p>
+<p>We can therefore draw <span class="math inline">\mathbf{z}_2</span> using one standard normal vector:</p>
+<p><span class="math display">\[\mathbf{z}_2
+=\sqrt{\alpha_1\alpha_2}\,\mathbf{x}_0
++\sqrt{1-\alpha_1\alpha_2}\,\boldsymbol{\epsilon}.\]</span></p>
+<p>Repeating the argument gives</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+q(\mathbf{z}_t\mid\mathbf{x}_0)
+&amp;=\mathcal{N}\big(\sqrt{\bar\alpha_t}\,\mathbf{x}_0,
+(1-\bar\alpha_t)\mathbf{I}\big),\\
+\bar\alpha_t&amp;=\prod_{s=1}^{t}\alpha_s,
+\qquad \bar\alpha_0=1.
+\end{aligned}
+}\]</span></p>
+<p>To shorten later equations, define</p>
+<p><span class="math display">\[a_t=\sqrt{\bar\alpha_t},
+\qquad b_t=\sqrt{1-\bar\alpha_t}.\]</span></p>
+<p>A direct sample is then</p>
+<p><span class="math display">\[\boxed{
+\mathbf{z}_t=a_t\mathbf{x}_0+b_t\boldsymbol{\epsilon},
+\qquad \boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}).
+}\]</span></p>
+<p>Here <span class="math inline">\boldsymbol{\epsilon}</span> represents the combined noise from all <span class="math inline">t</span> steps. This formula gives the same distribution at level <span class="math inline">t</span> as running the forward chain to that level.</p>
+<h2 id="choosing-the-schedule">Choosing the Schedule</h2>
+<p>As <span class="math inline">\bar\alpha_t</span> decreases, the image coefficient <span class="math inline">a_t</span> shrinks and the noise coefficient <span class="math inline">b_t</span> grows. If <span class="math inline">\bar\alpha_T</span> is close to zero, the endpoint distribution is close to <span class="math inline">\mathcal{N}(\mathbf{0},\mathbf{I})</span>.</p>
+<p>The lecture's MNIST experiment uses <span class="math inline">T=1000</span> and increases <span class="math inline">1-\alpha_t</span> linearly from <span class="math inline">0.0001</span> to <span class="math inline">0.02</span>. This gives <span class="math inline">\bar\alpha_T\approx4.04\times10^{-5}</span>, so the final image coefficient is about <span class="math inline">0.00635</span> and the noise coefficient is almost 1.</p>
+<p><strong>Optional exploration:</strong> the <a class="slide-link" href="../slides/lecture-11.html#55" target="_blank" rel="noopener">noise-schedule slide</a> shows the two coefficients alongside corrupted images.</p>
+<hr />
+<h1 id="the-target-for-one-reverse-step">The Target for One Reverse Step</h1>
+<h2 id="conditioning-on-the-clean-image">Conditioning on the Clean Image</h2>
+<p>For <span class="math inline">t\geq2</span>, the denoising KL compares the model to</p>
+<p><span class="math display">\[q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0).\]</span></p>
+<p>During training, we know the clean image and the noisy code we sampled. We can calculate this conditional distribution using</p>
+<p><span class="math display">\[q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+=\frac{
+q(\mathbf{z}_t\mid\mathbf{z}_{t-1})
+q(\mathbf{z}_{t-1}\mid\mathbf{x}_0)
+}{q(\mathbf{z}_t\mid\mathbf{x}_0)}.\]</span></p>
+<p>All three factors are Gaussians with known parameters. With <span class="math inline">\mathbf{z}_t</span> and <span class="math inline">\mathbf{x}_0</span> fixed, the denominator is constant with respect to <span class="math inline">\mathbf{z}_{t-1}</span>.</p>
+<h2 id="completing-the-square">Completing the Square</h2>
+<p>Write <span class="math inline">\mathbf{u}=\mathbf{z}_{t-1}</span> to simplify the calculation. Taking the logarithm of the two numerator factors gives</p>
+<p><span class="math display">\[\begin{aligned}
+\log q(\mathbf{u}\mid\mathbf{z}_t,\mathbf{x}_0)
+={}&amp;-\frac{\|\mathbf{z}_t-\sqrt{\alpha_t}\mathbf{u}\|^2}
+{2(1-\alpha_t)}\\
+&amp;-\frac{\|\mathbf{u}-\sqrt{\bar\alpha_{t-1}}\mathbf{x}_0\|^2}
+{2(1-\bar\alpha_{t-1})}
++\text{constant}.
+\end{aligned}\]</span></p>
+<p>Expand the squares and collect the quadratic and linear terms in <span class="math inline">\mathbf{u}</span>:</p>
+<p><span class="math display">\[\log q(\mathbf{u}\mid\mathbf{z}_t,\mathbf{x}_0)
+=-\frac12 A_t\|\mathbf{u}\|^2+\mathbf{u}^{\top}\mathbf{h}_t
++\text{constant},\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\begin{aligned}
+A_t
+&amp;=\frac{\alpha_t}{1-\alpha_t}
++\frac{1}{1-\bar\alpha_{t-1}}
+=\frac{1-\bar\alpha_t}{(1-\alpha_t)(1-\bar\alpha_{t-1})},\\
+\mathbf{h}_t
+&amp;=\frac{\sqrt{\alpha_t}}{1-\alpha_t}\mathbf{z}_t
++\frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\mathbf{x}_0.
+\end{aligned}\]</span></p>
+<p>Completing the square gives</p>
+<p><span class="math display">\[-\frac12 A_t\|\mathbf{u}\|^2+\mathbf{u}^{\top}\mathbf{h}_t
+=-\frac12 A_t\|\mathbf{u}-A_t^{-1}\mathbf{h}_t\|^2
++\text{constant}.\]</span></p>
+<p>We can now read off the mean and covariance:</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+q(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{x}_0)
+&amp;=\mathcal{N}\big(\tilde{\boldsymbol{\mu}}_t,
+\tilde\beta_t\mathbf{I}\big),\\
+\tilde{\boldsymbol{\mu}}_t&amp;=c_t\mathbf{x}_0+d_t\mathbf{z}_t,
+\end{aligned}
+}\]</span></p>
+<p>with</p>
+<p><span class="math display">\[\begin{aligned}
+c_t&amp;=\frac{\sqrt{\bar\alpha_{t-1}}(1-\alpha_t)}{1-\bar\alpha_t},\\
+d_t&amp;=\frac{\sqrt{\alpha_t}(1-\bar\alpha_{t-1})}{1-\bar\alpha_t},\\
+\tilde\beta_t&amp;=A_t^{-1}
+=\frac{(1-\bar\alpha_{t-1})(1-\alpha_t)}{1-\bar\alpha_t}.
+\end{aligned}\]</span></p>
+<p>This target Gaussian combines information from the clean image and the current noisy code. The learned reverse model receives only <span class="math inline">\mathbf{z}_t</span> and <span class="math inline">t</span>, so it learns from these targets across many training images.</p>
+<h2 id="matching-two-gaussians">Matching Two Gaussians</h2>
+<p>The target has mean <span class="math inline">\tilde{\boldsymbol{\mu}}_t</span> and covariance <span class="math inline">\tilde\beta_t\mathbf{I}</span>. Our model has mean <span class="math inline">\boldsymbol{\mu}_{\theta}(\mathbf{z}_t,t)</span> and covariance <span class="math inline">\sigma_t^2\mathbf{I}</span>. Substitution into the Gaussian KL formula gives</p>
+<p><span class="math display">\[\begin{aligned}
+D_{\mathrm{KL}}
+={}&amp;\frac{\|\tilde{\boldsymbol{\mu}}_t-\boldsymbol{\mu}_{\theta}(\mathbf{z}_t,t)\|^2}{2\sigma_t^2}\\
+&amp;+\frac12\left(
+\frac{D\tilde\beta_t}{\sigma_t^2}-D
++D\log\frac{\sigma_t^2}{\tilde\beta_t}
+\right)\\
+={}&amp;\frac{1}{2\sigma_t^2}
+\|\tilde{\boldsymbol{\mu}}_t-\boldsymbol{\mu}_{\theta}(\mathbf{z}_t,t)\|^2
++K_t.
+\end{aligned}\]</span></p>
+<p>The constant <span class="math inline">K_t</span> contains the variance terms and has no <span class="math inline">\theta</span> dependence. With both variances fixed, minimising this KL is equivalent to minimising the squared difference between the means.</p>
+<hr />
+<h1 id="predicting-the-noise">Predicting the Noise</h1>
+<h2 id="expressing-the-reverse-mean-with-noise">Expressing the Reverse Mean with Noise</h2>
+<p>We constructed the noisy image as <span class="math inline">\mathbf{z}_t=a_t\mathbf{x}_0+b_t\boldsymbol{\epsilon}</span>, so</p>
+<p><span class="math display">\[\mathbf{x}_0=\frac{\mathbf{z}_t-b_t\boldsymbol{\epsilon}}{a_t}.\]</span></p>
+<p>Substitute this into the target mean:</p>
+<p><span class="math display">\[\begin{aligned}
+\tilde{\boldsymbol{\mu}}_t
+&amp;=c_t\mathbf{x}_0+d_t\mathbf{z}_t\\
+&amp;=\left(\frac{c_t}{a_t}+d_t\right)\mathbf{z}_t
+-\frac{c_tb_t}{a_t}\boldsymbol{\epsilon}.
+\end{aligned}\]</span></p>
+<p>Using <span class="math inline">\bar\alpha_t=\alpha_t\bar\alpha_{t-1}</span> and <span class="math inline">b_t^2=1-\bar\alpha_t</span>, the coefficients simplify to</p>
+<p><span class="math display">\[\frac{c_t}{a_t}+d_t=\frac1{\sqrt{\alpha_t}},
+\qquad
+\frac{c_tb_t}{a_t}=\frac{1-\alpha_t}{\sqrt{\alpha_t}\,b_t}.\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[\tilde{\boldsymbol{\mu}}_t
+=\frac1{\sqrt{\alpha_t}}
+\left(\mathbf{z}_t-\frac{1-\alpha_t}{b_t}\boldsymbol{\epsilon}\right).\]</span></p>
+<p>Everything on the right is available to the reverse model except the added noise. We use a network <span class="math inline">\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)</span> to predict it and define the model mean by</p>
+<p><span class="math display">\[\boxed{
+\boldsymbol{\mu}_{\theta}(\mathbf{z}_t,t)
+=\frac1{\sqrt{\alpha_t}}
+\left(\mathbf{z}_t-\frac{1-\alpha_t}{b_t}
+\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\right).
+}\]</span></p>
+<p>The network outputs a noise vector with the same shape as the image. During training, its target is the standard normal vector <span class="math inline">\boldsymbol{\epsilon}</span> used to construct that noisy input.</p>
+<h2 id="the-weighted-noise-loss">The Weighted Noise Loss</h2>
+<p>Subtract the two means. Their <span class="math inline">\mathbf{z}_t</span> terms cancel:</p>
+<p><span class="math display">\[\tilde{\boldsymbol{\mu}}_t-\boldsymbol{\mu}_{\theta}(\mathbf{z}_t,t)
+=-\frac{1-\alpha_t}{\sqrt{\alpha_t}\,b_t}
+\big(\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\big).\]</span></p>
+<p>Substitute this difference into the KL:</p>
+<p><span class="math display">\[\begin{aligned}
+D_{\mathrm{KL}}
+&amp;=\frac1{2\sigma_t^2}
+\left(\frac{1-\alpha_t}{\sqrt{\alpha_t}\,b_t}\right)^2
+\|\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\|^2+K_t\\
+&amp;=w_t\|\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\|^2+K_t,
+\end{aligned}\]</span></p>
+<p>where</p>
+<p><span class="math display">\[\boxed{
+w_t=\frac{(1-\alpha_t)^2}{2\sigma_t^2\alpha_t(1-\bar\alpha_t)}.
+}\]</span></p>
+<p>Matching the two Gaussian distributions has become a weighted squared error in the predicted noise.</p>
+<h2 id="the-reconstruction-term-at-t1">The Reconstruction Term at <span class="math inline">t=1</span></h2>
+<p>At level 1, the next output is the observed image. We use the image likelihood directly:</p>
+<p><span class="math display">\[-\log p_{\theta}(\mathbf{x}_0\mid\mathbf{z}_1)
+=\frac1{2\sigma_1^2}
+\|\mathbf{x}_0-\boldsymbol{\mu}_{\theta}(\mathbf{z}_1,1)\|^2
++\text{constant}.\]</span></p>
+<p>Because <span class="math inline">a_1=\sqrt{\alpha_1}</span> and <span class="math inline">b_1=\sqrt{1-\alpha_1}</span>, substituting <span class="math inline">\mathbf{z}_1=a_1\mathbf{x}_0+b_1\boldsymbol{\epsilon}</span> into the model mean gives</p>
+<p><span class="math display">\[\mathbf{x}_0-\boldsymbol{\mu}_{\theta}(\mathbf{z}_1,1)
+=-\frac{\sqrt{1-\alpha_1}}{\sqrt{\alpha_1}}
+\big(\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_1,1)\big).\]</span></p>
+<p>The reconstruction loss is therefore another weighted noise error, with</p>
+<p><span class="math display">\[w_1=\frac{1-\alpha_1}{2\sigma_1^2\alpha_1}.\]</span></p>
+<p>This agrees with the formula for <span class="math inline">w_t</span> at <span class="math inline">t=1</span>. The target variance <span class="math inline">\tilde\beta_1</span> is zero because the clean image is known, which is why this endpoint uses the likelihood rather than a Gaussian KL.</p>
+<h2 id="the-simple-loss">The Simple Loss</h2>
+<p>Combining reconstruction and denoising matching, and collecting all terms independent of <span class="math inline">\theta</span>, gives</p>
+<p><span class="math display">\[\begin{aligned}
+\mathcal{L}(\theta;\mathbf{x}_0)
+&amp;=-\sum_{t=1}^{T}w_t\,
+\mathbb{E}_{\boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I})}
+\left[
+\|\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\|^2
+\right]
++\text{constant},\\
+\mathbf{z}_t&amp;=a_t\mathbf{x}_0+b_t\boldsymbol{\epsilon}.
+\end{aligned}\]</span></p>
+<p>In practice, DDPM uses the <strong>simple noise-prediction loss</strong>:</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+J_{\mathrm{simple}}(\theta)
+&amp;=\mathbb{E}_{\mathbf{x}_0,t,\boldsymbol{\epsilon}}
+\left[\|\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\|^2\right],\\
+t&amp;\sim\operatorname{Uniform}\{1,\ldots,T\},
+\qquad \mathbf{z}_t=a_t\mathbf{x}_0+b_t\boldsymbol{\epsilon}.
+\end{aligned}
+}\]</span></p>
+<p>Setting the level weights to 1 changes the objective. It gives each noise level equal weight in the sampling average, and the DDPM paper reported better image quality with this choice. See <a href="https://arxiv.org/html/2006.11239">Ho, Jain and Abbeel (2020), §3.4</a>.</p>
+<p>Sampling <span class="math inline">t</span> uniformly estimates an average over all levels. To estimate the weighted sum from the negative ELBO instead, we would multiply the sampled squared error by <span class="math inline">T w_t</span>.</p>
+<hr />
+<h1 id="training-and-generation">Training and Generation</h1>
+<h2 id="one-training-update">One Training Update</h2>
+<p>For each image in a minibatch:</p>
+<ol type="1">
+<li>Draw a clean image <span class="math inline">\mathbf{x}_0</span> from the training data.</li>
+<li>Draw a level <span class="math inline">t</span> uniformly from <span class="math inline">1,\ldots,T</span> and noise <span class="math inline">\boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I})</span>.</li>
+<li>Form <span class="math inline">\mathbf{z}_t=a_t\mathbf{x}_0+b_t\boldsymbol{\epsilon}</span> directly.</li>
+<li>Run the network on <span class="math inline">(\mathbf{z}_t,t)</span> and compute <span class="math inline">\|\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\|^2</span>.</li>
+<li>Average the losses across the minibatch, backpropagate and update <span class="math inline">\theta</span>.</li>
+</ol>
+<p>A single shared network handles every level. We give it <span class="math inline">t</span> so that it can adapt its prediction to the amount of corruption. The training target is available because we generated the noise ourselves, so unconditional training requires no class labels.</p>
+<p>The lecture's MNIST model uses a small <strong>U-Net</strong> with 612,129 parameters. Its layers reduce the image resolution, then increase it again, with skip connections carrying features between matching resolutions. It was trained for 20,000 updates with minibatches of 128 images, using the simple loss.</p>
+<h2 id="generating-a-new-image">Generating a New Image</h2>
+<p>Training uses one random level per image, but generation follows the complete reverse chain:</p>
+<ol type="1">
+<li>Draw <span class="math inline">\mathbf{z}_T\sim\mathcal{N}(\mathbf{0},\mathbf{I})</span>.</li>
+<li>For <span class="math inline">t=T,T-1,\ldots,2</span>, predict the noise, calculate the reverse mean and sample the next code.</li>
+<li>At <span class="math inline">t=1</span>, return <span class="math inline">\boldsymbol{\mu}_{\theta}(\mathbf{z}_1,1)</span> as the generated image.</li>
+</ol>
+<p>For the intermediate steps,</p>
+<p><span class="math display">\[\boxed{
+\begin{aligned}
+\mathbf{z}_{t-1}
+&amp;=\frac1{\sqrt{\alpha_t}}
+\left(\mathbf{z}_t-
+\frac{1-\alpha_t}{\sqrt{1-\bar\alpha_t}}
+\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)\right)
++\sigma_t\boldsymbol{\xi}_t,\\
+\boldsymbol{\xi}_t&amp;\sim\mathcal{N}(\mathbf{0},\mathbf{I}).
+\end{aligned}
+}\]</span></p>
+<p>The lecture experiment uses <span class="math inline">\sigma_t^2=1-\alpha_t</span>. The mean removes some predicted noise, and the fresh noise samples the uncertainty in the next code. At the final step, the sampler returns the mean without adding another observation-noise draw, as in the mean images displayed in Lecture 10.</p>
+<p class="notes-figure"><img src="../slides/media/l11/notes-reverse-process.png" alt="Three generated digit trajectories, moving from Gaussian noise at level 1000 to output images at level 0." /></p>
+<p><em>Saved trajectories from the lecture's trained MNIST model. Each row starts from a different Gaussian draw; the final column shows the returned mean image.</em></p>
+<p><strong>Optional exploration:</strong> follow generation in the <a class="slide-link" href="../slides/lecture-11.html#74" target="_blank" rel="noopener">two-dimensional example</a> and the <a class="slide-link" href="../slides/lecture-11.html#75" target="_blank" rel="noopener">digit example</a>.</p>
+<hr />
+<h1 id="extensions">Extensions</h1>
+<h2 id="conditioning-on-a-text-prompt">Conditioning on a Text Prompt</h2>
+<p>To generate images from text, encode a prompt as <span class="math inline">\mathbf{c}</span> and provide it to the noise-prediction network:</p>
+<p><span class="math display">\[\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t,\mathbf{c}).\]</span></p>
+<p>We train on image–prompt pairs and use the same prompt at every reverse step. The forward corruption remains unchanged. The learned transitions now have the form <span class="math inline">p_{\theta}(\mathbf{z}_{t-1}\mid\mathbf{z}_t,\mathbf{c})</span>.</p>
+<p><strong>Classifier-free guidance</strong> adds a further step. During training, we sometimes omit the prompt so that the network also learns an unconditional prediction. During generation, we combine conditional and unconditional predictions, for example</p>
+<p><span class="math display">\[\begin{aligned}
+\boldsymbol{\epsilon}_{\mathrm{guided}}
+={}&amp;\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t,\varnothing)\\
+&amp;+\gamma\big[
+\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t,\mathbf{c})
+-\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t,\varnothing)
+\big].
+\end{aligned}\]</span></p>
+<p>Here <span class="math inline">\varnothing</span> denotes an omitted prompt. Setting <span class="math inline">\gamma=1</span> gives the ordinary conditional prediction; larger values strengthen the difference associated with the prompt. Classifier guidance instead uses gradients from a separate classifier. See <a href="https://arxiv.org/html/2207.12598">Ho and Salimans (2022), §3</a>.</p>
+<h2 id="predicting-the-clean-image-or-the-score">Predicting the Clean Image or the Score</h2>
+<p>Noise prediction also gives a clean-image estimate:</p>
+<p><span class="math display">\[\hat{\mathbf{x}}_{\theta}(\mathbf{z}_t,t)
+=\frac{\mathbf{z}_t-b_t\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)}{a_t}.\]</span></p>
+<p>Under squared error, the optimal noise predictor is the conditional mean <span class="math inline">\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{z}_t]</span> at that level. The corresponding clean-image estimate is <span class="math inline">\mathbb{E}[\mathbf{x}_0\mid\mathbf{z}_t]</span>. At high noise, many clean images can explain the same noisy input, so this average can be blurry.</p>
+<p>A third output is the <strong>score</strong>, the gradient of log density with respect to the noisy input. For the known corruption distribution,</p>
+<p><span class="math display">\[\nabla_{\mathbf{z}_t}\log q(\mathbf{z}_t\mid\mathbf{x}_0)
+=-\frac{\mathbf{z}_t-a_t\mathbf{x}_0}{b_t^2}
+=-\frac{\boldsymbol{\epsilon}}{b_t}.\]</span></p>
+<p>Let <span class="math inline">q_t(\mathbf{z}_t)</span> be the distribution obtained by drawing a training image and corrupting it to level <span class="math inline">t</span>. Averaging the conditional score over clean images given <span class="math inline">\mathbf{z}_t</span> gives its marginal score:</p>
+<p><span class="math display">\[\nabla_{\mathbf{z}_t}\log q_t(\mathbf{z}_t)
+=-\frac{\mathbb{E}[\boldsymbol{\epsilon}\mid\mathbf{z}_t]}{b_t}.\]</span></p>
+<p>Thus a trained noise predictor also gives a score estimate,</p>
+<p><span class="math display">\[\mathbf{s}_{\theta}(\mathbf{z}_t,t)
+=-\frac{\boldsymbol{\epsilon}_{\theta}(\mathbf{z}_t,t)}{b_t},\]</span></p>
+<p>which points towards increasing density of noisy data. Noise, clean-image and score predictions can be converted into one another and used to calculate the same reverse mean. Their squared errors require different level-dependent weights to represent the same KL objective.</p>
+<hr />
+<h1 id="summary">Summary</h1>
+<p>We extended the VAE to a hierarchy of latent codes and compared learning the inference distributions with fixing them to a Gaussian corruption process. The fixed process gives a convenient diffusion ELBO with reconstruction, prior matching and denoising matching terms.</p>
+<p>Gaussian calculations let us sample a noisy image directly, derive the target for a reverse step, and turn its KL into a weighted noise-prediction error. The simple training loss gives all levels equal weight. After training, we generate by starting from Gaussian noise and applying the shared network repeatedly along the reverse chain.</p>
+<hr />
+<h1 id="reading">Reading</h1>
+<p><strong>Calvin Luo (2022), <em>Understanding Diffusion Models: A Unified Perspective</em></strong></p>
+<p>Read <a href="https://arxiv.org/html/2208.11970">§2.3 and §3</a>, also linked from <a href="https://calvinyluo.com/2022/08/26/diffusion-tutorial.html">Luo's tutorial page</a>, for hierarchical VAEs and the variational view of diffusion. Our presentation follows this route with some changes: the HVAE inference factors here run down the hierarchy and use the clean image at every level, and we retain <span class="math inline">\mathbf{z}_t</span> for noisy codes. The tutorial's HVAE inference factors run up the hierarchy, and its diffusion section uses <span class="math inline">\mathbf{x}_t</span>.</p>
+<p><strong>Ho, Jain and Abbeel (2020), <em>Denoising Diffusion Probabilistic Models</em></strong></p>
+<p>Read <a href="https://arxiv.org/abs/2006.11239">§2–3 and Algorithms 1–2</a> for the diffusion ELBO, noise parameterisation, simple loss and sampling procedure. The lecture uses a continuous Gaussian image likelihood at the final step; §3.3 of the paper models discrete pixel values.</p>
+<p><strong>Vahdat and Kautz (2020), <em>NVAE: A Deep Hierarchical Variational Autoencoder</em></strong></p>
+<p>Read <a href="https://arxiv.org/abs/2007.03898">§1–2 and §3.2</a> for hierarchical VAEs and methods for stabilising their training.</p>
+<p><strong>Optional extensions</strong></p>
+<ul>
+<li><a href="https://arxiv.org/abs/2207.12598">Ho and Salimans (2022), <em>Classifier-Free Diffusion Guidance</em></a>: combining conditional and unconditional predictions.</li>
+<li><a href="https://arxiv.org/abs/2105.05233">Dhariwal and Nichol (2021), <em>Diffusion Models Beat GANs on Image Synthesis</em>, §4</a>: classifier guidance.</li>
+<li><a href="https://arxiv.org/abs/2011.13456">Song et al. (2021), <em>Score-Based Generative Modeling through Stochastic Differential Equations</em></a>: a continuous-time view using scores.</li>
+<li><a href="https://arxiv.org/abs/2102.09672">Nichol and Dhariwal (2021), <em>Improved Denoising Diffusion Probabilistic Models</em>, §3.2</a>: a cosine noise schedule.</li>
+<li><a href="https://arxiv.org/abs/2107.00630">Kingma et al. (2021), <em>Variational Diffusion Models</em></a>: learning the noise schedule.</li>
+</ul>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    CS3264 · Foundations of Machine Learning · School of Computing, National University of Singapore<br>
+    Semester 1, AY2026/27 · <a href="../index.html">Course page</a>
+  </div>
+</footer>
+
+<script src="../slides/media/katex/katex.min.js"></script>
+<script>
+/* Maths: pandoc leaves each formula in a span; render it in place. */
+document.querySelectorAll('span.math').forEach(function(el){
+  var display = el.classList.contains('display');
+  var tex = el.textContent.replace(/^\\[\[(]/, '').replace(/\\[\])]$/, '');
+  try { katex.render(tex, el, {displayMode: display, throwOnError: false}); }
+  catch (e) { el.classList.add('math-error'); }
+});
+/* Outline: open beside the text on wide screens, folded above it on narrow ones.
+   The entry for the section being read is highlighted, and kept in view. */
+(function(){
+  const toc = document.querySelector('.toc'), box = toc && toc.querySelector('details');
+  if (!box) return;
+  const wide = matchMedia('(min-width: 1100px)');
+  const fit = function(){ box.open = wide.matches; };
+  fit(); wide.addEventListener('change', fit);
+  const list = toc.querySelector('.toc-list');
+  const links = Array.from(toc.querySelectorAll('.toc-list a'));
+  const heads = links.map(function(a){ return document.getElementById(decodeURIComponent(a.hash.slice(1))); });
+  links.forEach(function(a){ a.addEventListener('click', function(){ if (!wide.matches) box.open = false; }); });
+  let ticking = false;
+  function spy(){
+    ticking = false;
+    let cur = -1;
+    for (let i = 0; i < heads.length; i++){
+      if (heads[i] && heads[i].getBoundingClientRect().top <= 96) cur = i; else if (heads[i]) break;
+    }
+    links.forEach(function(a, i){ a.classList.toggle('active', i === cur); });
+    if (cur >= 0 && wide.matches && list.scrollHeight > list.clientHeight){
+      const a = links[cur], top = a.offsetTop, bottom = top + a.offsetHeight;
+      if (top < list.scrollTop + 24) list.scrollTop = Math.max(0, top - 48);
+      else if (bottom > list.scrollTop + list.clientHeight - 24) list.scrollTop = bottom - list.clientHeight + 48;
+    }
+  }
+  addEventListener('scroll', function(){ if (!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive: true});
+  addEventListener('resize', spy);
+  spy();
+})();
+/* Theme: the same choice as the course page. */
+(function(){
+  const root = document.documentElement, KEY = 'cs3264-theme';
+  const saved = localStorage.getItem(KEY);
+  if (saved) root.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    const cur = root.getAttribute('data-theme')
+      || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem(KEY, next);
+  });
+})();
+</script>
+</body>
+</html>
